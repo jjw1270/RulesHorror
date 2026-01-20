@@ -1,0 +1,6 @@
+[submodule "Plugins/CommonLibraryPlugin"]
+	path = Plugins/CommonLibraryPlugin
+	url = https://github.com/jjw1270/CommonLibraryPlugin.git
+[submodule "Plugins/CustomUIPlugin"]
+	path = Plugins/CustomUIPlugin
+	url = https://github.com/jjw1270/CustomUIPlugin.git

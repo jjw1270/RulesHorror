@@ -1,0 +1,115 @@
+####################################
+# Unreal Engine
+####################################
+
+# IDE
+.vs/
+
+# Build artifacts
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Plugin build artifacts
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Compiled files
+*.o
+*.obj
+*.pch
+*.gch
+
+# Libraries & executables
+*.dll
+*.lib
+*.exe
+*.so
+*.dylib
+
+# Live2D Cubism Core (EXCEPTION)
+!Plugins/Live2D/Source/ThirdParty/Live2DCubismCore/**
+
+# Generated project files
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.xcodeproj
+*.xcworkspace
+
+# Asset build data
+*_BuiltData.uasset
+
+####################################
+# Visual Studio / Rider
+####################################
+
+# User-specific
+*.user
+*.rsuser
+*.sln.docstates
+
+# Build output
+Debug/
+DebugPublic/
+Release/
+Releases/
+x64/
+x86/
+Win32/
+ARM/
+ARM64/
+bin/
+obj/
+
+# Debug symbols
+*.pdb
+*.ipdb
+*.iobj
+*.ilk
+
+# Logs & temp
+*.log
+*.tlog
+*.tmp
+*.cache
+ipch/
+
+####################################
+# VS Code
+####################################
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+####################################
+# Rider
+####################################
+
+.idea/
+*.sln.iml
+
+####################################
+# Misc
+####################################
+
+# OS / editor temp
+.DS_Store
+Thumbs.db
+~$*
+*~
+
+# Python cache (occasionally generated)
+__pycache__/
+*.pyc
+
+# Custom local config
+/UE_EngineDir.txt
