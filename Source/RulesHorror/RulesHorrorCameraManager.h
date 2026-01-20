@@ -7,7 +7,6 @@
 #include "RulesHorrorCameraManager.generated.h"
 
 /**
- *  Basic First Person camera manager.
  *  Limits min/max look pitch.
  */
 UCLASS()

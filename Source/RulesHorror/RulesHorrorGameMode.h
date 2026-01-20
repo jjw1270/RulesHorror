@@ -6,8 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "RulesHorrorGameMode.generated.h"
 
-/**
- *  Simple GameMode for a first person game
+/*
+* 
  */
 UCLASS(abstract)
 class ARulesHorrorGameMode : public AGameModeBase

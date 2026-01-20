@@ -18,19 +18,15 @@ public class RulesHorror : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
-		});
+			"Slate",
+            "CommonLibrary",
+            "CustomUI"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"RulesHorror",
-			"RulesHorror/Variant_Horror",
-			"RulesHorror/Variant_Horror/UI",
-			"RulesHorror/Variant_Shooter",
-			"RulesHorror/Variant_Shooter/AI",
-			"RulesHorror/Variant_Shooter/UI",
-			"RulesHorror/Variant_Shooter/Weapons"
 		});
 
 		// Uncomment if you are using Slate UI

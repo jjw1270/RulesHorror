@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -40,8 +41,20 @@ ARulesHorrorCharacter::ARulesHorrorCharacter()
 	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
 
 	// Configure character movement
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	// create the spotlight
+	SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
+	SpotLight->SetupAttachment(GetFirstPersonCameraComponent());
+
+	SpotLight->SetRelativeLocationAndRotation(FVector(30.0f, 17.5f, -5.0f), FRotator(-18.6f, -1.3f, 5.26f));
+	SpotLight->Intensity = 0.5;
+	SpotLight->SetIntensityUnits(ELightUnits::Lumens);
+	SpotLight->AttenuationRadius = 1050.0f;
+	SpotLight->InnerConeAngle = 18.7f;
+	SpotLight->OuterConeAngle = 45.24f;
 }
 
 void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -49,23 +62,17 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ARulesHorrorCharacter::DoJumpStart);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ARulesHorrorCharacter::DoJumpEnd);
-
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::MoveInput);
 
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::LookInput);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::LookInput);
 	}
 	else
 	{
-		UE_LOG(LogRulesHorror, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		TRACE_ERROR(TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this))
 	}
 }
-
 
 void ARulesHorrorCharacter::MoveInput(const FInputActionValue& Value)
 {
@@ -74,7 +81,6 @@ void ARulesHorrorCharacter::MoveInput(const FInputActionValue& Value)
 
 	// pass the axis values to the move input
 	DoMove(MovementVector.X, MovementVector.Y);
-
 }
 
 void ARulesHorrorCharacter::LookInput(const FInputActionValue& Value)
@@ -84,17 +90,6 @@ void ARulesHorrorCharacter::LookInput(const FInputActionValue& Value)
 
 	// pass the axis values to the aim input
 	DoAim(LookAxisVector.X, LookAxisVector.Y);
-
-}
-
-void ARulesHorrorCharacter::DoAim(float Yaw, float Pitch)
-{
-	if (GetController())
-	{
-		// pass the rotation inputs
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
-	}
 }
 
 void ARulesHorrorCharacter::DoMove(float Right, float Forward)
@@ -107,14 +102,12 @@ void ARulesHorrorCharacter::DoMove(float Right, float Forward)
 	}
 }
 
-void ARulesHorrorCharacter::DoJumpStart()
+void ARulesHorrorCharacter::DoAim(float Yaw, float Pitch)
 {
-	// pass Jump to the character
-	Jump();
-}
-
-void ARulesHorrorCharacter::DoJumpEnd()
-{
-	// pass StopJumping to the character
-	StopJumping();
+	if (GetController())
+	{
+		// pass the rotation inputs
+		AddControllerYawInput(Yaw);
+		AddControllerPitchInput(Pitch);
+	}
 }
