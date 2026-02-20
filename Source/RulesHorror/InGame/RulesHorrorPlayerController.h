@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerController.h"
-#include "RulesHorror.h"
+#include "WidgetPlayerController.h"
 #include "RulesHorrorPlayerController.generated.h"
 
 
@@ -12,8 +11,8 @@
  *  Manages the input mapping context.
  *  Overrides the Player Camera Manager class.
  */
-UCLASS(abstract, config="Game")
-class RULESHORROR_API ARulesHorrorPlayerController : public APlayerController
+UCLASS(abstract)
+class RULESHORROR_API ARulesHorrorPlayerController : public AWidgetPlayerController
 {
 	GENERATED_BODY()
 	

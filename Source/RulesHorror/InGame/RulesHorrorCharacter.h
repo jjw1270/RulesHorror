@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "RulesHorror.h"
 #include "RulesHorrorCharacter.generated.h"
 
 class UInputAction;

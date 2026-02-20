@@ -2,6 +2,7 @@
 
 
 #include "RulesHorrorPlayerController.h"
+#include "RulesHorrorUtils.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"

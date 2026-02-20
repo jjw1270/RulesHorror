@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "RulesHorrorCharacter.h"
+#include "RulesHorrorUtils.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,7 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "RulesHorror.h"
+#include "RulesHorrorUtils.h"
 
 ARulesHorrorCharacter::ARulesHorrorCharacter()
 {
