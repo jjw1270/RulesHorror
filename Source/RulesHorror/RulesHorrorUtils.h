@@ -14,6 +14,9 @@ class RULESHORROR_API URulesHorrorUtils : public UCommonUtils
 	UFUNCTION(BlueprintPure, Category = "Utils", meta = (WorldContext = "_obj"))
 	static class URulesHorrorGameInstance* GetGameInstance(const UObject* _obj);
 
-	UFUNCTION(BlueprintPure, Category = "Utils", meta = (WorldContext = "_obj"))
+	UFUNCTION(BlueprintPure, Category = "Utils|Lobby", meta = (WorldContext = "_obj"))
+	static class ALobbyPlayerController* GetLobbyPlayerController(const UObject* _obj);
+
+	UFUNCTION(BlueprintPure, Category = "Utils|Lobby", meta = (WorldContext = "_obj"))
 	static bool IsInLobby(const UObject* _obj);
 };

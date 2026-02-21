@@ -15,8 +15,13 @@ URulesHorrorGameInstance* URulesHorrorUtils::GetGameInstance(const UObject* _obj
 	return nullptr;
 }
 
+ALobbyPlayerController* URulesHorrorUtils::GetLobbyPlayerController(const UObject* _obj)
+{
+	return GetLocalPlayerController<ALobbyPlayerController>(_obj);
+}
+
 bool URulesHorrorUtils::IsInLobby(const UObject* _obj)
 {
-	auto lobby_pc = GetLocalPlayerController<ALobbyPlayerController>(_obj);
+	auto lobby_pc = GetLobbyPlayerController(_obj);
 	return IsValid(lobby_pc);
 }
