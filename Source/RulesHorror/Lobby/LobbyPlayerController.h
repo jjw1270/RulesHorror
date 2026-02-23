@@ -19,26 +19,4 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-#pragma region MainLobbyUI
-
-protected:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUI_MainLobby> _MainLobbyUIClass = nullptr;
-
-	UPROPERTY(BlueprintReadWrite)
-	TObjectPtr<UUI_MainLobby> _MainLobbyUI = nullptr;
-
-protected:
-	void InitMainLobbyUI();
-
-public:
-	UFUNCTION(BlueprintCallable)
-	void ShowMainLobbyUI();
-
-	UFUNCTION(BlueprintCallable)
-	void HideMainLobbyUI();
-
-#pragma endregion MainLobbyUI
-
-
 };
