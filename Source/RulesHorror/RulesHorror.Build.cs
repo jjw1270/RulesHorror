@@ -22,7 +22,8 @@ public class RulesHorror : ModuleRules
 			"SlateCore",
             "CommonLibrary",
             "CustomUI",
-            "UnrealEd"
+            "UnrealEd",
+            "DeveloperSettings"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

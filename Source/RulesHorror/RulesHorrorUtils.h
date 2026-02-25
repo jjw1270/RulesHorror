@@ -19,4 +19,5 @@ class RULESHORROR_API URulesHorrorUtils : public UCommonUtils
 
 	UFUNCTION(BlueprintPure, Category = "Utils|Lobby", meta = (WorldContext = "_obj"))
 	static bool IsInLobby(const UObject* _obj);
+
 };

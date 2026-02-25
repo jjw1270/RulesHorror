@@ -2,7 +2,7 @@
 
 
 #include "UI/Lobby/Page_Loading.h"
-#include "WidgetHelper.h"
+#include "UI/RulesHorrorWidgetHelper.h"
 #include "UI/Lobby/Page_InitUser.h"
 #include "RulesHorrorUtils.h"
 #include "Lobby/LobbyPlayerController.h"
