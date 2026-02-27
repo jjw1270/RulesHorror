@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Lobby/Page_Loading.h"
+#include "Page_Loading.h"
 #include "UI/RulesHorrorWidgetHelper.h"
 #include "UI/Lobby/Page_InitUser.h"
 #include "RulesHorrorUtils.h"

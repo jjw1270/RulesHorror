@@ -6,11 +6,14 @@
 #include "CommonUtils.h"
 #include "RulesHorrorUtils.generated.h"
 
+using Utils = URulesHorrorUtils;
+
 UCLASS()
 class RULESHORROR_API URulesHorrorUtils : public UCommonUtils
 {
 	GENERATED_BODY()
 
+public:
 	UFUNCTION(BlueprintPure, Category = "Utils", meta = (WorldContext = "_obj"))
 	static class URulesHorrorGameInstance* GetGameInstance(const UObject* _obj);
 

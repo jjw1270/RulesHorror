@@ -6,8 +6,6 @@
 #include "WidgetPlayerController.h"
 #include "LobbyPlayerController.generated.h"
 
-class UUI_MainLobby;
-
 UCLASS(abstract)
 class RULESHORROR_API ALobbyPlayerController : public AWidgetPlayerController
 {

@@ -2,7 +2,6 @@
 
 
 #include "LobbyPlayerController.h"
-#include "UI/Lobby/UI_MainLobby.h"
 
 ALobbyPlayerController::ALobbyPlayerController()
 {

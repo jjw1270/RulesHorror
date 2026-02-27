@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/WidgetBase.h"
-#include "UI_MainLobby.generated.h"
+#include "UI/Lobby/WindowBase/WindowBase.h"
+#include "Window_Explorer.generated.h"
 
 /**
  * 
  */
 UCLASS(abstract)
-class RULESHORROR_API UUI_MainLobby : public UWidgetBase
+class RULESHORROR_API UWindow_Explorer : public UWindowBase
 {
 	GENERATED_BODY()
 
 protected:
-	
+
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Lobby/Page_InitUser.h"
+#include "Page_InitUser.h"
 #include "SaveGame/SaveGameSubsystem.h"
 
 void UPage_InitUser::NativeConstruct()
