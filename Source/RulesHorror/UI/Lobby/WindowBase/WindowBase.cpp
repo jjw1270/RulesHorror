@@ -4,6 +4,7 @@
 #include "WindowBase.h"
 #include "Components/CanvasPanelSlot.h"
 #include "UI/Lobby/WindowBase/UI_WindowLayout.h"
+#include "Blueprint/DragDropOperation.h"
 
 void UWindowBase::NativeOnInitialized()
 {
@@ -70,7 +71,24 @@ void UWindowBase::NativeOnDragDetected(const FGeometry& _geo, const FPointerEven
 {
 	Super::NativeOnDragDetected(_geo, _mouse_event, _out_operation);
 
-	
+	auto drag_operation = NewObject<UDragDropOperation>();
+	if (IsValid(drag_operation))
+	{
+		drag_operation->Pivot = EDragPivot::MouseDown;
+		drag_operation->Payload = this;
+
+		auto visual_widget = CreateWidget<UWindowBase>(this, this->GetClass());
+		if(IsValid(visual_widget))
+		{
+			visual_widget->SetIsShowOnNextTick(false);
+			visual_widget->SetRenderOpacity(0.2f);
+			drag_operation->DefaultDragVisual = visual_widget;
+		}
+
+		_out_operation = drag_operation;
+
+		Hide(EWidgetHideType::Collapsed, true);
+	}
 }
 
 void UWindowBase::ExecuteCommand(EWindowCommand _command)
@@ -88,7 +106,10 @@ void UWindowBase::ExecuteCommand(EWindowCommand _command)
 		Hide(EWidgetHideType::Collapsed);
 		break;
 	case EWindowCommand::StartDrag:
-		_ShouldDrag = true;
+		if(_IsMaximized == false)
+		{
+			_ShouldDrag = true;
+		}
 		break;
 	default:
 		break;
