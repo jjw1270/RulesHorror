@@ -11,7 +11,8 @@ void UWindowBase::NativeOnInitialized()
 
 	if (IsValid(WindowLayout))
 	{
-		WindowLayout->_OnTitleBarDoubleClickedEvent.AddDynamic(this, &UWindowBase::OnTitleBarDoubleClicked);
+		WindowLayout->_OnRequestCommandEvent.Unbind();
+		WindowLayout->_OnRequestCommandEvent.BindUObject(this, &UWindowBase::ExecuteCommand);
 	}
 }
 
@@ -31,12 +32,14 @@ void UWindowBase::SynchronizeProperties()
 
 FReply UWindowBase::NativeOnFocusReceived(const FGeometry& _geo, const FFocusEvent& _focus_event)
 {
+	FReply reply = Super::NativeOnFocusReceived(_geo, _focus_event);
+
 	if (_OnWindowFocusedEvent.IsBound())
 	{
 		_OnWindowFocusedEvent.Broadcast(this, true);
 	}
 
-	return Super::NativeOnFocusReceived(_geo, _focus_event);
+	return MoveTemp(reply);
 }
 
 void UWindowBase::NativeOnFocusLost(const FFocusEvent& _focus_event)
@@ -49,13 +52,47 @@ void UWindowBase::NativeOnFocusLost(const FFocusEvent& _focus_event)
 	Super::NativeOnFocusLost(_focus_event);
 }
 
-FReply UWindowBase::NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
+FReply UWindowBase::NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
 {
-	Super::NativeOnPreviewMouseButtonDown(_geo, _mouse_event);
+	Super::NativeOnMouseButtonDown(_geo, _mouse_event);
 
 	SetFocus();
 
+	if (_ShouldDrag)
+	{
+		return FReply::Handled().DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
+	}
+
 	return FReply::Unhandled();
+}
+
+void UWindowBase::NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation)
+{
+	Super::NativeOnDragDetected(_geo, _mouse_event, _out_operation);
+
+	
+}
+
+void UWindowBase::ExecuteCommand(EWindowCommand _command)
+{
+	switch (_command)
+	{
+	case EWindowCommand::Minimize:
+		Hide(EWidgetHideType::Collapsed);
+		break;
+	case EWindowCommand::RestoreSize:
+		SetMaximize(!_IsMaximized);
+		break;
+	case EWindowCommand::Close:
+		// hide와 동일한 기능?
+		Hide(EWidgetHideType::Collapsed);
+		break;
+	case EWindowCommand::StartDrag:
+		_ShouldDrag = true;
+		break;
+	default:
+		break;
+	}
 }
 
 const FAnchors maximize_anchors = FAnchors(0.0f, 0.0f, 1.0f, 1.0f);
@@ -70,7 +107,7 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 		return;
 
 	// 중복 체크
-	const auto& anchors = cp_slot->GetAnchors();
+	/*const auto& anchors = cp_slot->GetAnchors();
 	if (_IsMaximized)
 	{
 		if (anchors == maximize_anchors)
@@ -80,7 +117,9 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 	{
 		if (anchors == normal_anchors)
 			return;
-	}
+	}*/
+
+	TRACE();
 
 	if (_IsMaximized)
 	{
@@ -99,9 +138,4 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 		cp_slot->SetPosition(_LastNormalPos);
 		cp_slot->SetSize(_NormalSize);
 	}
-}
-
-void UWindowBase::OnTitleBarDoubleClicked()
-{
-	SetMaximize(!_IsMaximized);
 }

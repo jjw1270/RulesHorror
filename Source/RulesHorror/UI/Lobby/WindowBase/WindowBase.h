@@ -22,10 +22,13 @@ protected:
 	bool _IsMaximized = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector2D _LastNormalPos = FVector2D(0.0f, 0.0f);
+	FVector2D _LastNormalPos = FVector2D::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector2D _NormalSize = FVector2D(600.0f, 600.0f);
+
+protected:
+	bool _ShouldDrag = false;
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -33,17 +36,25 @@ protected:
 	virtual void SynchronizeProperties() override;
 	virtual FReply NativeOnFocusReceived(const FGeometry& _geo, const FFocusEvent& _focus_event) override;
 	virtual void NativeOnFocusLost(const FFocusEvent& _focus_event) override;
-	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
-public:
-	UFUNCTION(BlueprintCallable)
-	void SetMaximize(bool _is_maximized);
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
+	virtual void NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation) override;
 
 public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDM_OnWindowFocused, UWindowBase*, _window_widget, bool, _is_focused);
+
 	UPROPERTY(BlueprintAssignable)
 	FDM_OnWindowFocused _OnWindowFocusedEvent;
 
+public:
+	UFUNCTION(BlueprintCallable)
+	void ExecuteCommand(EWindowCommand _command);
+
+	void SetLastNormalPos(const FVector2D& _pos)
+	{
+		_LastNormalPos = _pos;
+	}
+
 protected:
-	UFUNCTION()
-	void OnTitleBarDoubleClicked();
+	void SetMaximize(bool _is_maximized);
+
 };

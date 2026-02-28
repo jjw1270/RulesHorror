@@ -4,20 +4,8 @@
 #include "UI_WindowLayout.h"
 #include "Components/ClickButton.h"
 
-void UUI_WindowLayout::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
 
-	if (IsValid(BTN_TitleBar))
-	{
-		BTN_TitleBar->_OnDoubleClicked.AddDynamic(this, &UUI_WindowLayout::OnTitleBarButtonDoubleClicked);
-	}
-}
-
-void UUI_WindowLayout::OnTitleBarButtonDoubleClicked(UClickButton* _btn)
+void UUI_WindowLayout::RequestCommand(EWindowCommand _command)
 {
-	if (_OnTitleBarDoubleClickedEvent.IsBound())
-	{
-		_OnTitleBarDoubleClickedEvent.Broadcast();
-	}
+	_OnRequestCommandEvent.ExecuteIfBound(_command);
 }

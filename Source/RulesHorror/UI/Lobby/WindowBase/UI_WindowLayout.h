@@ -6,17 +6,19 @@
 #include "Widgets/WidgetBase.h"
 #include "UI_WindowLayout.generated.h"
 
-/**
- * 
- */
+UENUM(BlueprintType)
+enum class EWindowCommand : uint8
+{
+	Minimize						UMETA(ToolTip = "최소화"),
+	RestoreSize				UMETA(ToolTip = "사이즈 토글"),
+	Close							UMETA(ToolTip = "닫기"),
+	StartDrag					UMETA(ToolTip = "창 이동"),
+};
+
 UCLASS(abstract)
 class RULESHORROR_API UUI_WindowLayout : public UWidgetBase
 {
 	GENERATED_BODY()
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(BindWidget))
-	TObjectPtr<class UClickButton> BTN_TitleBar = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -29,15 +31,11 @@ protected:
 	bool _EnableTitleButtons = true;
 
 public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDM_OnDoubleClickTitleBar);
+	DECLARE_DELEGATE_OneParam(F_OnRequestCommand, EWindowCommand);
 
-	UPROPERTY(BlueprintAssignable)
-	FDM_OnDoubleClickTitleBar _OnTitleBarDoubleClickedEvent;
-
-protected:
-	virtual void NativeOnInitialized() override;
+	F_OnRequestCommand _OnRequestCommandEvent;
 
 protected:
-	UFUNCTION()
-	void OnTitleBarButtonDoubleClicked(UClickButton* _btn);
+	UFUNCTION(BlueprintCallable)
+	void RequestCommand(EWindowCommand _command);
 };
