@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/WidgetBase.h"
-#include "UI/Lobby/WindowBase/UI_WindowLayout.h"
+#include "UI/Lobby/WindowBase/WindowDefines.h"
 #include "WindowBase.generated.h"
 
 
@@ -15,7 +15,10 @@ class RULESHORROR_API UWindowBase : public UWidgetBase
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UUI_WindowLayout> WindowLayout = nullptr;
+	TObjectPtr<class UUI_WindowLayout> WindowLayout = nullptr;
+
+public:
+	EWindowWidgetType _WindowWidgetType = EWindowWidgetType::NA;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -33,17 +36,10 @@ protected:
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
-	virtual void SynchronizeProperties() override;
-	virtual FReply NativeOnFocusReceived(const FGeometry& _geo, const FFocusEvent& _focus_event) override;
-	virtual void NativeOnFocusLost(const FFocusEvent& _focus_event) override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 	virtual void NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation) override;
-
-public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDM_OnWindowFocused, UWindowBase*, _window_widget, bool, _is_focused);
-
-	UPROPERTY(BlueprintAssignable)
-	FDM_OnWindowFocused _OnWindowFocusedEvent;
+	virtual bool NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -54,7 +50,21 @@ public:
 		_LastNormalPos = _pos;
 	}
 
-protected:
+public:
 	void SetMaximize(bool _is_maximized);
+	bool IsMaximized() const { return _IsMaximized; }
 
+#pragma region WindowFocus
+public:
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDM_OnWindowFocused, UWindowBase*, _window_widget, bool, _is_focused);
+
+	UPROPERTY(BlueprintAssignable)
+	FDM_OnWindowFocused _OnWindowFocusedEvent;
+
+public:
+	void SetWindowFocused(bool _is_focused);
+
+protected:
+	void OnWindowFocused(bool _is_focused);
+#pragma endregion WindowFocus
 };

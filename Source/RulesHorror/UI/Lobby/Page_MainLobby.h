@@ -4,15 +4,38 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/PageBase.h"
+#include "UI/Lobby/WindowBase/WindowDefines.h"
 #include "Page_MainLobby.generated.h"
 
+
 class UWindowBase;
-class UClickButton;
-class UWindow_Explorer;
-class UWindow_ControlPanel;
-/**
- * 
- */
+class UBTN_WindowTab;
+
+USTRUCT(BlueprintType)
+struct FWindowData
+{
+	GENERATED_BODY()
+
+public:
+	// window widget
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UWindowBase> WindowWidgetClass = nullptr;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UWindowBase> WindowWidget = nullptr;
+
+public:
+	// window tab
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UTexture2D> WindowTabIcon = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	FText WindowTabText;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UBTN_WindowTab> WindowTab = nullptr;
+};
+
 UCLASS(abstract)
 class RULESHORROR_API UPage_MainLobby : public UPageBase
 {
@@ -20,21 +43,17 @@ class RULESHORROR_API UPage_MainLobby : public UPageBase
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UCanvasPanel> CP_Windows = nullptr;
-
-// Explorer
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UWindow_Explorer> Window_Explorer = nullptr;
+	TObjectPtr<class UCanvasPanel> CP_Window = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UClickButton> BTN_ExplorerTab = nullptr;
+	TObjectPtr<class UHorizontalBox> HB_WindowTab = nullptr;
 
-// Control Panel
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UWindow_ControlPanel> Window_ControlPanel = nullptr;
+protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBTN_WindowTab> _WindowTabClass = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UClickButton> BTN_ControlPanelTab = nullptr;
+	UPROPERTY(EditAnywhere)
+	TMap<EWindowWidgetType, FWindowData> _WindowDataMap;
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -44,10 +63,20 @@ public:
 	void SetBackgroundImage(const TSoftObjectPtr<UTexture2D>& _image);
 
 protected:
-	UFUNCTION()
-	void OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused);
+	UFUNCTION(BlueprintCallable)
+	void CreateWindow(EWindowWidgetType _type);
+
+	UFUNCTION(BlueprintCallable)
+	void OpenWindow(EWindowWidgetType _type, bool _is_open);
+
+	void SetTopWindow(UWindowBase* _target_window);
+	void UpdateTopWindow();
+	UWindowBase* GetTopWindow() const;
 
 	UFUNCTION()
-	void OnClickWindowTabButton(class UButtonBase* _tab_button);
+	void OnClickWindowTab(class UButtonBase* _tab_button);
+
+	UFUNCTION()
+	void OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused);
 
 };

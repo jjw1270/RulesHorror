@@ -4,16 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/WidgetBase.h"
+#include "UI/Lobby/WindowBase/WindowDefines.h"
 #include "UI_WindowLayout.generated.h"
-
-UENUM(BlueprintType)
-enum class EWindowCommand : uint8
-{
-	Minimize						UMETA(ToolTip = "최소화"),
-	RestoreSize				UMETA(ToolTip = "사이즈 토글"),
-	Close							UMETA(ToolTip = "닫기"),
-	StartDrag					UMETA(ToolTip = "창 이동"),
-};
 
 UCLASS(abstract)
 class RULESHORROR_API UUI_WindowLayout : public UWidgetBase
@@ -38,4 +30,8 @@ public:
 protected:
 	UFUNCTION(BlueprintCallable)
 	void RequestCommand(EWindowCommand _command);
+
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnFocused(bool _is_focused);
 };

@@ -10,6 +10,8 @@ void UWindowBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	SetIsFocusable(true);
+
 	if (IsValid(WindowLayout))
 	{
 		WindowLayout->_OnRequestCommandEvent.Unbind();
@@ -21,43 +23,21 @@ void UWindowBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	SetIsFocusable(true);
-}
-
-void UWindowBase::SynchronizeProperties()
-{
-	Super::SynchronizeProperties();
-
 	SetMaximize(_IsMaximized);
 }
 
-FReply UWindowBase::NativeOnFocusReceived(const FGeometry& _geo, const FFocusEvent& _focus_event)
+FReply UWindowBase::NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
 {
-	FReply reply = Super::NativeOnFocusReceived(_geo, _focus_event);
+	Super::NativeOnPreviewMouseButtonDown(_geo, _mouse_event);
 
-	if (_OnWindowFocusedEvent.IsBound())
-	{
-		_OnWindowFocusedEvent.Broadcast(this, true);
-	}
+	SetWindowFocused(true);
 
-	return MoveTemp(reply);
-}
-
-void UWindowBase::NativeOnFocusLost(const FFocusEvent& _focus_event)
-{
-	if (_OnWindowFocusedEvent.IsBound())
-	{
-		_OnWindowFocusedEvent.Broadcast(this, false);
-	}
-
-	Super::NativeOnFocusLost(_focus_event);
+	return FReply::Unhandled();
 }
 
 FReply UWindowBase::NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
 {
 	Super::NativeOnMouseButtonDown(_geo, _mouse_event);
-
-	SetFocus();
 
 	if (_ShouldDrag)
 	{
@@ -91,6 +71,22 @@ void UWindowBase::NativeOnDragDetected(const FGeometry& _geo, const FPointerEven
 	}
 }
 
+bool UWindowBase::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
+{
+	Super::NativeOnDrop(_geo, _drag_drop_event, _operation);
+
+	if (IsInvalid(_operation))
+		return false;
+
+	auto window_widget = Cast<UWindowBase>(_operation->Payload);
+	if (IsValid(window_widget))
+	{
+
+	}
+
+	return false;
+}
+
 void UWindowBase::ExecuteCommand(EWindowCommand _command)
 {
 	switch (_command)
@@ -106,10 +102,12 @@ void UWindowBase::ExecuteCommand(EWindowCommand _command)
 		Hide(EWidgetHideType::Collapsed);
 		break;
 	case EWindowCommand::StartDrag:
-		if(_IsMaximized == false)
+		if(_IsMaximized)
 		{
-			_ShouldDrag = true;
+			SetMaximize(false);
 		}
+
+		_ShouldDrag = true;
 		break;
 	default:
 		break;
@@ -140,8 +138,6 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 			return;
 	}*/
 
-	TRACE();
-
 	if (_IsMaximized)
 	{
 		_LastNormalPos = cp_slot->GetPosition();
@@ -159,4 +155,20 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 		cp_slot->SetPosition(_LastNormalPos);
 		cp_slot->SetSize(_NormalSize);
 	}
+}
+
+void UWindowBase::SetWindowFocused(bool _is_focused)
+{
+	if (_OnWindowFocusedEvent.IsBound())
+	{
+		_OnWindowFocusedEvent.Broadcast(this, _is_focused);
+	}
+
+	OnWindowFocused(_is_focused);
+}
+
+void UWindowBase::OnWindowFocused(bool _is_focused)
+{
+	WindowLayout->OnFocused(_is_focused);
+
 }
