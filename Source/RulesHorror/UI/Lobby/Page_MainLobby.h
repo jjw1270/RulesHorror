@@ -73,6 +73,9 @@ protected:
 	void UpdateTopWindow();
 	UWindowBase* GetTopWindow() const;
 
+	virtual bool NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
+	virtual bool NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
+
 	UFUNCTION()
 	void OnClickWindowTab(class UButtonBase* _tab_button);
 

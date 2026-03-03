@@ -8,6 +8,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "UI/Lobby/WindowBase/WindowDragDropOperation.h"
 
 void UPage_MainLobby::NativeOnInitialized()
 {
@@ -177,6 +178,68 @@ UWindowBase* UPage_MainLobby::GetTopWindow() const
 	}
 
 	return top_window;
+}
+
+bool UPage_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
+{
+	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
+
+	auto drag_operation = Cast<UWindowDragDropOperation>(_operation);
+	if (IsInvalid(drag_operation))
+		return false;
+
+	auto window_widget = Cast<UWindowBase>(drag_operation->Payload);
+	if (IsInvalid(window_widget))
+		return false;
+
+	const FVector2D screen_pos = _drag_drop_event.GetScreenSpacePosition();
+	const FVector2D canvas_local = _geo.AbsoluteToLocal(screen_pos);
+
+	const FVector2D drag_pos = canvas_local - drag_operation->_LocalOffset;
+
+	if (drag_operation->_DragType == EWindowDragType::Move)
+	{
+		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
+		if (IsInvalid(cp_slot))
+			return false;
+
+		cp_slot->SetPosition(drag_pos);
+		return true;
+	}
+	else
+	{
+		// window_widget->ResizeWindow(drag_operation->_DragType, drag_pos);
+	}
+
+	return true;
+}
+
+bool UPage_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
+{
+	Super::NativeOnDrop(_geo, _drag_drop_event, _operation);
+
+	auto drag_operation = Cast<UWindowDragDropOperation>(_operation);
+	if (IsInvalid(drag_operation))
+		return false;
+
+	if (drag_operation->_DragType != EWindowDragType::Move)
+		return false;
+
+	auto window_widget = Cast<UWindowBase>(drag_operation->Payload);
+	if (IsInvalid(window_widget))
+		return false;
+
+	auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
+	if (IsInvalid(cp_slot))
+		return false;
+
+	const FVector2D screen_pos = _drag_drop_event.GetScreenSpacePosition();
+	const FVector2D canvas_local = _geo.AbsoluteToLocal(screen_pos);
+
+	const FVector2D drag_pos = canvas_local - drag_operation->_LocalOffset;
+	cp_slot->SetPosition(drag_pos);
+
+	return true;
 }
 
 void UPage_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)

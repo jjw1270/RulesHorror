@@ -4,7 +4,7 @@
 #include "WindowBase.h"
 #include "Components/CanvasPanelSlot.h"
 #include "UI/Lobby/WindowBase/UI_WindowLayout.h"
-#include "Blueprint/DragDropOperation.h"
+#include "UI/Lobby/WindowBase/WindowDragDropOperation.h"
 
 void UWindowBase::NativeOnInitialized()
 {
@@ -39,7 +39,7 @@ FReply UWindowBase::NativeOnMouseButtonDown(const FGeometry& _geo, const FPointe
 {
 	Super::NativeOnMouseButtonDown(_geo, _mouse_event);
 
-	if (_ShouldDrag)
+	if (_DragType != EWindowDragType::NA)
 	{
 		return FReply::Handled().DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
 	}
@@ -51,40 +51,25 @@ void UWindowBase::NativeOnDragDetected(const FGeometry& _geo, const FPointerEven
 {
 	Super::NativeOnDragDetected(_geo, _mouse_event, _out_operation);
 
-	auto drag_operation = NewObject<UDragDropOperation>();
+	auto drag_operation = NewObject<UWindowDragDropOperation>();
 	if (IsValid(drag_operation))
 	{
-		drag_operation->Pivot = EDragPivot::MouseDown;
-		drag_operation->Payload = this;
-
-		auto visual_widget = CreateWidget<UWindowBase>(this, this->GetClass());
-		if(IsValid(visual_widget))
+		if (_DragType == EWindowDragType::Move)
 		{
-			visual_widget->SetIsShowOnNextTick(false);
-			visual_widget->SetRenderOpacity(0.2f);
-			drag_operation->DefaultDragVisual = visual_widget;
+			if (_IsMaximized)
+			{
+				SetMaximize(false);
+			}
 		}
 
+		drag_operation->_DragType = _DragType;
+
+		drag_operation->Pivot = EDragPivot::MouseDown;
+		drag_operation->Payload = this;
+		drag_operation->_LocalOffset = _geo.AbsoluteToLocal(_mouse_event.GetScreenSpacePosition());
+
 		_out_operation = drag_operation;
-
-		Hide(EWidgetHideType::Collapsed, true);
 	}
-}
-
-bool UWindowBase::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
-{
-	Super::NativeOnDrop(_geo, _drag_drop_event, _operation);
-
-	if (IsInvalid(_operation))
-		return false;
-
-	auto window_widget = Cast<UWindowBase>(_operation->Payload);
-	if (IsValid(window_widget))
-	{
-
-	}
-
-	return false;
 }
 
 void UWindowBase::ExecuteCommand(EWindowCommand _command)
@@ -94,21 +79,39 @@ void UWindowBase::ExecuteCommand(EWindowCommand _command)
 	case EWindowCommand::Minimize:
 		Hide(EWidgetHideType::Collapsed);
 		break;
+
 	case EWindowCommand::RestoreSize:
 		SetMaximize(!_IsMaximized);
 		break;
-	case EWindowCommand::Close:
-		// hide와 동일한 기능?
-		Hide(EWidgetHideType::Collapsed);
-		break;
-	case EWindowCommand::StartDrag:
-		if(_IsMaximized)
-		{
-			SetMaximize(false);
-		}
 
-		_ShouldDrag = true;
+	case EWindowCommand::Close:
+		RemoveFromParent();
 		break;
+
+	case EWindowCommand::Move:
+		_DragType = EWindowDragType::Move;
+		break;
+
+	case EWindowCommand::Resize_UpDown:
+		_DragType = EWindowDragType::Resize_UpDown;
+		break;
+
+	case EWindowCommand::Resize_LeftRight:
+		_DragType = EWindowDragType::Resize_LeftRight;
+		break;
+
+	case EWindowCommand::Resize_SouthEast:
+		_DragType = EWindowDragType::Resize_SouthEast;
+		break;
+
+	case EWindowCommand::Resize_SouthWest:
+		_DragType = EWindowDragType::Resize_SouthWest;
+		break;
+
+	case EWindowCommand::EndDrag:
+		_DragType = EWindowDragType::NA;
+		break;
+
 	default:
 		break;
 	}
@@ -153,8 +156,9 @@ void UWindowBase::SetMaximize(bool _is_maximized)
 		cp_slot->SetAlignment(FVector2D::ZeroVector);
 
 		cp_slot->SetPosition(_LastNormalPos);
-		cp_slot->SetSize(_NormalSize);
 	}
+
+	WindowLayout->EnableWindowScaler(!_IsMaximized);
 }
 
 void UWindowBase::SetWindowFocused(bool _is_focused)

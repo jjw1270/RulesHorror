@@ -31,7 +31,7 @@ protected:
 	FVector2D _NormalSize = FVector2D(600.0f, 600.0f);
 
 protected:
-	bool _ShouldDrag = false;
+	EWindowDragType _DragType = EWindowDragType::NA;
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -39,7 +39,6 @@ protected:
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 	virtual void NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation) override;
-	virtual bool NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
