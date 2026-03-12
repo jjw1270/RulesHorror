@@ -16,6 +16,16 @@ class RULESHORROR_API UBTN_WindowTab : public UClickButton
 public:
 	EWindowWidgetType _WindowWidgetType = EWindowWidgetType::NA;
 
+protected:
+	UPROPERTY(EditAnywhere)
+	TMap<EButtonState, FButtonStyleConfig> _HighlightedStateStyles;
+
+	UPROPERTY()
+	TMap<EButtonState, FButtonStyleConfig> _NonHighlightedStateStyles;
+
+protected:
+	virtual void NativeOnInitialized() override;
+
 public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetTabIcon(UTexture2D* _image);
@@ -23,6 +33,5 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetTabText(const FText& _text);
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void SetHighlight(bool _is_highlight);
+	void SetHighlight(bool _is_highlighted);
 };

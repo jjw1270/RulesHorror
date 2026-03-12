@@ -28,7 +28,7 @@ protected:
 	FVector2D _LastNormalPos = FVector2D::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector2D _NormalSize = FVector2D(600.0f, 600.0f);
+	FVector2D _LastNormalSize = FVector2D(600.0f, 600.0f);
 
 protected:
 	EWindowDragType _DragType = EWindowDragType::NA;
@@ -48,6 +48,9 @@ public:
 	{
 		_LastNormalPos = _pos;
 	}
+
+public:
+	void ResizeWindow(EWindowDragType _drag_type, const FVector2D& _initial_window_pos, 	const FVector2D& _initial_window_size, const FVector2D& _drag_delta);
 
 public:
 	void SetMaximize(bool _is_maximized);

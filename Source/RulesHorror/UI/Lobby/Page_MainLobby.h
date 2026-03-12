@@ -21,11 +21,17 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UWindowBase> WindowWidgetClass = nullptr;
 
+	UPROPERTY(EditAnywhere)
+	bool IsMaximized = false;
+
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UWindowBase> WindowWidget = nullptr;
 
 public:
 	// window tab
+	UPROPERTY(EditAnywhere)
+	bool CreateTab = true;
+
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UTexture2D> WindowTabIcon = nullptr;
 

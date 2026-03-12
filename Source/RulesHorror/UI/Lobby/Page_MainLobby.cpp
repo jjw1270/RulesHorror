@@ -70,27 +70,35 @@ void UPage_MainLobby::CreateWindow(EWindowWidgetType _type)
 	}
 	data_ptr->WindowWidget->SetLastNormalPos(widget_pos);
 
+	data_ptr->WindowWidget->_OnWindowFocusedEvent.AddDynamic(this, &UPage_MainLobby::OnWindowFocused);
+	data_ptr->WindowWidget->Hide(EWidgetHideType::Collapsed);
+
 	auto cp_slot = CP_Window->AddChildToCanvas(data_ptr->WindowWidget);
 	if (IsValid(cp_slot))
 	{
-		cp_slot->SetAutoSize(true);
+		cp_slot->SetAutoSize(false);
+		cp_slot->SetAlignment(FVector2D::ZeroVector);
+		cp_slot->SetSize(FVector2D(600.0f));
 	}
 
 	// window tab
-	data_ptr->WindowTab = CreateWidget<UBTN_WindowTab>(this, _WindowTabClass);
-	if (IsInvalid(data_ptr->WindowTab))
+	if (data_ptr->CreateTab)
 	{
-		TRACE_ERROR(TEXT("window tab 생성 실패."))
-		return;
+		data_ptr->WindowTab = CreateWidget<UBTN_WindowTab>(this, _WindowTabClass);
+		if (IsInvalid(data_ptr->WindowTab))
+		{
+			TRACE_ERROR(TEXT("window tab 생성 실패."))
+				return;
+		}
+
+		data_ptr->WindowTab->_WindowWidgetType = _type;
+		data_ptr->WindowTab->SetTabIcon(data_ptr->WindowTabIcon);
+		data_ptr->WindowTab->SetTabText(data_ptr->WindowTabText);
+
+		data_ptr->WindowTab->_OnClicked.AddDynamic(this, &UPage_MainLobby::OnClickWindowTab);
+
+		HB_WindowTab->AddChildToHorizontalBox(data_ptr->WindowTab);
 	}
-
-	data_ptr->WindowTab->_WindowWidgetType = _type;
-	data_ptr->WindowTab->SetTabIcon(data_ptr->WindowTabIcon);
-	data_ptr->WindowTab->SetTabText(data_ptr->WindowTabText);
-
-	data_ptr->WindowTab->_OnClicked.AddDynamic(this, &UPage_MainLobby::OnClickWindowTab);
-
-	HB_WindowTab->AddChildToHorizontalBox(data_ptr->WindowTab);
 }
 
 void UPage_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
@@ -99,12 +107,18 @@ void UPage_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
 	if (IsInvalid(data_ptr))
 		return;
 
-	if (IsAnyInvalid(data_ptr->WindowWidget, data_ptr->WindowTab))
+	if (IsInvalid(data_ptr->WindowWidget))
 		return;
 
 	if (_is_open)
 	{
 		data_ptr->WindowWidget->Show(EWidgetShowType::SelfHitTestInvisible);
+
+		if (data_ptr->IsMaximized)
+		{
+			data_ptr->WindowWidget->SetMaximize(true);
+		}
+
 		SetTopWindow(data_ptr->WindowWidget);
 	}
 	else
@@ -126,7 +140,18 @@ void UPage_MainLobby::SetTopWindow(UWindowBase* _target_window)
 		if (IsInvalid(cp_slot))
 			continue;
 
-		cp_slot->SetZOrder(window_widget == _target_window ? 1 : 0);
+		const bool is_top = window_widget == _target_window;
+
+		cp_slot->SetZOrder(is_top ? 1 : 0);
+
+		auto data_ptr = _WindowDataMap.Find(window_widget->_WindowWidgetType);
+		if (IsValid(data_ptr))
+		{
+			if (IsValid(data_ptr->WindowTab))
+			{
+				data_ptr->WindowTab->SetHighlight(is_top);
+			}
+		}
 	}
 }
 
@@ -192,23 +217,22 @@ bool UPage_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEve
 	if (IsInvalid(window_widget))
 		return false;
 
-	const FVector2D screen_pos = _drag_drop_event.GetScreenSpacePosition();
-	const FVector2D canvas_local = _geo.AbsoluteToLocal(screen_pos);
-
-	const FVector2D drag_pos = canvas_local - drag_operation->_LocalOffset;
-
 	if (drag_operation->_DragType == EWindowDragType::Move)
 	{
 		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
 		if (IsInvalid(cp_slot))
 			return false;
 
-		cp_slot->SetPosition(drag_pos);
-		return true;
+		const FVector2D canvas_local = _geo.AbsoluteToLocal(_drag_drop_event.GetScreenSpacePosition());
+		const FVector2D new_pos = canvas_local - drag_operation->_LocalOffset;
+
+		cp_slot->SetPosition(new_pos);
 	}
 	else
 	{
-		// window_widget->ResizeWindow(drag_operation->_DragType, drag_pos);
+		const FVector2D drag_delta = _drag_drop_event.GetScreenSpacePosition() - drag_operation->_DragStartScreenPos;
+
+		window_widget->ResizeWindow(drag_operation->_DragType, drag_operation->_InitialWindowPos, drag_operation->_InitialWindowSize, drag_delta);
 	}
 
 	return true;
@@ -216,47 +240,50 @@ bool UPage_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEve
 
 bool UPage_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
 {
-	Super::NativeOnDrop(_geo, _drag_drop_event, _operation);
+	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
 
 	auto drag_operation = Cast<UWindowDragDropOperation>(_operation);
 	if (IsInvalid(drag_operation))
-		return false;
-
-	if (drag_operation->_DragType != EWindowDragType::Move)
 		return false;
 
 	auto window_widget = Cast<UWindowBase>(drag_operation->Payload);
 	if (IsInvalid(window_widget))
 		return false;
 
-	auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
-	if (IsInvalid(cp_slot))
-		return false;
+	if (drag_operation->_DragType == EWindowDragType::Move)
+	{
+		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
+		if (IsInvalid(cp_slot))
+			return false;
 
-	const FVector2D screen_pos = _drag_drop_event.GetScreenSpacePosition();
-	const FVector2D canvas_local = _geo.AbsoluteToLocal(screen_pos);
+		const FVector2D canvas_local = _geo.AbsoluteToLocal(_drag_drop_event.GetScreenSpacePosition());
+		const FVector2D new_pos = canvas_local - drag_operation->_LocalOffset;
 
-	const FVector2D drag_pos = canvas_local - drag_operation->_LocalOffset;
-	cp_slot->SetPosition(drag_pos);
+		cp_slot->SetPosition(new_pos);
+	}
+	else
+	{
+		const FVector2D drag_delta = _drag_drop_event.GetScreenSpacePosition() - drag_operation->_DragStartScreenPos;
+
+		window_widget->ResizeWindow(drag_operation->_DragType, drag_operation->_InitialWindowPos, drag_operation->_InitialWindowSize, drag_delta);
+	}
 
 	return true;
 }
 
 void UPage_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 {
-	/*if (IsInvalid(_tab_button))
+	auto window_tab = Cast<UBTN_WindowTab>(_tab_button);
+	if (IsInvalid(window_tab))
 		return;
 
-	UWindowBase* window_widget = nullptr;
+	const EWindowWidgetType window_widget_type = window_tab->_WindowWidgetType;
 
-	if (_tab_button == BTN_ExplorerTab)
-	{
-		window_widget = Window_Explorer;
-	}
-	else if (_tab_button == BTN_ControlPanelTab)
-	{
-		window_widget = Window_ControlPanel;
-	}
+	auto window_data_ptr = _WindowDataMap.Find(window_widget_type);
+	if (IsInvalid(window_data_ptr))
+		return;
+
+	auto window_widget = window_data_ptr->WindowWidget;
 
 	if (IsInvalid(window_widget))
 		return;
@@ -265,51 +292,37 @@ void UPage_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 	{
 	case EWidgetState::Hiding:
 	case EWidgetState::Hide:
-		window_widget->Show(EWidgetShowType::SelfHitTestInvisible);
-		window_widget->SetWindowFocused(true);
+		OpenWindow(window_widget_type, true);
 		break;
 
 	case EWidgetState::Showing:
 	case EWidgetState::Idle:
-	{
-		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
-		if (IsValid(cp_slot))
+		if (window_widget == GetTopWindow())
 		{
-			if (cp_slot->GetZOrder() == 0)
-			{
-				window_widget->SetWindowFocused(true);
-			}
-			else
-			{
-				window_widget->Hide(EWidgetHideType::Collapsed);
-			}
+			OpenWindow(window_widget_type, false);
 		}
-	}
+		else
+		{
+			SetTopWindow(window_widget);
+		}
 		break;
 
 	default:
 		break;
-	}*/
+	}
 }
 
 void UPage_MainLobby::OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused)
 {
-	/*if (_is_focused == false)
-		return;
-
 	if (IsInvalid(_focused_window_widget))
 		return;
 
-	for (auto child : CP_Window->GetAllChildren())
+	if (_is_focused)
 	{
-		auto window_widget = Cast<UWindowBase>(child);
-		if (IsInvalid(window_widget))
-			continue;
-
-		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
-		if (IsValid(cp_slot))
-		{
-			cp_slot->SetZOrder(_focused_window_widget == window_widget ? 1 : 0);
-		}
-	}*/
+		SetTopWindow(_focused_window_widget);
+	}
+	else
+	{
+		UpdateTopWindow();
+	}
 }

@@ -31,20 +31,24 @@ void UBTN_WindowScaler::UpdateCursor(bool _show_scaler_cursor)
 
 	switch (_WindowCommandType)
 	{
-	case EWindowCommand::Resize_LeftRight:
-		SetCursor(EMouseCursor::ResizeLeftRight);
-		break;
-
-	case EWindowCommand::Resize_UpDown:
+	case EWindowCommand::Resize_North:
+	case EWindowCommand::Resize_South:
 		SetCursor(EMouseCursor::ResizeUpDown);
 		break;
 
-	case EWindowCommand::Resize_SouthEast:
-		SetCursor(EMouseCursor::ResizeSouthEast);
+	case EWindowCommand::Resize_West:
+	case EWindowCommand::Resize_East:
+		SetCursor(EMouseCursor::ResizeLeftRight);
 		break;
 
+	case EWindowCommand::Resize_NorthEast:
 	case EWindowCommand::Resize_SouthWest:
 		SetCursor(EMouseCursor::ResizeSouthWest);
+		break;
+
+	case EWindowCommand::Resize_NorthWest:
+	case EWindowCommand::Resize_SouthEast:
+		SetCursor(EMouseCursor::ResizeSouthEast);
 		break;
 
 	default:

@@ -18,4 +18,10 @@ class RULESHORROR_API UWindowDragDropOperation : public UAdvancedDragDropOperati
 public:
 	UPROPERTY(BlueprintReadWrite)
 	EWindowDragType _DragType = EWindowDragType::NA;
+
+	UPROPERTY()
+	FVector2D _InitialWindowPos = FVector2D::ZeroVector;
+
+	UPROPERTY()
+	FVector2D _InitialWindowSize = FVector2D::ZeroVector;
 };

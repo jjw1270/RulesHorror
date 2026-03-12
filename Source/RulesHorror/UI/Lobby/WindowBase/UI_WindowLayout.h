@@ -15,10 +15,6 @@ class RULESHORROR_API UUI_WindowLayout : public UWidgetBase
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	TObjectPtr<class USizeBox> SizeBox = nullptr;
-
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UTexture2D> _TitleImage = nullptr;
 
@@ -26,7 +22,7 @@ protected:
 	FText _TitleText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool _EnableTitleButtons = true;
+	bool _ShowTitle = true;
 
 #pragma region Window Command
 public:
@@ -41,8 +37,6 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////
 #pragma region Scaler
 public:
-	void SetSize(const FVector2D& _size);
-
 	UFUNCTION(BlueprintImplementableEvent)
 	void EnableWindowScaler(bool _is_enable);
 
