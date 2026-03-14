@@ -23,7 +23,8 @@ public class RulesHorror : ModuleRules
             "CommonLibrary",
             "CustomUI",
             "UnrealEd",
-            "DeveloperSettings"
+            "DeveloperSettings",
+			"ItemCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

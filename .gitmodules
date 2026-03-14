@@ -4,3 +4,6 @@
 [submodule "Plugins/CustomUIPlugin"]
 	path = Plugins/CustomUIPlugin
 	url = https://github.com/jjw1270/CustomUIPlugin.git
+[submodule "Plugins/ItemCorePlugin"]
+	path = Plugins/ItemCorePlugin
+	url = https://github.com/jjw1270/ItemCorePlugin.git

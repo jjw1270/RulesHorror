@@ -29,9 +29,6 @@ Plugins/**/Intermediate/
 *.so
 *.dylib
 
-# Live2D Cubism Core (EXCEPTION)
-!Plugins/Live2D/Source/ThirdParty/Live2DCubismCore/**
-
 # Generated project files
 *.sln
 *.suo
