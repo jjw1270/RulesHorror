@@ -18,4 +18,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText DisplayName;
+
+#if WITH_EDITORONLY_DATA
+private:
+	TOptional<FItemID> CachedItemID;
+#endif
+
+public:
+#if WITH_EDITOR
+	virtual void OnDataTableChanged(const UDataTable* _in_data_table, const FName _in_row_name) override;
+	virtual void OnPostDataImport(const UDataTable* _in_data_table, const FName _in_row_name, TArray<FString>& _out_collected_import_problems) override;
+
+protected:
+	void HandleItemIDChanged(const UDataTable* _in_data_table);
+#endif
 };

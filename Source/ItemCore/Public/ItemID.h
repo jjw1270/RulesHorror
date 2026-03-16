@@ -28,14 +28,14 @@ private:
 
 protected:
 	UPROPERTY(EditAnywhere)
-	uint32 _Value = 0;
+	uint32 Value = 0;
 
 public:
 	FItemID() = default;
 
 	FItemID(uint32 _value)
 	{
-		_Value = _value;
+		Value = _value;
 	}
 
 	FItemID(EItemType _type, uint8 _sub_type, uint16 _serial)
@@ -45,37 +45,37 @@ public:
 
 	friend uint32 GetTypeHash(const FItemID& _item_id)
 	{
-		return GetTypeHash(_item_id._Value);
+		return GetTypeHash(_item_id.Value);
 	}
 
 	friend bool operator==(const FItemID& _left, uint32 _right)
 	{
-		return _left._Value == _right;
+		return _left.Value == _right;
 	}
 
 	friend bool operator!=(const FItemID& _left, uint32 _right)
 	{
-		return _left._Value != _right;
+		return _left.Value != _right;
 	}
 
 	friend bool operator==(const FItemID& _left, const FItemID& _right)
 	{
-		return _left._Value == _right._Value;
+		return _left.Value == _right.Value;
 	}
 
 	friend bool operator!=(const FItemID& _left, const FItemID& _right)
 	{
-		return _left._Value != _right._Value;
+		return _left.Value != _right.Value;
 	}
 
 	operator uint32() const
 	{
-		return _Value;
+		return Value;
 	}
 
 	FString ToString() const
 	{
-		return FString::FromInt(_Value);
+		return FString::FromInt(Value);
 	}
 
 public:
@@ -101,19 +101,19 @@ public:
 public:
 	EItemType GetType() const
 	{
-		return static_cast<EItemType>(_Value / TypeMultiplier);
+		return static_cast<EItemType>(Value / TypeMultiplier);
 	}
 
 	uint8 GetSubType() const
 	{
-		return static_cast<uint8>((_Value / SubTypeMultiplier) % 1000);
+		return static_cast<uint8>((Value / SubTypeMultiplier) % 1000);
 	}
 
 	static const UEnum* GetSubTypeEnum(EItemType _type);
 
 	uint16 GetSerial() const
 	{
-		return static_cast<uint16>(_Value % SubTypeMultiplier);
+		return static_cast<uint16>(Value % SubTypeMultiplier);
 	}
 
 public:

@@ -2,6 +2,7 @@
 
 #include "ItemCore.h"
 
+
 #define LOCTEXT_NAMESPACE "FItemCoreModule"
 
 void FItemCoreModule::StartupModule()

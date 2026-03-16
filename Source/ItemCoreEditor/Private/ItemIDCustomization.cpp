@@ -14,7 +14,7 @@ TSharedRef<IPropertyTypeCustomization> FItemIDCustomization::MakeInstance()
 
 void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property_handle, FDetailWidgetRow& _header_row, IPropertyTypeCustomizationUtils& _customization_utils)
 {
-	_ValuePropertyHandle = _property_handle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FItemID, _Value));
+	_ValuePropertyHandle = _property_handle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FItemID, Value));
 	
 	GenerateTypeOptions();
 	GenerateSubTypeOptions();
@@ -130,7 +130,7 @@ void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property
 									)
 									.ToolTipText_Lambda([this]()
 										{
-											return FText::FromString(GetItemID().Validate()._Reason);
+											return FText::FromString(GetItemID().Validate().Reason);
 										}
 									)
 							]

@@ -43,6 +43,9 @@ public class ItemCoreEditor : ModuleRules
 				"PropertyEditor",
 				"CommonLibrary",
 				"ItemCore",
+				"ToolMenus",
+				"Projects",
+                "MessageLog",
             }
 			);
 		

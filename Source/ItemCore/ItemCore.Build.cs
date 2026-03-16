@@ -42,6 +42,7 @@ public class ItemCore : ModuleRules
                 "UnrealEd",
                 "BlueprintGraph",
                 "KismetCompiler",
+                "DeveloperSettings",
             }
             );
 		

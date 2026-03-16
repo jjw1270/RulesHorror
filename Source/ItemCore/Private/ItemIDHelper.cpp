@@ -44,7 +44,7 @@ FString UItemIDHelper::ToString(FItemID _item_id)
 bool UItemIDHelper::IsValid(FItemID _item_id, FString& _out_reason)
 {
 	const FItemIDValidationResult result = _item_id.Validate();
-	_out_reason = result._Reason;
+	_out_reason = result.Reason;
 
 	return result.IsValid();
 }

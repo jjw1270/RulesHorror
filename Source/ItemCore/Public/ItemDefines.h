@@ -30,15 +30,17 @@ struct FItemIDValidationResult
 {
 	GENERATED_BODY()
 
-public:
+private:
 	bool _IsValid = true;
-	FString _Reason;
+
+public:
+	FString Reason;
 
 public:
 	FItemIDValidationResult() = default;
 
 	FItemIDValidationResult(bool _is_valid, const FString& _reason)
-		: _IsValid(_is_valid), _Reason(_reason)
+		: _IsValid(_is_valid), Reason(_reason)
 	{
 	}
 

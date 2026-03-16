@@ -11,25 +11,25 @@ void FItemID::Set(EItemType _type, uint8 _sub_type, uint16 _serial)
 	if (type_value > MaxTypeValue)
 	{
 		TRACE_ERROR(TEXT("Type 값은 %d 이하여야 합니다."), MaxTypeValue);
-		_Value = 0;
+		Value = 0;
 		return;
 	}
 
 	if (sub_type_value > MaxSubTypeValue)
 	{
 		TRACE_ERROR(TEXT("SubType 값은 %d 이하여야 합니다."), MaxSubTypeValue);
-		_Value = 0;
+		Value = 0;
 		return;
 	}
 
 	if (serial_value > MaxSerialValue)
 	{
 		TRACE_ERROR(TEXT("시리얼 값은 %d 이하여야 합니다."), MaxSerialValue);
-		_Value = 0;
+		Value = 0;
 		return;
 	}
 
-	_Value = type_value * TypeMultiplier + sub_type_value * SubTypeMultiplier + serial_value;
+	Value = type_value * TypeMultiplier + sub_type_value * SubTypeMultiplier + serial_value;
 }
 
 // 여기에 SubType을 추가할 수 있습니다.

@@ -4,6 +4,8 @@
 
 #include "Modules/ModuleManager.h"
 
+static const FName ItemRegistryLog(TEXT("ItemRegistry"));
+
 class FItemCoreModule : public IModuleInterface
 {
 public:
