@@ -7,13 +7,6 @@
 #include "ItemRegistrySubsystem.h"
 #endif
 
-FItemTableRow::FItemTableRow()
-{
-	if (IsValidEnumValue(GetTableItemType(), true))
-	{
-		ItemID.SetType(GetTableItemType());
-	}
-}
 
 #if WITH_EDITOR
 const FName FItemTableRow::ItemTableLog(TEXT("ItemTable"));
@@ -47,11 +40,11 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 	if (IsInvalid(_in_data_table))
 		return;
 
-	if (IsValidEnumValue(GetTableItemType(), true))
+	if (IsValidEnumValue(TableItemType, true))
 	{
-		if (ItemID.GetType() != GetTableItemType())
+		if (ItemID.GetType() != TableItemType)
 		{
-			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(GetTableItemType(), true));
+			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(TableItemType, true));
 			return;
 		}
 	}
@@ -69,7 +62,7 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 		return;
 	}
 
-	if (ItemID.IsValid() == false && ItemID != FItemID())
+	if (ItemID.IsValid() == false && ItemID != FItemID::Zero)
 		return;
 
 	if (IsValid(GEngine))

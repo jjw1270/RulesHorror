@@ -2,6 +2,8 @@
 
 #include "ItemID.h"
 
+const FItemID FItemID::Zero;
+
 void FItemID::Set(EItemType _type, uint8 _sub_type, uint16 _serial)
 {
 	const uint32 type_value = static_cast<uint32>(_type);
