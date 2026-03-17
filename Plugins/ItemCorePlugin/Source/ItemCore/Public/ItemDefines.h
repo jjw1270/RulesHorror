@@ -11,7 +11,7 @@ enum class EItemType : uint8
 {
 	NA = 0								UMETA(Hidden),
 
-	RESERVED						UMETA(ToolTip = "이 값을 지우고 Item Type을 추가하여 사용하세요!"),
+	Story								UMETA(ToolTip = "스토리"),
 
 	MAX								UMETA(Hidden)
 };
