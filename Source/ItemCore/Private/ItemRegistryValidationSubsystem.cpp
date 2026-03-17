@@ -2,12 +2,7 @@
 
 #include "ItemRegistryValidationSubsystem.h"
 #include "ItemRegistrySubsystem.h"
-
-#if WITH_EDITOR
-#include "Editor.h"
-#include "Editor/EditorEngine.h"
-#include "Misc/MessageDialog.h"
-#endif
+#include "CommonUtils.h"
 
 void UItemRegistryValidationSubsystem::Initialize(FSubsystemCollectionBase& _collection)
 {
@@ -23,7 +18,7 @@ void UItemRegistryValidationSubsystem::Initialize(FSubsystemCollectionBase& _col
 	const bool is_success = item_registry->RefreshRegistry();
 
 #if WITH_EDITOR
-	FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(TEXT("Refresh Item Registry Failed.\n\n")));
+	EDITOR_POPUP(TEXT("Refresh Item Registry 실패!"));
 
 	if (IsValid(GEditor))
 	{
