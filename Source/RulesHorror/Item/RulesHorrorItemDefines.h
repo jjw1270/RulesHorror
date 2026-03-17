@@ -11,6 +11,8 @@ struct RULESHORROR_API FStoryTableRow : public FItemTableRow
 {
 	GENERATED_BODY()
 
+protected:
+	virtual EItemType GetTableItemType() const { return EItemType::Story; }
 
 #if WITH_EDITOR
 public:

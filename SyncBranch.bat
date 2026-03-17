@@ -206,7 +206,7 @@ if not defined LAST_SPLIT (
     echo [WARN] Previous git-subtree-split not found for %CURRENT_PREFIX%
     echo [INFO] Running subtree pull because sync state cannot be verified...
 
-    git subtree pull --prefix="%CURRENT_PREFIX%" "%CURRENT_REPO%" "%CURRENT_BRANCH%" --squash
+    git subtree pull --prefix="%CURRENT_PREFIX%" "%CURRENT_REPO%" "%CURRENT_BRANCH%" --squash -m "Merge From %CURRENT_PREFIX%"
     if errorlevel 1 (
         echo [ERROR] subtree pull failed for %CURRENT_PREFIX%
         exit /b 1
@@ -228,7 +228,7 @@ if /I "%LAST_SPLIT%"=="%REMOTE_SHA%" (
 
 echo [INFO] Remote changes detected. Running subtree pull...
 
-git subtree pull --prefix="%CURRENT_PREFIX%" "%CURRENT_REPO%" "%CURRENT_BRANCH%" --squash
+git subtree pull --prefix="%CURRENT_PREFIX%" "%CURRENT_REPO%" "%CURRENT_BRANCH%" --squash -m "Merge From %CURRENT_PREFIX%"
 if errorlevel 1 (
     echo [ERROR] subtree pull failed for %CURRENT_PREFIX%
     exit /b 1
