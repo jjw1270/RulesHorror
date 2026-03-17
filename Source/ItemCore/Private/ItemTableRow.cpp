@@ -22,6 +22,16 @@ void FItemTableRow::OnPostDataImport(const UDataTable* _in_data_table, const FNa
 	CachedItemID = ItemID;
 }
 
+EDataValidationResult FItemTableRow::IsDataValid(FDataValidationContext& _context) const
+{
+	if (ItemID.IsValid() == false)
+	{
+		return EDataValidationResult::Invalid;
+	}
+
+	return EDataValidationResult::Valid;
+}
+
 void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 {
 	if (IsInvalid(_in_data_table))

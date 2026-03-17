@@ -8,17 +8,14 @@
 class FItemCoreEditorModule : public IModuleInterface
 {
 public:
-
-	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
 private:
+	bool _IsMenuRegistered = false;
+
 	void RegisterMenus();
 	void AddItemRegistryMenuEntry();
 
 	void OnClicked_RefreshRegistry();
-
-private:
-	bool _IsMenuRegistered = false;
 };

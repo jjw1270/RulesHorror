@@ -179,12 +179,9 @@ void UK2Node_MakeItemID::PostReconstructNode()
 		return;
 	}
 
-	// 기본값이 현재 enum에서 유효하지 않으면 첫 유효값으로 교체
 	const int64 current_value = sub_type_enum->GetValueByNameString(sub_type_pin->DefaultValue);
-	if (current_value != INDEX_NONE && IsValidEnumValue(sub_type_enum, current_value))
-	{
+	if (IsValidEnumValue(sub_type_enum, current_value, true))
 		return;
-	}
 
 	const int32 num = sub_type_enum->NumEnums();
 	for (int32 i = 0; i < num; ++i)
@@ -195,7 +192,7 @@ void UK2Node_MakeItemID::PostReconstructNode()
 		}
 
 		const int64 value = sub_type_enum->GetValueByIndex(i);
-		if (!IsValidEnumValue(sub_type_enum, value))
+		if (!IsValidEnumValue(sub_type_enum, value, true))
 		{
 			continue;
 		}

@@ -4,8 +4,14 @@
 #include "PropertyHandle.h"
 #include "DetailWidgetRow.h"
 #include "Widgets/Input/SComboBox.h"
-#include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Input/SComboButton.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Text/STextBlock.h"
+#include "ItemRegistrySubsystem.h"
 
 TSharedRef<IPropertyTypeCustomization> FItemIDCustomization::MakeInstance()
 {
@@ -102,7 +108,6 @@ void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property
 									.MaxValue(9999)
 									.AllowSpin(false)
 									.Value(this, &FItemIDCustomization::GetSerialValue)
-									.OnValueChanged(this, &FItemIDCustomization::OnSerialChanged)
 									.OnValueCommitted(this, &FItemIDCustomization::OnSerialCommitted)
 							]
 					]
@@ -137,8 +142,9 @@ void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property
 
 						// Display Number
 						+ SHorizontalBox::Slot()
-							.AutoWidth()
+							.MinWidth(60.0f)
 							.VAlign(VAlign_Center)
+							.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 							[
 								SNew(STextBlock)
 									.Text_Lambda([this]()
@@ -146,6 +152,26 @@ void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property
 											return FText::FromString(GetItemID().ToString());
 										}
 									)
+							]
+
+						// Picker Button
+						+ SHorizontalBox::Slot()
+							.AutoWidth()
+							.VAlign(VAlign_Center)
+							[
+								SAssignNew(_ItemIDPickerButton, SComboButton)
+									.ContentPadding(FMargin(8.0f, 0.0f))
+									.IsEnabled_Lambda([this]()
+										{
+											return IsValidEnumValue(GetItemID().GetType(), true);
+										}
+									)
+									.OnGetMenuContent(this, &FItemIDCustomization::GetItemIDPickerMenu)
+									.ButtonContent()
+									[
+										SNew(STextBlock)
+											.Text(this, &FItemIDCustomization::GetPickerButtonText)
+									]
 							]
 					]
 		];
@@ -190,7 +216,7 @@ void FItemIDCustomization::GenerateTypeOptions()
 
 	for (EItemType item_type : TEnumRange<EItemType>())
 	{
-		if (IsValidEnumValue(item_type) == false)
+		if (IsValidEnumValue(item_type, true) == false)
 			continue;
 
 		auto type_option = MakeShared<EItemType>(item_type);
@@ -307,15 +333,12 @@ void FItemIDCustomization::OnSubTypeChanged(TSharedPtr<uint8> _item, ESelectInfo
 
 FText FItemIDCustomization::GetSelectedSubTypeText() const
 {
-	if (IsValid(_SelectedSubType))
-	{
-		const FItemID item_id = GetItemID();
-		const UEnum* sub_type_enum = item_id.GetSubTypeEnum(item_id.GetType());
+	const FItemID item_id = GetItemID();
+	const UEnum* sub_type_enum = item_id.GetSubTypeEnum(item_id.GetType());
 
-		if (IsValid(sub_type_enum))
-		{
-			return FText::FromString(sub_type_enum->GetNameStringByValue(*_SelectedSubType));
-		}
+	if (IsValidEnumValue(sub_type_enum, item_id.GetSubType(), true))
+	{
+		return FText::FromString(sub_type_enum->GetNameStringByValue(item_id.GetSubType()));
 	}
 
 	return FText::FromString(TEXT("Invalid"));
@@ -328,16 +351,6 @@ TOptional<int32> FItemIDCustomization::GetSerialValue() const
 	return static_cast<int32>(GetItemID().GetSerial());
 }
 
-void FItemIDCustomization::OnSerialChanged(int32 _value)
-{
-	_value = FMath::Clamp(_value, 0, 9999);
-
-	FItemID item_id = GetItemID();
-	item_id.SetSerial(static_cast<uint16>(_value));
-
-	SetItemID(item_id);
-}
-
 void FItemIDCustomization::OnSerialCommitted(int32 _value, ETextCommit::Type _commit_type)
 {
 	_value = FMath::Clamp(_value, 0, 9999);
@@ -348,3 +361,123 @@ void FItemIDCustomization::OnSerialCommitted(int32 _value, ETextCommit::Type _co
 	SetItemID(item_id);
 }
 #pragma endregion Serial
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Picker
+void FItemIDCustomization::GenerateItemIDPickerOptions()
+{
+	_ItemIDPickerOptions.Reset();
+
+	if (IsInvalid(GEngine))
+		return;
+
+	auto item_registry = GEngine->GetEngineSubsystem<UItemRegistrySubsystem>();
+	if (IsInvalid(item_registry))
+		return;
+
+	const FItemID item_id = GetItemID();
+
+	TOptional<uint8> sub_type_filter;
+	if (IsValidEnumValue(FItemID::GetSubTypeEnum(item_id.GetType()), item_id.GetSubType(), true))
+	{
+		sub_type_filter = item_id.GetSubType();
+	}
+
+	const auto item_rows = item_registry->GetItemRowsByType<FItemTableRow>(item_id.GetType());
+	
+	_ItemIDPickerOptions.Reserve(item_rows.Num());
+
+	for (const auto item_row : item_rows)
+	{
+		if (IsInvalid(item_row))
+			continue;
+
+		if (sub_type_filter.IsSet())
+		{
+			if (item_row->ItemID.GetSubType() != sub_type_filter.GetValue())
+				continue;
+		}
+
+		TSharedPtr<FItemIDPickerOption> option = MakeShared<FItemIDPickerOption>();
+		option->ItemID = item_row->ItemID;
+
+		FNumberFormattingOptions opt;
+		opt.UseGrouping = false;
+
+		option->DisplayText = FText::Format(
+			FText::FromString(TEXT("{0} ({1})")), 
+			FText::AsNumber(item_row->ItemID, &opt),
+			item_row->DisplayName);
+
+		_ItemIDPickerOptions.Add(option);
+	}
+
+	// sorting
+	_ItemIDPickerOptions.Sort([](const TSharedPtr<FItemIDPickerOption>& _a, const TSharedPtr<FItemIDPickerOption>& _b)
+		{
+			if (IsAnyInvalid(_a, _b))
+				return false;
+
+			return static_cast<uint32>(_a->ItemID) < static_cast<uint32>(_b->ItemID);
+		});
+}
+
+TSharedRef<SWidget> FItemIDCustomization::GetItemIDPickerMenu()
+{
+	GenerateItemIDPickerOptions();
+
+	FMenuBuilder menu_builder(true, nullptr);
+
+	if (_ItemIDPickerOptions.IsEmpty())
+	{
+		menu_builder.AddMenuEntry(
+			FText::FromString(TEXT("No ItemIDs")),
+			FText::GetEmpty(),
+			FSlateIcon(),
+			FUIAction()
+		);
+
+		return menu_builder.MakeWidget();
+	}
+
+	for (const auto& option : _ItemIDPickerOptions)
+	{
+		if (IsInvalid(option))
+			continue;
+
+		menu_builder.AddMenuEntry(
+			option->DisplayText,
+			FText::GetEmpty(),
+			FSlateIcon(),
+			FUIAction(FExecuteAction::CreateSP(this, &FItemIDCustomization::OnItemIDPicked, option))
+		);
+	}
+
+	return menu_builder.MakeWidget();
+}
+
+void FItemIDCustomization::OnItemIDPicked(TSharedPtr<FItemIDPickerOption> _item)
+{
+	if (IsInvalid(_item))
+		return;
+
+	SetItemID(_item->ItemID);
+
+	if (IsValid(_ItemIDPickerButton))
+	{
+		_ItemIDPickerButton->SetIsOpen(false);
+	}
+}
+
+FText FItemIDCustomization::GetPickerButtonText() const
+{
+	EItemType current_item_type = GetItemID().GetType();
+
+	if (IsValidEnumValue(current_item_type, true))
+	{
+		return FText::FromString(TEnumToString(current_item_type));
+	}
+
+	return FText::FromString(TEXT("Set Item Type First"));
+}
+#pragma endregion Picker

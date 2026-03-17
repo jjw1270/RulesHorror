@@ -8,6 +8,7 @@
 #include "ItemRegistrySubsystem.generated.h"
 
 
+
 // ItemID->DataTable / RowName / RowStruct 참조 정보
 USTRUCT()
 struct FItemRowReference
@@ -34,6 +35,24 @@ public:
 	}
 };
 
+USTRUCT()
+struct FItemTypeIndex
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<FItemID, FItemRowReference> ItemIDToRow;
+};
+
+USTRUCT()
+struct FItemIDList
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FItemID> ItemIDs;
+};
+
 UCLASS()
 class ITEMCORE_API UItemRegistrySubsystem : public UEngineSubsystem
 {
@@ -44,9 +63,11 @@ protected:
 	UPROPERTY(Transient)
 	TArray<const UDataTable*> _RegisteredItemTables;
 
-	// ItemID -> Row 위치 정보
 	UPROPERTY(Transient)
-	TMap<FItemID, FItemRowReference> _ItemIndex;
+	TMap<EItemType, FItemTypeIndex> _ItemTypeIndexMap;
+
+	UPROPERTY(Transient)
+	TMap<const UDataTable*, FItemIDList> _TableToItemIDs;
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& _collection) override;
@@ -56,6 +77,9 @@ protected:
 	bool AutoRegisterItemTables();
 	TArray<FString> GetTableSearchPaths() const;
 
+	// _item_table 의 RowStruct 가 FItemTableRow 계열인지 검사
+	bool IsSupportedItemTable(const UDataTable* _item_table) const;
+
 	bool RegisterItemTable(const UDataTable* _item_table);
 	void ClearRegisteredItemTables();
 
@@ -64,8 +88,7 @@ protected:
 	bool IndexItemTable(const UDataTable* _item_table);
 	void ClearItemIndex();
 
-	// _item_table 의 RowStruct 가 FItemTableRow 계열인지 검사
-	bool IsSupportedItemTable(const UDataTable* _item_table) const;
+	const FItemRowReference* Find(const FItemID& _item_id) const;
 
 public:
 	bool RefreshRegistry();
@@ -79,7 +102,11 @@ public:
 	{
 		static_assert(TIsDerivedFrom<T, FItemTableRow>::IsDerived, "T must derive from FItemTableRow.");
 
-		const FItemRowReference* row_reference = _ItemIndex.Find(_item_id);
+		const FItemTypeIndex* item_type_index = _ItemTypeIndexMap.Find(_item_id.GetType());
+		if (IsInvalid(item_type_index))
+			return nullptr;
+
+		const FItemRowReference* row_reference = item_type_index->ItemIDToRow.Find(_item_id);
 		if (IsInvalid(row_reference))
 			return nullptr;
 
@@ -96,9 +123,42 @@ public:
 		return reinterpret_cast<const T*>(*row_data_ptr);
 	}
 
-	bool ContainsItemID(const FItemID& _item_id) const;
+	template <typename T = FItemTableRow>
+	TArray<const T*> GetItemRowsByType(EItemType _item_type) const
+	{
+		static_assert(TIsDerivedFrom<T, FItemTableRow>::IsDerived, "T must derive from FItemTableRow.");
 
-	const FItemRowReference* FindItemRowReference(const FItemID& _item_id) const;
+		TArray<const T*> rows;
+
+		const FItemTypeIndex* item_type_index = _ItemTypeIndexMap.Find(_item_type);
+		if (IsInvalid(item_type_index))
+			return rows;
+
+		rows.Reserve(item_type_index->ItemIDToRow.Num());
+
+		for (const auto& item_pair : item_type_index->ItemIDToRow)
+		{
+			const FItemRowReference& row_reference = item_pair.Value;
+
+			if (IsAnyInvalid(row_reference.RowStruct, row_reference.DataTable))
+				continue;
+
+			if (row_reference.RowStruct->IsChildOf(T::StaticStruct()) == false)
+				continue;
+
+			const uint8* const* row_data_ptr = row_reference.DataTable->GetRowMap().Find(row_reference.RowName);
+			if (IsAnyInvalid(row_data_ptr, *row_data_ptr))
+				continue;
+
+			rows.Add(reinterpret_cast<const T*>(*row_data_ptr));
+		}
+
+		return rows;
+	}
+
+	bool Contains(const FItemID& _item_id) const;
 
 	int32 GetItemCount() const;
+	int32 GetTypeItemCount(EItemType _item_type) const;
+	
 };

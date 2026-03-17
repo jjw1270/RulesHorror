@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ItemCoreEditor.h"
+#include "ItemCore.h"
 #include "PropertyEditorModule.h"
 #include "ItemIDCustomization.h"
 #include "Engine/Engine.h"
@@ -18,7 +19,7 @@ void FItemCoreEditorModule::StartupModule()
 
 	// message log
 	FMessageLogModule& message_log_module = FModuleManager::LoadModuleChecked<FMessageLogModule>("MessageLog");
-	message_log_module.RegisterLogListing(TEXT("ItemRegistry"), FText::FromString(TEXT("Item Registry")));
+	message_log_module.RegisterLogListing(ItemRegistryLog, FText::FromString(TEXT("Item Registry")));
 
 	// property customization
 	FPropertyEditorModule& property_module = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -88,6 +89,7 @@ void FItemCoreEditorModule::OnClicked_RefreshRegistry()
 		item_registry->RefreshRegistry();
 	}
 }
+
 #undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FItemCoreEditorModule, ItemCoreEditor)

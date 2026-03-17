@@ -6,7 +6,7 @@
 #include "IPropertyTypeCustomization.h"
 #include "ItemID.h"
 
-class IPropertyHandle;
+class SWidget;
 
 class FItemIDCustomization : public IPropertyTypeCustomization
 {
@@ -39,7 +39,7 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma region SubType
 protected:
-	TSharedPtr<SComboBox<TSharedPtr<uint8>>> _SubTypeComboBox;
+	TSharedPtr<class SComboBox<TSharedPtr<uint8>>> _SubTypeComboBox;
 
 	TArray<TSharedPtr<uint8>> _SubTypeOptions;
 	TSharedPtr<uint8> _SelectedSubType;
@@ -56,7 +56,28 @@ protected:
 #pragma region Serial
 protected:
 	TOptional<int32> GetSerialValue() const;
-	void OnSerialChanged(int32 _value);
 	void OnSerialCommitted(int32 _value, ETextCommit::Type _commit_type);
 #pragma endregion Serial
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Picker
+protected:
+	struct FItemIDPickerOption
+	{
+		FItemID ItemID;
+		FText DisplayText;
+	};
+
+protected:
+	TSharedPtr<class SComboButton> _ItemIDPickerButton;
+	TArray<TSharedPtr<FItemIDPickerOption>> _ItemIDPickerOptions;
+
+protected:
+	void GenerateItemIDPickerOptions();
+
+	TSharedRef<SWidget> GetItemIDPickerMenu();
+	void OnItemIDPicked(TSharedPtr<FItemIDPickerOption> _item);
+
+	FText GetPickerButtonText() const;
+#pragma endregion Picker
 };
