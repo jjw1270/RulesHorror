@@ -9,7 +9,7 @@
 
 FItemTableRow::FItemTableRow()
 {
-	if (IsValidEnumValue(GetTableItemType()))
+	if (IsValidEnumValue(GetTableItemType(), true))
 	{
 		ItemID.SetType(GetTableItemType());
 	}
@@ -47,7 +47,7 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 	if (IsInvalid(_in_data_table))
 		return;
 
-	if (IsValidEnumValue(GetTableItemType()))
+	if (IsValidEnumValue(GetTableItemType(), true))
 	{
 		if (ItemID.GetType() != GetTableItemType())
 		{
