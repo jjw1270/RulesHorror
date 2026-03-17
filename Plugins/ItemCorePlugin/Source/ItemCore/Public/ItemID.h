@@ -31,6 +31,9 @@ protected:
 	uint32 Value = 0;
 
 public:
+	static const FItemID Zero;
+
+public:
 	FItemID() = default;
 
 	FItemID(uint32 _value)

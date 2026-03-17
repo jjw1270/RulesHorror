@@ -20,13 +20,30 @@ public:
 	FText DisplayName;
 
 public:
-	FItemTableRow();
+	FItemTableRow()
+		: FItemTableRow(EItemType::NA)
+	{
+	}
 
-protected:
-	virtual EItemType GetTableItemType() const { return EItemType::NA; }
+	FItemTableRow(EItemType _type)
+	{
+		if (IsValidEnumValue(_type, true) == false)
+			return;
+
+		if(ItemID == FItemID::Zero)
+		{
+			ItemID.SetType(_type);
+		}
+
+#if WITH_EDITOR
+		TableItemType = _type;
+#endif
+	}
 
 #if WITH_EDITORONLY_DATA
 private:
+	EItemType TableItemType = EItemType::NA;
+
 	TOptional<FItemID> CachedItemID;
 
 	static const FName ItemTableLog;
