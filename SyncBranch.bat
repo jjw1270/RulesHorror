@@ -70,15 +70,6 @@ if "!HAS_CONFLICT!"=="1" (
     goto AFTER_GIT_UPDATE
 )
 
-REM Pull confirm
-set "DO_GIT_SYNC="
-set /p DO_GIT_SYNC=Do you want to run git pull? (Cancel[C]): 
-
-if /I "%DO_GIT_SYNC%"=="C" (
-    echo Cancelled.
-    goto AFTER_GIT_UPDATE
-)
-
 echo Pulling...
 git pull --no-rebase origin %CUR_BRANCH%
 if errorlevel 1 (
