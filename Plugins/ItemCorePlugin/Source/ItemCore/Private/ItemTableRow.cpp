@@ -1,13 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ItemTableRow.h"
-
+#include "CommonUtils.h"
 #if WITH_EDITOR
 #include "Engine/Engine.h"
 #include "ItemRegistrySubsystem.h"
 #endif
 
+FItemTableRow::FItemTableRow()
+{
+	if (GetItemType().IsSet())
+	{
+		ItemID.SetType(GetItemType().GetValue());
+	}
+}
+
 #if WITH_EDITOR
+const FName FItemTableRow::ItemTableLog(TEXT("ItemTable"));
+
 void FItemTableRow::OnDataTableChanged(const UDataTable* _in_data_table, const FName _in_row_name)
 {
 	Super::OnDataTableChanged(_in_data_table, _in_row_name);
@@ -36,6 +46,15 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 {
 	if (IsInvalid(_in_data_table))
 		return;
+
+	if (GetItemType().IsSet())
+	{
+		if (ItemID.GetType() != GetItemType().GetValue())
+		{
+			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(GetItemType().GetValue(), true));
+			return;
+		}
+	}
 
 	if (CachedItemID.IsSet())
 	{

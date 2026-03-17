@@ -19,9 +19,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText DisplayName;
 
+public:
+	FItemTableRow();
+
+protected:
+	virtual TOptional<EItemType> GetItemType() const
+	{
+		return TOptional<EItemType>();
+	}
+
 #if WITH_EDITORONLY_DATA
 private:
 	TOptional<FItemID> CachedItemID;
+
+	static const FName ItemTableLog;
 #endif
 
 public:
