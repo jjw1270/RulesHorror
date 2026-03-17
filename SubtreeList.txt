@@ -1,0 +1,2 @@
+# prefix repo branch
+Plugins/ItemCorePlugin https://github.com/jjw1270/ItemCorePlugin.git master
