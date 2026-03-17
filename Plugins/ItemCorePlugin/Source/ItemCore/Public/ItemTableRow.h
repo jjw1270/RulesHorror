@@ -23,10 +23,7 @@ public:
 	FItemTableRow();
 
 protected:
-	virtual TOptional<EItemType> GetItemType() const
-	{
-		return TOptional<EItemType>();
-	}
+	virtual EItemType GetTableItemType() const { return EItemType::NA; }
 
 #if WITH_EDITORONLY_DATA
 private:

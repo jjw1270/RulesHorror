@@ -9,9 +9,9 @@
 
 FItemTableRow::FItemTableRow()
 {
-	if (GetItemType().IsSet())
+	if (IsValidEnumValue(GetTableItemType()))
 	{
-		ItemID.SetType(GetItemType().GetValue());
+		ItemID.SetType(GetTableItemType());
 	}
 }
 
@@ -47,11 +47,11 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 	if (IsInvalid(_in_data_table))
 		return;
 
-	if (GetItemType().IsSet())
+	if (IsValidEnumValue(GetTableItemType()))
 	{
-		if (ItemID.GetType() != GetItemType().GetValue())
+		if (ItemID.GetType() != GetTableItemType())
 		{
-			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(GetItemType().GetValue(), true));
+			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(GetTableItemType(), true));
 			return;
 		}
 	}
