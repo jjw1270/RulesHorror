@@ -24,7 +24,7 @@ echo Fetching...
 git fetch --all --progress --verbose
 if errorlevel 1 (
     echo [ERROR] git fetch failed.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 REM Get current branch name
@@ -32,7 +32,7 @@ for /f "tokens=*" %%i in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "CUR_
 
 if "%CUR_BRANCH%"=="" (
     echo [ERROR] Unable to determine the current branch.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 echo [INFO] Current branch: %CUR_BRANCH%
@@ -46,17 +46,17 @@ for /f "tokens=*" %%i in ('git rev-parse origin/%CUR_BRANCH% 2^>nul') do set "RE
 
 if "%LOCAL_SHA%"=="" (
     echo [ERROR] Unable to determine local SHA.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 if "%REMOTE_SHA%"=="" (
     echo [WARN] origin/%CUR_BRANCH% not found.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 if "%LOCAL_SHA%"=="%REMOTE_SHA%" (
     echo [INFO] Already up to date.
-    goto GIT_UPDATE_Success
+    goto GIT_UPDATE_SUCCESS
 )
 
 REM Conflict check
@@ -67,17 +67,17 @@ for /f %%A in ('git diff --name-only --diff-filter=U') do (
 
 if "!HAS_CONFLICT!"=="1" (
     echo [WARN] Conflicts exist.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 echo Pulling...
 git pull --no-rebase origin %CUR_BRANCH%
 if errorlevel 1 (
     echo [ERROR] git pull failed.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
-:GIT_UPDATE_Success
+:GIT_UPDATE_SUCCESS
 echo.
 echo ***** Git Sync Success! *****
 
@@ -94,19 +94,19 @@ if not exist ".gitmodules" (
 git submodule sync --recursive
 if errorlevel 1 (
     echo [ERROR] git submodule sync failed.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 git submodule update --init --recursive --progress
 if errorlevel 1 (
     echo [ERROR] git submodule init/update failed.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 git submodule update --remote --recursive --progress
 if errorlevel 1 (
     echo [ERROR] git submodule remote update failed.
-    goto AFTER_GIT_UPDATE
+    goto FAIL_EXIT
 )
 
 :SUBMODULE_SUCCESS
@@ -139,16 +139,16 @@ for /f "usebackq tokens=1,2,3" %%A in ("%SUBTREE_FILE%") do (
 
             if "!LINE_REPO!"=="" (
                 echo [ERROR] Repo missing: !LINE_PREFIX!
-                goto AFTER_GIT_UPDATE
+                goto FAIL_EXIT
             )
 
             if "!LINE_BRANCH!"=="" (
                 echo [ERROR] Branch missing: !LINE_PREFIX!
-                goto AFTER_GIT_UPDATE
+                goto FAIL_EXIT
             )
 
             call :SYNC_SUBTREE "!LINE_PREFIX!" "!LINE_REPO!" "!LINE_BRANCH!"
-            if errorlevel 1 goto AFTER_GIT_UPDATE
+            if errorlevel 1 goto FAIL_EXIT
         )
     )
 )
@@ -161,12 +161,32 @@ if "!SUBTREE_FOUND!"=="0" (
 echo.
 echo ***** Subtree Sync Success! *****
 
-:AFTER_GIT_UPDATE
-timeout /t 3 /nobreak >nul
+goto SUCCESS_EXIT
 
+
+REM ===============================
+REM Exit Handlers
+REM ===============================
+
+:SUCCESS_EXIT
+echo.
+echo ***** ALL TASKS COMPLETED SUCCESSFULLY *****
+timeout /t 3 /nobreak >nul
 endlocal
 exit /b 0
 
+:FAIL_EXIT
+echo.
+echo ***** PROCESS FAILED *****
+echo Check the log above for details.
+pause
+endlocal
+exit /b 1
+
+
+REM ===============================
+REM Subtree Sync Function
+REM ===============================
 
 :SYNC_SUBTREE
 set "CURRENT_PREFIX=%~1"
