@@ -45,7 +45,6 @@ public class ItemCoreEditor : ModuleRules
 				"ItemCore",
 				"ToolMenus",
 				"Projects",
-                "MessageLog",
             }
 			);
 		
