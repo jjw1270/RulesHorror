@@ -24,7 +24,8 @@ public class RulesHorror : ModuleRules
             "CustomUI",
             "UnrealEd",
             "DeveloperSettings",
-			"ItemCore"
+			"ItemCore",
+			"InteractionSystem",
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

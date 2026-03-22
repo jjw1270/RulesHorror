@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
 #include "RulesHorrorCharacter.generated.h"
 
 class UInputAction;
-struct FInputActionValue;
 
 /*
 *
@@ -20,48 +20,58 @@ class ARulesHorrorCharacter : public ACharacter
 protected:
 	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class USkeletalMeshComponent* FirstPersonMesh;
+	TObjectPtr<class USkeletalMeshComponent> FirstPersonMesh = nullptr;
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UCameraComponent* FirstPersonCameraComponent;
+	TObjectPtr<class UCameraComponent> FirstPersonCameraComponent = nullptr;
 
 	/** Player light source */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USpotLightComponent* SpotLight;
+	TObjectPtr<class USpotLightComponent> SpotLight = nullptr;
+
+	/** Interaction */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UInteractionComponent> Interaction = nullptr;
 
 protected:
-	/** Move Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* MoveAction;
+	UInputAction* _IA_Move = nullptr;
 
-	/** Look Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* LookAction;
+	UInputAction* _IA_Look = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* _IA_Interact = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Walk")
-	float WalkSpeed = 250.0f;
+	float _WalkSpeed = 250.0f;
 
 public:
 	ARulesHorrorCharacter();
 
 protected:
-	void MoveInput(const FInputActionValue& Value);
-	void LookInput(const FInputActionValue& Value);
+	void MoveInput(const FInputActionValue& _value);
+	void LookInput(const FInputActionValue& _value);
+	void InteractInput(const FInputActionValue& _value);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
+	virtual void DoMove(float _right, float _forward);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
+	virtual void DoAim(float _yaw, float _pitch);
 
 protected:
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* _input_component) override;
 
 public:
+	UFUNCTION(BlueprintPure)
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
 
+	UFUNCTION(BlueprintPure)
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	UFUNCTION(BlueprintPure)
+	UInteractionComponent* GetInteractionComponent() const { return Interaction; }
 };
