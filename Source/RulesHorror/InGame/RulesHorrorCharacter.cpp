@@ -83,7 +83,6 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_co
 
 	// Interact
 	enhanced_input_comp->BindAction(_IA_Interact, ETriggerEvent::Started, this, &ARulesHorrorCharacter::InteractInput);
-	enhanced_input_comp->BindAction(_IA_Interact, ETriggerEvent::Completed, this, &ARulesHorrorCharacter::InteractInput);
 }
 
 void ARulesHorrorCharacter::MoveInput(const FInputActionValue& _value)
@@ -109,16 +108,7 @@ void ARulesHorrorCharacter::InteractInput(const FInputActionValue& _value)
 	if (IsInvalid(Interaction))
 		return;
 	
-	bool is_started = _value.Get<bool>();
-
-	if (is_started)
-	{
-		Interaction->StartInteract();
-	}
-	else
-	{
-		Interaction->EndInteract();
-	}
+	Interaction->TryInteract();
 }
 
 void ARulesHorrorCharacter::DoMove(float _right, float _forward)

@@ -32,7 +32,7 @@
 			"Enabled": true
 		},
 		{
-			"Name": "CommonUI",
+			"Name": "CustomUI",
 			"Enabled": true
 		}
 	]

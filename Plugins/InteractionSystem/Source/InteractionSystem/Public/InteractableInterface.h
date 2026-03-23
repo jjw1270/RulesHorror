@@ -33,22 +33,23 @@ public:
 		return true;
 	}
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction, Tooltip = "자기 자신이 가릴 수 있는지"))
+	bool CanBeCollapsedBySelf() const;
+	virtual bool CanBeCollapsedBySelf_Implementation() const
+	{
+		return false;
+	}
+
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction, Tooltip = "상호작용 가능한지"))
-	bool CanStartInteract() const;
-	virtual bool CanStartInteract_Implementation() const
+	bool CanInteract() const;
+	virtual bool CanInteract_Implementation() const
 	{
 		return true;
 	}
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
-	void StartInteract(AActor* _interactor);
-	virtual void StartInteract_Implementation(AActor* _interactor)
-	{
-	}
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
-	void EndInteract(AActor* _interactor);
-	virtual void EndInteract_Implementation(AActor* _interactor)
+	void Interact(AActor* _interactor);
+	virtual void Interact_Implementation(AActor* _interactor)
 	{
 	}
 

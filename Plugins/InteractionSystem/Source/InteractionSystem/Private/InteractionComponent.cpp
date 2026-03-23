@@ -9,6 +9,8 @@
 #include "InteractableInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
+#include "UI_InteractionIndicatorPanel.h"
+
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InteractionComponent)
 
@@ -28,17 +30,19 @@ void UInteractionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	_TargetedActor = nullptr;
-	_InteractingActor = nullptr;
-
 	SetDetectableRange(_DetectableRange);
 	SetTargetableRange(_TargetableRange);
 	_MinViewDotThreshold = FMath::Cos(FMath::DegreesToRadians(_MaxViewHalfAngleDegrees));
 
+	_OverlappedActorInfos.Empty();
+	_TargetedActor = nullptr;
+
+	InitIndicatorPanel();
+
 	TSet<AActor*> overlapping_actors;
 	GetOverlappingActors(overlapping_actors);
 
-	for (AActor* actor : overlapping_actors)
+	for (const auto actor : overlapping_actors)
 	{
 		if (IsInvalid(actor))
 			continue;
@@ -46,10 +50,15 @@ void UInteractionComponent::BeginPlay()
 		if (actor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()) == false)
 			continue;
 
-		_OverlappedActors.FindOrAdd(actor) = EInteractionState::None;
+		_OverlappedActorInfos.Add(actor);
+		
+		if(IsValid(_IndicatorPanel))
+		{
+			_IndicatorPanel->AddInteractionActor(actor, EInteractionState::None);
+		}
 	}
 
-	if (_OverlappedActors.IsEmpty() == false)
+	if (_OverlappedActorInfos.IsEmpty() == false)
 	{
 		SetComponentTickEnabled(true);
 		UpdateInteraction();
@@ -84,10 +93,14 @@ void UInteractionComponent::OnBeginOverlap(UPrimitiveComponent* _overlapped_comp
 	if (_other_actor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()) == false)
 		return;
 
-	_OverlappedActors.FindOrAdd(_other_actor) = EInteractionState::None;
+	_OverlappedActorInfos.Add(_other_actor);
+
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->AddInteractionActor(_other_actor, EInteractionState::None);
+	}
 
 	SetComponentTickEnabled(true);
-
 	UpdateInteraction();
 }
 
@@ -96,27 +109,30 @@ void UInteractionComponent::OnEndOverlap(UPrimitiveComponent* _overlapped_compon
 	if (IsInvalid(_other_actor))
 		return;
 
-	if (_InteractingActor == _other_actor)
-	{
-		StopCurrentInteraction();
-	}
+	auto overlapped_actor_info_ptr = _OverlappedActorInfos.Find(_other_actor);
+	if (IsInvalid(overlapped_actor_info_ptr))
+		return;
 
 	if (_TargetedActor == _other_actor)
 	{
 		_TargetedActor = nullptr;
 	}
 
-	if (EInteractionState* state_ptr = _OverlappedActors.Find(_other_actor))
+	auto actor_state = (*overlapped_actor_info_ptr).State;
+
+	if (actor_state.IsSet() && actor_state != EInteractionState::None)
 	{
-		if (*state_ptr != EInteractionState::None)
-		{
-			IInteractableInterface::Execute_SetInteractionState(_other_actor, EInteractionState::None);
-		}
+		IInteractableInterface::Execute_SetInteractionState(_other_actor, EInteractionState::None);
 	}
 
-	_OverlappedActors.Remove(_other_actor);
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->RemoveInteractionActor(_other_actor);
+	}
 
-	if (_OverlappedActors.IsEmpty())
+	_OverlappedActorInfos.Remove(_other_actor);
+
+	if (_OverlappedActorInfos.IsEmpty())
 	{
 		SetComponentTickEnabled(false);
 	}
@@ -160,97 +176,96 @@ void UInteractionComponent::SetTargetableRange(float _range)
 	_TargetableRangeSquared = _TargetableRange * _TargetableRange;
 }
 
-void UInteractionComponent::StartInteract()
+void UInteractionComponent::TryInteract()
 {
 	if (IsInvalid(_TargetedActor))
 		return;
 
-	if (IInteractableInterface::Execute_CanStartInteract(_TargetedActor) == false)
+	if (IInteractableInterface::Execute_CanInteract(_TargetedActor) == false)
 		return;
 
-	if (IsValid(_InteractingActor))
-	{
-		if (_InteractingActor == _TargetedActor)
-			return;
-
-		StopCurrentInteraction();
-	}
-
-	IInteractableInterface::Execute_StartInteract(_TargetedActor, GetOwner());
-	_InteractingActor = _TargetedActor;
-
-	UpdateInteraction();
-}
-
-void UInteractionComponent::EndInteract()
-{
-	if (IsInvalid(_InteractingActor))
-		return;
-
-	StopCurrentInteraction();
-
-	UpdateInteraction();
+	IInteractableInterface::Execute_Interact(_TargetedActor, GetOwner());
 }
 
 void UInteractionComponent::UpdateInteraction()
 {
-	AActor* interactor = GetOwner();
-	if (IsValid(interactor) == false)
+	auto interactor = GetOwner();
+	if (IsInvalid(interactor))
 		return;
 
-	const FVector view_location = GetViewLocation();
-	const FVector view_forward = GetViewForwardVector();
+	const FVector location = GetComponentLocation();
 
-	AActor* previous_targeted_actor = _TargetedActor;
-	AActor* new_targeted_actor = SelectTargetedActor(view_location, view_forward);
+	FVector view_location, view_forward;
+	GetViewVectorInfo(view_location, view_forward);
 
-	if (_InteractingActor != nullptr && _InteractingActor != new_targeted_actor)
-	{
-		StopCurrentInteraction();
-	}
+	FCollisionQueryParams collision_query_params;
+	collision_query_params.AddIgnoredActor(interactor);
+	collision_query_params.bTraceComplex = true;
+	FHitResult hit;
 
-	_TargetedActor = new_targeted_actor;
-
-	for (auto it = _OverlappedActors.CreateIterator(); it; ++it)
+	for (auto it = _OverlappedActorInfos.CreateIterator(); it; ++it)
 	{
 		AActor* actor = it.Key();
-
 		if (IsInvalid(actor))
 		{
-			if (_InteractingActor == actor)
-			{
-				_InteractingActor = nullptr;
-			}
-
-			if (_TargetedActor == actor)
-			{
-				_TargetedActor = nullptr;
-			}
-
 			it.RemoveCurrent();
 			continue;
 		}
 
-		EInteractionState& old_state = it.Value();
-		const EInteractionState new_state = EvaluateInteractionState(actor);
+		auto& info = it.Value();
 
-		if (old_state != new_state)
+		const FVector interaction_location = IInteractableInterface::Execute_GetInteractionLocation(actor);
+		const float distance_squared = FVector::DistSquared(location, interaction_location);
+
+		info.IsDetectedAndVisible = true;
+
+		if (distance_squared > _DetectableRangeSquared || IInteractableInterface::Execute_CanBeDetected(actor) == false)
 		{
-			old_state = new_state;
-			IInteractableInterface::Execute_SetInteractionState(actor, new_state);
+			info.IsDetectedAndVisible = false;
+		}
+		else
+		{
+			bool is_hit = GetWorld()->LineTraceSingleByChannel(hit, view_location, interaction_location, ECC_Visibility, collision_query_params);
+
+			if (is_hit)
+			{
+				if (IInteractableInterface::Execute_CanBeCollapsedBySelf(actor) || hit.GetActor() != actor)
+				{
+					info.IsDetectedAndVisible = false;
+				}
+			}
 		}
 	}
 
-	if (_OverlappedActors.IsEmpty())
-	{
-		_TargetedActor = nullptr;
+	_TargetedActor = SelectTargetedActor(view_location, view_forward);
 
-		if (IsValid(_InteractingActor))
+	for (auto& actor_info_pair : _OverlappedActorInfos)
+	{
+		auto actor = actor_info_pair.Key;
+		auto& info = actor_info_pair.Value;
+
+		EInteractionState new_state = EInteractionState::None;
+
+		if (actor == _TargetedActor)
 		{
-			StopCurrentInteraction();
+			new_state = EInteractionState::Targeted;
+		}
+		else if(info.IsDetectedAndVisible)
+		{
+			new_state = EInteractionState::Detected;
 		}
 
-		SetComponentTickEnabled(false);
+		if (info.State.IsSet() == false || info.State.GetValue() != new_state)
+		{
+			info.State = new_state;
+
+			if (IsValid(_IndicatorPanel))
+			{
+				_IndicatorPanel->SetInteractionActorState(actor, new_state);
+			}
+
+			IInteractableInterface::Execute_SetInteractionState(actor, new_state);
+		}
 	}
 
 #if !UE_BUILD_SHIPPING
@@ -259,6 +274,18 @@ void UInteractionComponent::UpdateInteraction()
 		DrawDebugInteraction(view_location, view_forward);
 	}
 #endif
+
+	if (_OverlappedActorInfos.IsEmpty())
+	{
+		if (IsValid(_TargetedActor))
+		{
+			IInteractableInterface::Execute_SetInteractionState(_TargetedActor, EInteractionState::None);
+		}
+
+		_TargetedActor = nullptr;
+
+		SetComponentTickEnabled(false);
+	}
 }
 
 AActor* UInteractionComponent::SelectTargetedActor(const FVector& _view_location, const FVector& _view_forward) const
@@ -268,14 +295,12 @@ AActor* UInteractionComponent::SelectTargetedActor(const FVector& _view_location
 
 	const FVector location = GetComponentLocation();
 
-	for (const auto& overlapped_actor_pair : _OverlappedActors)
+	for (const auto& actor_info_pair : _OverlappedActorInfos)
 	{
-		AActor* actor = overlapped_actor_pair.Key;
-		if (IsInvalid(actor))
+		if (actor_info_pair.Value.IsDetectedAndVisible == false)
 			continue;
 
-		if (IInteractableInterface::Execute_CanBeDetected(actor) == false)
-			continue;
+		auto actor = actor_info_pair.Key;
 
 		const FVector interaction_location = IInteractableInterface::Execute_GetInteractionLocation(actor);
 		const float distance_squared = FVector::DistSquared(location, interaction_location);
@@ -299,43 +324,9 @@ AActor* UInteractionComponent::SelectTargetedActor(const FVector& _view_location
 	return new_targeted_actor;
 }
 
-EInteractionState UInteractionComponent::EvaluateInteractionState(AActor* _actor) const
-{
-	if (IsInvalid(_actor))
-		return EInteractionState::None;
-
-	if (_actor == _InteractingActor)
-		return EInteractionState::Interacting;
-
-	if (_actor == _TargetedActor)
-		return EInteractionState::Targeted;
-
-	const FVector interaction_location = IInteractableInterface::Execute_GetInteractionLocation(_actor);
-	const float distance_squared = FVector::DistSquared(GetComponentLocation(), interaction_location);
-
-	if (distance_squared <= _DetectableRangeSquared && IInteractableInterface::Execute_CanBeDetected(_actor))
-	{
-		return EInteractionState::Detected;
-	}
-
-	return EInteractionState::None;
-}
-
-void UInteractionComponent::StopCurrentInteraction()
-{
-	if (IsInvalid(_InteractingActor))
-	{
-		_InteractingActor = nullptr;
-		return;
-	}
-
-	IInteractableInterface::Execute_EndInteract(_InteractingActor, GetOwner());
-	_InteractingActor = nullptr;
-}
-
 APlayerController* UInteractionComponent::GetOwnerPlayerController() const
 {
-	const APawn* owner_pawn = Cast<APawn>(GetOwner());
+	const auto owner_pawn = Cast<APawn>(GetOwner());
 	if (IsValid(owner_pawn))
 	{
 		return Cast<APlayerController>(owner_pawn->GetController());
@@ -344,58 +335,39 @@ APlayerController* UInteractionComponent::GetOwnerPlayerController() const
 	return nullptr;
 }
 
-FVector UInteractionComponent::GetViewLocation() const
+void UInteractionComponent::GetViewVectorInfo(FVector& _out_location, FVector& _out_forward) const
 {
-	const APlayerController* pc = GetOwnerPlayerController();
+	const auto pc = GetOwnerPlayerController();
 	if (IsValid(pc))
 	{
-		FVector view_location = FVector::ZeroVector;
 		FRotator view_rotation = FRotator::ZeroRotator;
-		pc->GetPlayerViewPoint(view_location, view_rotation);
+		pc->GetPlayerViewPoint(_out_location, view_rotation);
 
-		return view_location;
+		_out_forward = view_rotation.Vector();
+
+		return;
 	}
 
-	const AActor* owner = GetOwner();
+	const auto owner = GetOwner();
 	if (IsValid(owner))
 	{
-		const UCameraComponent* cam = owner->FindComponentByClass<UCameraComponent>();
+		const auto cam = owner->FindComponentByClass<UCameraComponent>();
 		if (IsValid(cam))
 		{
-			return cam->GetComponentLocation();
+			_out_location = cam->GetComponentLocation();
+			_out_forward = cam->GetForwardVector();
+
+			return;
 		}
 
-		return owner->GetActorLocation();
+		_out_location = owner->GetActorLocation();
+		_out_forward = owner->GetActorForwardVector();
+
+		return;
 	}
 
-	return FVector::ZeroVector;
-}
-
-FVector UInteractionComponent::GetViewForwardVector() const
-{
-	const APlayerController* pc = GetOwnerPlayerController();
-	if (IsValid(pc))
-	{
-		FVector view_location = FVector::ZeroVector;
-		FRotator view_rotation = FRotator::ZeroRotator;
-		pc->GetPlayerViewPoint(view_location, view_rotation);
-
-		return view_rotation.Vector();
-	}
-
-	const AActor* owner = GetOwner();
-	if (IsValid(owner))
-	{
-		const UCameraComponent* cam = owner->FindComponentByClass<UCameraComponent>();
-		if (IsValid(cam))
-		{
-			return cam->GetForwardVector();
-		}
-
-		return owner->GetActorForwardVector();
-	}
-
-	return FVector::ForwardVector;
+	_out_location = FVector::ZeroVector;
+	_out_forward = FVector::ZeroVector;
 }
 
 #if !UE_BUILD_SHIPPING
@@ -410,48 +382,68 @@ void UInteractionComponent::SetShowDebug(bool _show_debug)
 
 void UInteractionComponent::DrawDebugInteraction(const FVector& _view_location, const FVector& _view_forward)
 {
-	UWorld* world = GetWorld();
+	auto world = GetWorld();
 	if (IsInvalid(world))
 		return;
 
+	// targetable range
 	DrawDebugSphere(world, GetComponentLocation(), _TargetableRange, 12, FColor::Yellow, false, PrimaryComponentTick.TickInterval);
 
-	const float half_angle_rad = FMath::DegreesToRadians(_MaxViewHalfAngleDegrees);
-	const float circle_radius = _TargetableRange * FMath::Tan(half_angle_rad);
+	// 시야각
+	const float circle_radius = _TargetableRange * FMath::Tan(FMath::DegreesToRadians(_MaxViewHalfAngleDegrees));
 	const FVector circle_center = _view_location + _view_forward * _TargetableRange;
 
-	FVector circle_y;
-	FVector circle_z;
+	FVector circle_y, circle_z;
 	_view_forward.FindBestAxisVectors(circle_y, circle_z);
 
 	DrawDebugCircle(world, circle_center, circle_radius, 32, FColor::Green, false, PrimaryComponentTick.TickInterval, 1, 2.0f, circle_y, circle_z, false);
 
-	for (const auto& overlapped_actor_pair : _OverlappedActors)
+	// overlapped actors
+	for (const auto& overlapped_actor_pair : _OverlappedActorInfos)
 	{
 		AActor* actor = overlapped_actor_pair.Key;
 		if (IsInvalid(actor))
 			continue;
 
-		const FVector interaction_location = IInteractableInterface::Execute_GetInteractionLocation(actor);
+		auto state = overlapped_actor_pair.Value.State;
+		if (state.IsSet() == false)
+			continue;
 
-		FColor color = FColor::Blue;
-		switch (overlapped_actor_pair.Value)
+		FColor color = FColor::White;
+		switch (state.GetValue())
 		{
 		case EInteractionState::Detected:
 			color = FColor::Blue;
 			break;
+
 		case EInteractionState::Targeted:
 			color = FColor::Yellow;
 			break;
-		case EInteractionState::Interacting:
-			color = FColor::Red;
-			break;
+
 		default:
-			color = FColor::White;
 			break;
 		}
 
+		const FVector interaction_location = IInteractableInterface::Execute_GetInteractionLocation(actor);
 		DrawDebugSphere(world, interaction_location, 8.0f, 8, color, false, PrimaryComponentTick.TickInterval, 1);
 	}
 }
 #endif
+
+void UInteractionComponent::InitIndicatorPanel()
+{
+	if (IsInvalid(_IndicatorPanelClass))
+		return;
+
+	const auto pc = GetOwnerPlayerController();
+	if (IsInvalid(pc) || pc->IsLocalController() == false)
+		return;
+
+	_IndicatorPanel = CreateWidget<UUI_InteractionIndicatorPanel>(pc, _IndicatorPanelClass);
+	if (IsInvalid(_IndicatorPanel))
+		return;
+
+	_IndicatorPanel->SetPerspectiveDistance(_TargetableRange, _DetectableRange);
+
+	_IndicatorPanel->AddToViewport(_IndicatorPanelZOrder);
+}

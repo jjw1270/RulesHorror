@@ -7,6 +7,15 @@
 #include "InteractionSystemDefines.h"
 #include "InteractionComponent.generated.h"
 
+USTRUCT()
+struct FInteractionActorInfo
+{
+	GENERATED_BODY()
+
+	TOptional<EInteractionState> State;
+	bool IsDetectedAndVisible = false;
+};
+
 UCLASS(BlueprintType, Blueprintable, meta = (BlueprintSpawnableComponent))
 class INTERACTIONSYSTEM_API UInteractionComponent : public USphereComponent
 {
@@ -29,14 +38,11 @@ protected:
 	float _MaxViewHalfAngleDegrees = 60.0f;
 	float _MinViewDotThreshold = 0.0f;
 
-	UPROPERTY(BlueprintReadOnly)
-	TMap<TObjectPtr<AActor>, EInteractionState> _OverlappedActors;
+	UPROPERTY()
+	TMap<TObjectPtr<AActor>, FInteractionActorInfo> _OverlappedActorInfos;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<AActor> _TargetedActor = nullptr;
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<AActor> _InteractingActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	bool _ShowDebug = false;
@@ -65,14 +71,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void SetTargetableRange(float _range);
 
-	void StartInteract();
-	void EndInteract();
+	void TryInteract();
 
 	UFUNCTION(BlueprintPure, Category = "Interaction")
 	AActor* GetTargetedActor() const { return _TargetedActor; }
-
-	UFUNCTION(BlueprintPure, Category = "Interaction")
-	AActor* GetInteractingActor() const { return _InteractingActor; }
 
 	UFUNCTION(BlueprintCallable)
 	void ToggleDebug()
@@ -85,17 +87,29 @@ protected:
 	void UpdateInteraction();
 
 	AActor* SelectTargetedActor(const FVector& _view_location, const FVector& _view_forward) const;
-	EInteractionState EvaluateInteractionState(AActor* _actor) const;
-
-	void StopCurrentInteraction();
 
 	APlayerController* GetOwnerPlayerController() const;
-	FVector GetViewLocation() const;
-	FVector GetViewForwardVector() const;
+	void GetViewVectorInfo(FVector& _out_location, FVector& _out_forward) const;
 
 #if !UE_BUILD_SHIPPING
 	void SetShowDebug(bool _show_debug);
 
 	void DrawDebugInteraction(const FVector& _view_location, const FVector& _view_forward);
 #endif
+
+#pragma region Indicator
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction|Indicator")
+	TSubclassOf<class UUI_InteractionIndicatorPanel> _IndicatorPanelClass = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UUI_InteractionIndicatorPanel> _IndicatorPanel = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction|Indicator")
+	int32 _IndicatorPanelZOrder = 0;
+
+protected:
+	void InitIndicatorPanel();
+
+#pragma endregion Indicator
 };

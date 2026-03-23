@@ -12,5 +12,4 @@ enum class EInteractionState : uint8
 	None,
 	Detected						UMETA(Tooltip = "인지함"),
 	Targeted						UMETA(Tooltip = "상호작용 대상으로 선택됨"),
-	Interacting					UMETA(Tooltip = "상호작용 중")
 };

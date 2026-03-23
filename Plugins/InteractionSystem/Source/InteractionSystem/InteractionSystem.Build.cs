@@ -40,7 +40,8 @@ public class InteractionSystem : ModuleRules
 				"SlateCore",
                 "InputCore",
                 "CommonLibrary",
-				"CommonUI",
+				"CustomUI",
+				"UMG"
 			}
 			);
 		
