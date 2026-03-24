@@ -11,6 +11,17 @@
 bool FItemTableRow::DEBUG_ShowItemIDOnDisplayName = false;
 #endif
 
+bool FItemTableRow::IsUsableItem() const
+{
+#if UE_BUILD_SHIPPING
+	return DevState == EItemDevelopmentState::Shipping;
+#endif
+
+	return DevState == EItemDevelopmentState::Developing ||
+				DevState == EItemDevelopmentState::Ready ||
+				DevState == EItemDevelopmentState::Shipping;
+}
+
 FText FItemTableRow::GetDisplayName() const
 {
 #if !UE_BUILD_SHIPPING
