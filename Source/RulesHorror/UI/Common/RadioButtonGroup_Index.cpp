@@ -5,7 +5,6 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/StackBox.h"
 #include "Components/StackBoxSlot.h"
-#include "UI/Common/RadioButton_Index.h"
 
 void URadioButtonGroup_Index::SynchronizeProperties()
 {
@@ -17,26 +16,42 @@ void URadioButtonGroup_Index::SynchronizeProperties()
 		hb_slot->SetPadding(_ButtonPadding);
 	}
 
-	UpdateLeftRightButtons();
+	UpdatePageButtons();
 }
 
-void URadioButtonGroup_Index::SetMaxIndex(int32 _max_index)
+void URadioButtonGroup_Index::InitWidget(int32 _max_index, int32 _current_index)
 {
 	_MaxIndex = _max_index;
 
-	UpdateLeftRightButtons();
+	_CurrentIndex = -1;
+	SetCurrentIndex(_current_index);
 }
 
 void URadioButtonGroup_Index::SetCurrentIndex(int32 _current_index)
 {
+	if(IsAny(_MaxIndex < 0, _MaxButtonCount < 0))
+	{
+		TRACE_ERROR(TEXT("Init Widget을 해야 합니다!"));
+		return;
+	}
+
+	if (_current_index < 0 || _current_index > _MaxIndex)
+	{
+		TRACE_WARNING(TEXT("_current_index 가 범위 밖입니다. clamp 됩니다."));
+		_current_index = FMath::Clamp(_current_index, 0, _MaxIndex);
+	}
+
 	if (_CurrentIndex == _current_index)
 		return;
+
 	_CurrentIndex = _current_index;
+	_PageIndex = (_CurrentIndex > 0) ? _CurrentIndex / _MaxButtonCount : 0;
 
 	if (IsInvalid(_IndexButtonClass))
 		return;
 
-	const int32 button_count = FMath::Min(_MaxButtonCount, _MaxIndex - _CurrentIndex);
+	const int32 page_start_index = _PageIndex * _MaxButtonCount;
+	const int32 button_count = FMath::Clamp(_MaxIndex - page_start_index, 0, _MaxButtonCount);
 
 	while (StackBox->GetChildrenCount() != button_count)
 	{
@@ -61,7 +76,7 @@ void URadioButtonGroup_Index::SetCurrentIndex(int32 _current_index)
 
 	UpdateRadioButtons();
 
-	int32 _idx = _CurrentIndex + 1;
+	int32 _idx = page_start_index;
 	for (auto child : StackBox->GetAllChildren())
 	{
 		auto button = Cast<URadioButton_Index>(child);
@@ -73,24 +88,27 @@ void URadioButtonGroup_Index::SetCurrentIndex(int32 _current_index)
 		}
 	}
 
-	UpdateLeftRightButtons();
+	UpdatePageButtons();
+
+	SelectRadioButtonByIndex(_CurrentIndex % _MaxButtonCount);
 }
 
-void URadioButtonGroup_Index::UpdateLeftRightButtons()
+void URadioButtonGroup_Index::UpdatePageButtons()
 {
-	ShowLeftButton(_CurrentIndex > 0);
-	ShowRightButton(_CurrentIndex + _MaxButtonCount < _MaxIndex);
+	ShowLeftPageButton(_PageIndex > 0);
+	ShowRighPagetButton(_PageIndex < (_MaxIndex - 1) / _MaxButtonCount);
 }
 
-void URadioButtonGroup_Index::OnClickLeftButton()
+void URadioButtonGroup_Index::OnClickPageButton(bool _is_left)
 {
-	SetCurrentIndex(FMath::Max(0, _CurrentIndex - _MaxButtonCount));
-
-	SelectRadioButtonByIndex(_MaxButtonCount-1);
-}
-
-void URadioButtonGroup_Index::OnClickRightButton()
-{
-	SetCurrentIndex(_CurrentIndex + _MaxButtonCount);
-	SelectRadioButtonByIndex(0);
+	if (_is_left)
+	{
+		// 제일 우측 버튼의 인덱스
+		SetCurrentIndex(FMath::Max(0, _PageIndex * _MaxButtonCount - 1));
+	}
+	else
+	{
+		// 제일 좌측 버튼의 인덱스
+		SetCurrentIndex((_PageIndex * _MaxButtonCount) + _MaxButtonCount);
+	}
 }

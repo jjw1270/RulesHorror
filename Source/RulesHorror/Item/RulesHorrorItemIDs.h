@@ -17,4 +17,8 @@ public:
 	{
 	}
 
+	FItemID_Story(const FItemID& _other)
+		: FItemID(_other)
+	{
+	}
 };

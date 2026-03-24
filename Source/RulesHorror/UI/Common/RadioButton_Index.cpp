@@ -11,5 +11,6 @@ void URadioButton_Index::SetIndex(int32 _new_index)
 	FNumberFormattingOptions option;
 	option.AlwaysSign = false;
 
-	TXT_Index->SetText(FText::AsNumber(_Index, &option));
+	// 유저한테 보여주는건 +1
+	TXT_Index->SetText(FText::AsNumber(_Index + 1, &option));
 }

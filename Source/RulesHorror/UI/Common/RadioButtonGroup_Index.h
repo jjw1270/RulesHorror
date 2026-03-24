@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/Components/RadioButtonGroup.h"
+#include "UI/Common/RadioButton_Index.h"
 #include "RadioButtonGroup_Index.generated.h"
 
 
@@ -21,9 +22,12 @@ protected:
 	int32 _MaxButtonCount = 5;
 
 	UPROPERTY(meta = (Tooltip = "최대 인덱스 값"))
-	int32 _MaxIndex = 0;
+	int32 _MaxIndex = -1;
 
-	UPROPERTY(meta = (Tooltip = "현재 보여지는 버튼들 중 첫번째 버튼의 인덱스 값"))
+	UPROPERTY(meta = (Tooltip = "(CurrentIndex - 1) / MaxButtonCount"))
+	int32 _PageIndex = -1;
+
+	UPROPERTY(meta = (Tooltip = "현재 선택된 인덱스 값"))
 	int32 _CurrentIndex = -1;
 
 protected:
@@ -31,23 +35,28 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetMaxIndex(int32 _max_index);
+	void InitWidget(int32 _max_index, int32 _current_index);
 
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentIndex(int32 _current_index);
 
 protected:
-	void UpdateLeftRightButtons();
+	void UpdatePageButtons();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowLeftButton(bool _show);
+	void ShowLeftPageButton(bool _show);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowRightButton(bool _show);
+	void ShowRighPagetButton(bool _show);
 
 	UFUNCTION(BlueprintCallable)
-	void OnClickLeftButton();
+	void OnClickPageButton(bool _is_left);
 
-	UFUNCTION(BlueprintCallable)
-	void OnClickRightButton();
+public:
+	UFUNCTION(BlueprintPure)
+	int32 GetMaxButtonCount() const { return _MaxButtonCount; }
+
+	UFUNCTION(BlueprintPure)
+	int32 GetCurrentIndex() const { return _CurrentIndex; }
+
 };
