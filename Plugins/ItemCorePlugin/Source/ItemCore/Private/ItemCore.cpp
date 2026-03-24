@@ -1,19 +1,29 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ItemCore.h"
+#include "HAL/IConsoleManager.h"
 
+#if !UE_BUILD_SHIPPING
+#include "ItemTableRow.h"
+#endif
 
 #define LOCTEXT_NAMESPACE "FItemCoreModule"
 
 void FItemCoreModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+#if !UE_BUILD_SHIPPING
+	FConsoleCommandDelegate delegate;
+	delegate.BindStatic(&FItemTableRow::ToggleShowItemIDOnDisplayName);
+
+	IConsoleManager::Get().RegisterConsoleCommand(*ConsoleCommand_ToggleShowItemID, TEXT("Toggle Show ItemID"), delegate);
+#endif
 }
 
 void FItemCoreModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+#if !UE_BUILD_SHIPPING
+	IConsoleManager::Get().UnregisterConsoleObject(*ConsoleCommand_ToggleShowItemID);
+#endif
 }
 
 #undef LOCTEXT_NAMESPACE
