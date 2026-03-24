@@ -383,7 +383,7 @@ void FItemIDCustomization::GenerateItemIDPickerOptions()
 		sub_type_filter = item_id.GetSubType();
 	}
 
-	const auto item_rows = item_registry->GetItemRowsByType<FItemTableRow>(item_id.GetType());
+	const auto item_rows = item_registry->GetItemRowsByType<FItemTableRow>(item_id.GetType(), false);
 	
 	_ItemIDPickerOptions.Reserve(item_rows.Num());
 
