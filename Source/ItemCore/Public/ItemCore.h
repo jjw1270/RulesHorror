@@ -8,6 +8,11 @@ static const FName ItemRegistryLog(TEXT("ItemRegistry"));
 
 class FItemCoreModule : public IModuleInterface
 {
+protected:
+#if !UE_BUILD_SHIPPING
+	const FString ConsoleCommand_ToggleShowItemID = TEXT("ToggleShowItemID");
+#endif
+
 public:
 
 	/** IModuleInterface implementation */

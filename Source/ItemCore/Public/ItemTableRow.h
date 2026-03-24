@@ -40,6 +40,20 @@ public:
 #endif
 	}
 
+public:
+	FText GetDisplayName() const;
+
+#if !UE_BUILD_SHIPPING
+private:
+	static bool DEBUG_ShowItemIDOnDisplayName;
+
+public:
+	static void ToggleShowItemIDOnDisplayName()
+	{
+		DEBUG_ShowItemIDOnDisplayName = !DEBUG_ShowItemIDOnDisplayName;
+	}
+#endif
+
 #if WITH_EDITORONLY_DATA
 private:
 	EItemType TableItemType = EItemType::NA;

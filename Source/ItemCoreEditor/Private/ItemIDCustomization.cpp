@@ -404,10 +404,9 @@ void FItemIDCustomization::GenerateItemIDPickerOptions()
 		FNumberFormattingOptions opt;
 		opt.UseGrouping = false;
 
-		option->DisplayText = FText::Format(
-			FText::FromString(TEXT("{0} ({1})")), 
-			FText::AsNumber(item_row->ItemID, &opt),
-			item_row->DisplayName);
+		option->DisplayText = FText::Format(FText::FromString(TEXT("{0} ({1})")), 
+													FText::AsNumber(item_row->ItemID, &opt),
+													item_row->DisplayName);
 
 		_ItemIDPickerOptions.Add(option);
 	}

@@ -7,6 +7,26 @@
 #include "ItemRegistrySubsystem.h"
 #endif
 
+#if !UE_BUILD_SHIPPING
+bool FItemTableRow::DEBUG_ShowItemIDOnDisplayName = false;
+#endif
+
+FText FItemTableRow::GetDisplayName() const
+{
+#if !UE_BUILD_SHIPPING
+	if (DEBUG_ShowItemIDOnDisplayName)
+	{
+		FNumberFormattingOptions opt;
+		opt.UseGrouping = false;
+
+		return FText::Format(FText::FromString(TEXT("[{0}] {1}")),
+			FText::AsNumber(ItemID, &opt),
+			DisplayName);
+	}
+#endif
+
+	return DisplayName;
+}
 
 #if WITH_EDITOR
 const FName FItemTableRow::ItemTableLog(TEXT("ItemTable"));
