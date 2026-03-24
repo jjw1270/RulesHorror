@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/WidgetBase.h"
+#include "Widgets/Components/ClickButton.h"
 #include "Item/RulesHorrorItemIDs.h"
-#include "UI_StoryTitle.generated.h"
+#include "BTN_StoryTitle.generated.h"
 
 
 UCLASS(abstract)
-class RULESHORROR_API UUI_StoryTitle : public UWidgetBase
+class RULESHORROR_API UBTN_StoryTitle : public UClickButton
 {
 	GENERATED_BODY()
 

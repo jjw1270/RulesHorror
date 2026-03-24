@@ -13,4 +13,6 @@ void UUI_MainSite::NativeConstruct()
 	{
 		SetNickName(FText::FromString(save_game->GetNickName()));
 	}
+
+
 }

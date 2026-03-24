@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI_StoryTitle.h"
+#include "BTN_StoryTitle.h"
 #include "Item/RulesHorrorItemHelper.h"
 
-void UUI_StoryTitle::SetStoryID(FItemID_Story _story_id)
+void UBTN_StoryTitle::SetStoryID(FItemID_Story _story_id)
 {
 	if (_StoryID == _story_id)
 		return;
@@ -13,5 +13,5 @@ void UUI_StoryTitle::SetStoryID(FItemID_Story _story_id)
 
 	const auto& story_data = URulesHorrorItemHelper::GetStoryItemRow(_StoryID);
 
-	SetTitle(story_data.DisplayName);
+	SetTitle(story_data.GetDisplayName());
 }
