@@ -17,4 +17,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Item")
 	static const FStoryTableRow& GetStoryItemRow(FItemID_Story _story_id);
 
+	UFUNCTION(BlueprintPure, Category = "Item")
+	static TArray<FStoryTableRow> GetAllStoryItemRows();
 };

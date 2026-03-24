@@ -3,6 +3,7 @@
 
 #include "UI_MainSite.h"
 #include "SaveGame/SaveGameSubsystem.h"
+#include "Item/RulesHorrorItemHelper.h"
 
 void UUI_MainSite::NativeConstruct()
 {
@@ -14,5 +15,5 @@ void UUI_MainSite::NativeConstruct()
 		SetNickName(FText::FromString(save_game->GetNickName()));
 	}
 
-
+	URulesHorrorItemHelper::GetAllItemRowsByType<FStoryTableRow>(EItemType::Story, true);
 }
