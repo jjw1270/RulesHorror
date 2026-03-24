@@ -11,7 +11,7 @@ class ITEMCORE_API UItemHelper : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
-protected:
+public:
 	template <typename T>
 	static const T* FindItemRow(FItemID _item_id)
 	{
@@ -40,5 +40,6 @@ protected:
 
 public:
 	UFUNCTION(BlueprintPure, Category = "Item")
-	static const FItemTableRow& GetItemRow(FItemID _item_id);
+	static bool FindItemRow(FItemID _item_id, FItemTableRow& _out_item_row);
+
 };

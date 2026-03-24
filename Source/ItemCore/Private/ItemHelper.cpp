@@ -3,15 +3,13 @@
 #include "ItemHelper.h"
 
 
-const FItemTableRow& UItemHelper::GetItemRow(FItemID _item_id)
+bool UItemHelper::FindItemRow(FItemID _item_id, FItemTableRow& _out_item_row)
 {
 	auto item_row_ptr = FindItemRow<FItemTableRow>(_item_id);
 
-	if (IsValid(item_row_ptr))
-	{
-		return *item_row_ptr;
-	}
+	if (IsInvalid(item_row_ptr))
+		return false;
 
-	static const FItemTableRow  s_null;
-	return s_null;
+	_out_item_row = *item_row_ptr;
+	return true;
 }
