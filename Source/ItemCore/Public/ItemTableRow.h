@@ -7,6 +7,16 @@
 #include "ItemID.h"
 #include "ItemTableRow.generated.h"
 
+UENUM(BlueprintType)
+enum class EItemDevelopmentState : uint8
+{
+	NotUsed				UMETA(Tooltip = "사용하지 않음, 샘플 등"),
+
+	Developing			UMETA(Tooltip = "개발 중"),
+	Ready					UMETA(Tooltip = "출시 가능"),
+	Shipping				UMETA(Tooltip = "Shipping"),
+};
+
 USTRUCT(BlueprintType)
 struct ITEMCORE_API FItemTableRow : public FTableRowBase
 {
@@ -18,6 +28,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	EItemDevelopmentState DevState = EItemDevelopmentState::NotUsed;
 
 public:
 	FItemTableRow()
@@ -41,6 +54,8 @@ public:
 	}
 
 public:
+	bool IsUsableItem() const;
+
 	FText GetDisplayName() const;
 
 #if !UE_BUILD_SHIPPING
