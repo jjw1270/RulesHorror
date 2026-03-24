@@ -124,7 +124,7 @@ public:
 	}
 
 	template <typename T = FItemTableRow>
-	TArray<const T*> GetItemRowsByType(EItemType _item_type, const TSet<EItemDevelopmentState>& _dev_state_filter = TSet<EItemDevelopmentState>()) const
+	TArray<const T*> GetItemRowsByType(EItemType _item_type, bool _usable_item_only) const
 	{
 		static_assert(TIsDerivedFrom<T, FItemTableRow>::IsDerived, "T must derive from FItemTableRow.");
 
@@ -151,7 +151,8 @@ public:
 				continue;
 
 			const T* item_row_ptr = reinterpret_cast<const T*>(*row_data_ptr);
-			if (!_dev_state_filter.IsEmpty() && !_dev_state_filter.Contains(item_row_ptr->DevState))
+
+			if (_usable_item_only && item_row_ptr->IsUsableItem() == false)
 				continue;
 
 			rows.Add(item_row_ptr);

@@ -26,7 +26,7 @@ protected:
 	}
 
 	template <typename T>
-	static TArray<const T*> GetAllItemRowsByType(EItemType _item_type, const TSet<EItemDevelopmentState>& _dev_state_filter)
+	static TArray<const T*> GetAllItemRowsByType(EItemType _item_type, bool _usable_item_only = true)
 	{
 		if (IsInvalid(GEngine))
 			return TArray<const T*>();
@@ -35,7 +35,7 @@ protected:
 		if (IsInvalid(item_registry))
 			return TArray<const T*>();
 
-		return item_registry->GetItemRowsByType<T>(_item_type, _dev_state_filter);
+		return item_registry->GetItemRowsByType<T>(_item_type, _usable_item_only);
 	}
 
 public:
