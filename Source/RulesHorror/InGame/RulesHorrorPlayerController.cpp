@@ -19,6 +19,13 @@ ARulesHorrorPlayerController::ARulesHorrorPlayerController()
 void ARulesHorrorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FInputModeGameOnly input_mode;
+	SetInputMode(input_mode);
+
+	//SetShowMouseCursor(false);
+	//SetIgnoreLookInput(false);
+	//SetIgnoreMoveInput(false);
 }
 
 void ARulesHorrorPlayerController::OnPossess(APawn* aPawn)

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/WidgetBase.h"
-#include "Item/RulesHorrorItemDefines.h"
 #include "Item/RulesHorrorItemIDs.h"
 #include "UI_SitePanel.generated.h"
 
@@ -16,16 +15,11 @@ class RULESHORROR_API UUI_SitePanel : public UWidgetBase
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UUniformGridPanel> UGP_Story = nullptr;
-	
+	TObjectPtr<class UWidgetSwitcher> WS_Site = nullptr;
+
 protected:
 	UPROPERTY(EditAnywhere)
-	FString _MainAddress;
-
-	UPROPERTY(Transient)
-	TArray<FStoryTableRow> _AllStroyItemRows;
-
-	int32 _StoryTitleNum = 0;
+	FString _MainSiteAddress;
 
 public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDM_OnSiteChanged, const FString&, _address);
@@ -41,19 +35,28 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetNickName(const FText& _nick_name);
 
-	void UpdateStoryTitles();
+	void ChangeSite(class UUI_SiteBase* _new_site);
 
-#pragma region RadioButton
+#pragma region Site_StoryList
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class URadioButtonGroup_Index> RadioButtonGroup_Index = nullptr;
-
-protected:
-	static TOptional<int32> _LastRadioButtonIndex;
+	TObjectPtr<class USite_StoryList> Site_StoryList = nullptr;
 
 protected:
 	UFUNCTION()
-	void OnRadioButtonSelected(class URadioButton* _btn);
+	void ShowStoryListSite();
 
-#pragma endregion RadioButton
+#pragma endregion Site_StoryList
+//////////////////////////////////////////////////////////////////////
+#pragma region Site_StoryDetail
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<class USite_StoryDetail> Site_StoryDetail = nullptr;
+
+protected:
+	UFUNCTION()
+	void ShowStoryDetailSite(const FItemID_Story& _story_id);
+
+#pragma endregion Site_StoryDetail
+
 };

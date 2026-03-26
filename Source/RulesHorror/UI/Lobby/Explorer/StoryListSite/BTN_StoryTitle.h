@@ -26,5 +26,5 @@ protected:
 
 public:
 	UFUNCTION(BlueprintPure)
-	const FItemID_Story& GetStroyID() const { return _StoryID; }
+	const FItemID_Story& GetStoryID() const { return _StoryID; }
 };

@@ -4,12 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "ItemTableRow.h"
+#include "Item/RulesHorrorItemIDs.h"
 #include "RulesHorrorItemDefines.generated.h"
 
 USTRUCT(BlueprintType)
 struct RULESHORROR_API FStoryTableRow : public FItemTableRow
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSoftObjectPtr<UWorld> StoryMap;
 
 public:
 	FStoryTableRow()

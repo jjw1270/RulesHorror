@@ -4,19 +4,22 @@
 #include "UI_SitePanel.h"
 #include "SaveGame/SaveGameSubsystem.h"
 #include "Item/RulesHorrorItemHelper.h"
-#include "UI/Common/RadioButtonGroup_Index.h"
-#include "Components/UniformGridPanel.h"
-#include "BTN_StoryTitle.h"
-
-TOptional<int32> UUI_SitePanel::_LastRadioButtonIndex;
+#include "Components/WidgetSwitcher.h"
+#include "UI/Lobby/Explorer/StoryListSite/Site_StoryList.h"
+#include "UI/Lobby/Explorer/StoryDetailSite/Site_StoryDetail.h"
 
 void UUI_SitePanel::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	if (IsValid(RadioButtonGroup_Index))
+	if (IsValid(Site_StoryList))
 	{
-		RadioButtonGroup_Index->_OnRadioButtonSelected.AddDynamic(this, &UUI_SitePanel::OnRadioButtonSelected);
+		Site_StoryList->_OnClickShowStoryDetailEvent.BindUObject(this, &UUI_SitePanel::ShowStoryDetailSite);
+	}
+
+	if (IsValid(Site_StoryDetail))
+	{
+		Site_StoryDetail->_OnClickShowStoryListEvent.BindUObject(this, &UUI_SitePanel::ShowStoryListSite);
 	}
 }
 
@@ -29,74 +32,41 @@ void UUI_SitePanel::NativeConstruct()
 	{
 		SetNickName(FText::FromString(save_game->GetNickName()));
 	}
-
-	_AllStroyItemRows = URulesHorrorItemHelper::GetAllStoryItemRows();
-
-	_StoryTitleNum = 0;
-	if (IsValid(UGP_Story))
-	{
-		for (auto child : UGP_Story->GetAllChildren())
-		{
-			auto story_title = Cast<UBTN_StoryTitle>(child);
-			if (IsInvalid(story_title))
-			{
-				TRACE_ERROR(TEXT("UGP_Story 에 StoryTitle만 들어있을 수 있습니다."));
-				continue;
-			}
-
-			_StoryTitleNum++;
-		}
-	}
-
-	if (_LastRadioButtonIndex.IsSet() == false)
-	{
-		_LastRadioButtonIndex = 0;
-	}
-
-	if (IsValid(RadioButtonGroup_Index))
-	{
-		int32 max_radio_button_idx = _AllStroyItemRows.Num() / _StoryTitleNum + 1;
-
-		RadioButtonGroup_Index->InitWidget(max_radio_button_idx, _LastRadioButtonIndex.GetValue());
-	}
 }
 
-void UUI_SitePanel::UpdateStoryTitles()
+void UUI_SitePanel::ChangeSite(UUI_SiteBase* _new_site)
 {
-	int32 start_idx = _StoryTitleNum * _LastRadioButtonIndex.GetValue();
+	if (IsInvalid(_new_site))
+		return;
 
-	for (int32 i = 0; i < _StoryTitleNum; ++i)
+	const int32 prev_ws_index = WS_Site->GetActiveWidgetIndex();
+
+	WS_Site->SetActiveWidget(_new_site);
+
+	if (prev_ws_index != WS_Site->GetActiveWidgetIndex())
 	{
-		auto story_title = Cast<UBTN_StoryTitle>(UGP_Story->GetChildAt(i));
-		if (IsInvalid(story_title))
-			continue;
-
-		const int32 idx = start_idx + i;
-
-		if (_AllStroyItemRows.IsValidIndex(idx))
+		const FString& additional_address = _new_site->GetAdditionalSiteAddress();
+		if (additional_address.IsEmpty() == false)
 		{
-			story_title->Show(EWidgetShowType::SelfHitTestInvisible, true);
-			story_title->SetStoryID(_AllStroyItemRows[idx].ItemID);
+			_OnSiteChangedEvent.Broadcast(_MainSiteAddress + "/" + additional_address);
 		}
 		else
 		{
-			story_title->Hide(EWidgetHideType::Hidden, true);
+			_OnSiteChangedEvent.Broadcast(_MainSiteAddress);
 		}
 	}
 }
 
-void UUI_SitePanel::OnRadioButtonSelected(URadioButton* _btn)
+void UUI_SitePanel::ShowStoryListSite()
 {
-	auto radio_button = Cast<URadioButton_Index>(_btn);
-	if (IsInvalid(radio_button))
+	ChangeSite(Site_StoryList);
+}
+
+void UUI_SitePanel::ShowStoryDetailSite(const FItemID_Story& _story_id)
+{
+	if (_story_id.IsValid() == false)
 		return;
 
-	int32 idx = radio_button->GetIndex();
-
-	if (_LastRadioButtonIndex.IsSet() == false || _LastRadioButtonIndex.GetValue() != idx)
-	{
-		_LastRadioButtonIndex = idx;
-	}
-
-	UpdateStoryTitles();
+	ChangeSite(Site_StoryDetail);
+	Site_StoryDetail->SetStoryID(_story_id);
 }

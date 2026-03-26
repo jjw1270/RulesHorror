@@ -21,10 +21,7 @@ class INTERACTIONSYSTEM_API IInteractableInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
 	void SetInteractionState(EInteractionState _state);
-	virtual void SetInteractionState_Implementation(EInteractionState _state)
-	{
-		TRACE_LOG(TEXT("%s"), *TEnumToString(_state));
-	}
+	virtual void SetInteractionState_Implementation(EInteractionState _state) {};
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction, Tooltip = "감지 가능한지"))
 	bool CanBeDetected() const;
@@ -49,9 +46,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
 	void Interact(AActor* _interactor);
-	virtual void Interact_Implementation(AActor* _interactor)
-	{
-	}
+	virtual void Interact_Implementation(AActor* _interactor) {};
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
 	FText GetDisplayName() const;

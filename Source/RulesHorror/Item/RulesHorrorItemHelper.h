@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "ItemHelper.h"
-#include "Item/RulesHorrorItemIDs.h"
 #include "Item/RulesHorrorItemDefines.h"
 #include "RulesHorrorItemHelper.generated.h"
 
