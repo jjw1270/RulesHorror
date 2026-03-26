@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 #include "Widgets/WidgetBase.h"
 #include "Item/RulesHorrorItemDefines.h"
-#include "UI_MainSite.generated.h"
+#include "Item/RulesHorrorItemIDs.h"
+#include "UI_SitePanel.generated.h"
 
 
 UCLASS(abstract)
-class RULESHORROR_API UUI_MainSite : public UWidgetBase
+class RULESHORROR_API UUI_SitePanel : public UWidgetBase
 {
 	GENERATED_BODY()
 
@@ -18,10 +19,19 @@ protected:
 	TObjectPtr<class UUniformGridPanel> UGP_Story = nullptr;
 	
 protected:
+	UPROPERTY(EditAnywhere)
+	FString _MainAddress;
+
 	UPROPERTY(Transient)
 	TArray<FStoryTableRow> _AllStroyItemRows;
 
 	int32 _StoryTitleNum = 0;
+
+public:
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDM_OnSiteChanged, const FString&, _address);
+
+	UPROPERTY(BlueprintCallable)
+	FDM_OnSiteChanged _OnSiteChangedEvent;
 
 protected:
 	virtual void NativeOnInitialized() override;

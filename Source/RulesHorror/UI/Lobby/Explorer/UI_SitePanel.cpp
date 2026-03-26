@@ -1,26 +1,26 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI_MainSite.h"
+#include "UI_SitePanel.h"
 #include "SaveGame/SaveGameSubsystem.h"
 #include "Item/RulesHorrorItemHelper.h"
 #include "UI/Common/RadioButtonGroup_Index.h"
 #include "Components/UniformGridPanel.h"
 #include "BTN_StoryTitle.h"
 
-TOptional<int32> UUI_MainSite::_LastRadioButtonIndex;
+TOptional<int32> UUI_SitePanel::_LastRadioButtonIndex;
 
-void UUI_MainSite::NativeOnInitialized()
+void UUI_SitePanel::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
 	if (IsValid(RadioButtonGroup_Index))
 	{
-		RadioButtonGroup_Index->_OnRadioButtonSelected.AddDynamic(this, &UUI_MainSite::OnRadioButtonSelected);
+		RadioButtonGroup_Index->_OnRadioButtonSelected.AddDynamic(this, &UUI_SitePanel::OnRadioButtonSelected);
 	}
 }
 
-void UUI_MainSite::NativeConstruct()
+void UUI_SitePanel::NativeConstruct()
 {
 	Super::NativeConstruct();
 
@@ -61,7 +61,7 @@ void UUI_MainSite::NativeConstruct()
 	}
 }
 
-void UUI_MainSite::UpdateStoryTitles()
+void UUI_SitePanel::UpdateStoryTitles()
 {
 	int32 start_idx = _StoryTitleNum * _LastRadioButtonIndex.GetValue();
 
@@ -85,7 +85,7 @@ void UUI_MainSite::UpdateStoryTitles()
 	}
 }
 
-void UUI_MainSite::OnRadioButtonSelected(URadioButton* _btn)
+void UUI_SitePanel::OnRadioButtonSelected(URadioButton* _btn)
 {
 	auto radio_button = Cast<URadioButton_Index>(_btn);
 	if (IsInvalid(radio_button))

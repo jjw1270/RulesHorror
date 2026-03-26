@@ -15,5 +15,14 @@ class RULESHORROR_API UWindow_Explorer : public UWindowBase
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<class UUI_SitePanel> UI_SitePanel = nullptr;
+
+protected:
+	virtual void NativeOnInitialized() override;
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetAddressText(const FString& _text);
 
 };

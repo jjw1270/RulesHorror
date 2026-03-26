@@ -24,4 +24,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetTitle(const FText& _text);
 
+public:
+	UFUNCTION(BlueprintPure)
+	const FItemID_Story& GetStroyID() const { return _StoryID; }
 };
