@@ -26,6 +26,9 @@ class INTERACTIONSYSTEM_API UInteractionComponent : public USphereComponent
 #endif
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+	EInteractionDetectMode _DetectMode = EInteractionDetectMode::CameraCenter;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (ClampMin = "0.0", Tooltip = "감지 가능한 거리"))
 	float _DetectableRange = 600.0f;
 	float _DetectableRangeSquared = 0.0f;
@@ -34,9 +37,12 @@ protected:
 	float _TargetableRange = 300.0f;
 	float _TargetableRangeSquared = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (ClampMin = "0.0", ClampMax = "180.0", Tooltip = "상호작용 가능한 시야 각도"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction|CameraCenter", meta = (ClampMin = "0.0", ClampMax = "180.0", Tooltip = "상호작용 가능한 시야 각도"))
 	float _MaxViewHalfAngleDegrees = 60.0f;
 	float _MinViewDotThreshold = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction|Cursor", meta = (ClampMin = "0.0", Tooltip = "커서 기준 감지 반경(px)"))
+	float _CursorDetectRadius = 120.0f;
 
 	UPROPERTY()
 	TMap<TObjectPtr<AActor>, FInteractionActorInfo> _OverlappedActorInfos;
@@ -53,6 +59,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float _delta_time, ELevelTick _tick_type, FActorComponentTickFunction* _this_tick_function) override;
+	virtual void EndPlay(const EEndPlayReason::Type _end_play_reason) override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event) override;
@@ -66,6 +73,9 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void SetDetectMode(EInteractionDetectMode _detect_mode);
+
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void SetDetectableRange(float _range);
 
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
@@ -74,28 +84,37 @@ public:
 	void TryInteract();
 
 	UFUNCTION(BlueprintPure, Category = "Interaction")
+	EInteractionDetectMode GetDetectMode() const { return _DetectMode; }
+
+	UFUNCTION(BlueprintPure, Category = "Interaction")
 	AActor* GetTargetedActor() const { return _TargetedActor; }
 
-	UFUNCTION(BlueprintCallable)
-	void ToggleDebug()
-	{
-		SetShowDebug(!_ShowDebug);
-	}
-
 protected:
-	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void UpdateInteraction();
+	void ClearInteractionState();
 
-	AActor* SelectTargetedActor(const FVector& _view_location, const FVector& _view_forward) const;
+	void UpdateInteraction();
+	void UpdateInteractionStates();
+
+#pragma region CameraCenter
+	void UpdateDetectedAndVisibleActors_CameraCenter(const FVector& _location, const FVector& _view_location, const FVector& _view_forward);
+	AActor* SelectTargetedActor_CameraCenter(const FVector& _location, const FVector& _view_location, const FVector& _view_forward) const;
+
+#pragma endregion CameraCenter
+//////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Cursor
+	void UpdateDetectedAndVisibleActors_Cursor(const FVector& _location, const FVector& _view_location);
+	AActor* SelectTargetedActor_Cursor(const FVector& _location) const;
+
+	bool GetMouseScreenPosition(FVector2D& _out_mouse_pos) const;
+	bool ProjectInteractionLocationToScreen(AActor* _actor, FVector2D& _out_screen_pos) const;
+
+#pragma endregion Cursor
+
+	bool IsActorVisible(AActor* _actor, const FVector& _view_location) const;
+	bool IsActorInTargetableRange(AActor* _actor, const FVector& _location) const;
 
 	APlayerController* GetOwnerPlayerController() const;
 	void GetViewVectorInfo(FVector& _out_location, FVector& _out_forward) const;
-
-#if !UE_BUILD_SHIPPING
-	void SetShowDebug(bool _show_debug);
-
-	void DrawDebugInteraction(const FVector& _view_location, const FVector& _view_forward);
-#endif
 
 #pragma region Indicator
 protected:
@@ -112,4 +131,19 @@ protected:
 	void InitIndicatorPanel();
 
 #pragma endregion Indicator
+//////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Debug
+public:
+	UFUNCTION(BlueprintCallable)
+	void ToggleDebug()
+	{
+		SetShowDebug(!_ShowDebug);
+	}
+#if !UE_BUILD_SHIPPING
+protected:
+	void SetShowDebug(bool _show_debug);
+	void DrawDebugInteraction(const FVector& _view_location, const FVector& _view_forward);
+#endif
+#pragma endregion Debug
+
 };

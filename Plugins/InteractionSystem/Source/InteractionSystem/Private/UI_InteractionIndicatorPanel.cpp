@@ -89,6 +89,31 @@ void UUI_InteractionIndicatorPanel::NativeTick(const FGeometry& _geo, float _del
 	}
 }
 
+void UUI_InteractionIndicatorPanel::NativeDestruct()
+{
+	for (auto& pair : _ActivatedIndicatorMap)
+	{
+		if (IsValid(pair.Value))
+		{
+			pair.Value->ClearWidget();
+			pair.Value->RemoveFromParent();
+		}
+	}
+	_ActivatedIndicatorMap.Empty();
+
+	for (auto& indicator : _IndicatorPool)
+	{
+		if (IsValid(indicator))
+		{
+			indicator->ClearWidget();
+			indicator->RemoveFromParent();
+		}
+	}
+	_IndicatorPool.Empty();
+
+	Super::NativeDestruct();
+}
+
 void UUI_InteractionIndicatorPanel::SetPerspectiveDistance(float _min_dist, float _max_dist)
 {
 	_PerspectiveMinDistance = _min_dist;

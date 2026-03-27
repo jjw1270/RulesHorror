@@ -83,6 +83,7 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_co
 
 	// Interact
 	enhanced_input_comp->BindAction(_IA_Interact, ETriggerEvent::Started, this, &ARulesHorrorCharacter::InteractInput);
+	enhanced_input_comp->BindAction(_IA_ClickInteract, ETriggerEvent::Started, this, &ARulesHorrorCharacter::ClickInteractInput);
 }
 
 void ARulesHorrorCharacter::MoveInput(const FInputActionValue& _value)
@@ -108,7 +109,21 @@ void ARulesHorrorCharacter::InteractInput(const FInputActionValue& _value)
 	if (IsInvalid(Interaction))
 		return;
 	
-	Interaction->TryInteract();
+	if (Interaction->GetDetectMode() == EInteractionDetectMode::CameraCenter)
+	{
+		Interaction->TryInteract();
+	}
+}
+
+void ARulesHorrorCharacter::ClickInteractInput(const FInputActionValue& _value)
+{
+	if (IsInvalid(Interaction))
+		return;
+
+	if (Interaction->GetDetectMode() == EInteractionDetectMode::Cursor)
+	{
+		Interaction->TryInteract();
+	}
 }
 
 void ARulesHorrorCharacter::DoMove(float _right, float _forward)

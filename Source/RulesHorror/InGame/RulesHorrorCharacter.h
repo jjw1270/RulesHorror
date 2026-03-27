@@ -36,13 +36,16 @@ protected:
 
 protected:
 	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* _IA_Move = nullptr;
+	TObjectPtr<UInputAction> _IA_Move = nullptr;
 
 	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* _IA_Look = nullptr;
+	TObjectPtr<UInputAction> _IA_Look = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* _IA_Interact = nullptr;
+	TObjectPtr<UInputAction> _IA_Interact = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> _IA_ClickInteract = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Walk")
@@ -55,6 +58,7 @@ protected:
 	void MoveInput(const FInputActionValue& _value);
 	void LookInput(const FInputActionValue& _value);
 	void InteractInput(const FInputActionValue& _value);
+	void ClickInteractInput(const FInputActionValue& _value);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float _right, float _forward);

@@ -46,6 +46,7 @@ protected:
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativeTick(const FGeometry& _geo, float _delta) override;
+	virtual void NativeDestruct() override;
 
 public:
 	void SetPerspectiveDistance(float _min_dist, float _max_dist);

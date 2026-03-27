@@ -7,6 +7,14 @@
 #include "InteractionSystemDefines.generated.h"
 
 UENUM(BlueprintType)
+enum class EInteractionDetectMode : uint8
+{
+	NA,
+	CameraCenter			UMETA(Tooltip = "카메라 중심 기준"),
+	Cursor							UMETA(Tooltip = "마우스 커서 기준"),
+};
+
+UENUM(BlueprintType)
 enum class EInteractionState : uint8
 {
 	None,
