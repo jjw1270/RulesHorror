@@ -30,6 +30,9 @@ void ALobbyPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	_BaseYaw = GetActorRotation().Yaw;
+	_BasePitch = GetActorRotation().Pitch;
+
 	auto pc = Cast<ALobbyPlayerController>(GetController());
 	if (IsInvalid(pc))
 		return;
@@ -96,7 +99,7 @@ void ALobbyPawn::Tick(float _delta_time)
 		_CurrentYaw = FMath::FInterpTo(_CurrentYaw, _TargetYaw, _delta_time, _FollowSpeed);
 		_CurrentPitch = FMath::FInterpTo(_CurrentPitch, _TargetPitch, _delta_time, _FollowSpeed);
 
-		SetActorRotation(FRotator(_CurrentPitch, _CurrentYaw, 0.0f));
+		SetActorRotation(FRotator(_BasePitch + _CurrentPitch, _BaseYaw + _CurrentYaw, 0.0f));
 	}
 }
 
@@ -126,12 +129,12 @@ void ALobbyPawn::UpdateLookTargetFromMouse()
 	normalized_y = FMath::Sign(normalized_y) * FMath::Square(normalized_y);
 
 	// 데드존
-	if (FMath::Abs(normalized_x) < _DeadZoneNormalized)
+	if (_DeadZoneNormalizedYaw > 0.0f && FMath::Abs(normalized_x) < _DeadZoneNormalizedYaw)
 	{
 		normalized_x = 0.0f;
 	}
 
-	if (FMath::Abs(normalized_y) < _DeadZoneNormalized)
+	if (_DeadZoneNormalizedPitch > 0.0f && FMath::Abs(normalized_y) < _DeadZoneNormalizedPitch)
 	{
 		normalized_y = 0.0f;
 	}

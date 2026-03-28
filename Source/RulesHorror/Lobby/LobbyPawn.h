@@ -41,7 +41,10 @@ protected:
 	float _FollowSpeed = 8.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float _DeadZoneNormalized = 0.05f;
+	float _DeadZoneNormalizedYaw = 0.05f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	float _DeadZoneNormalizedPitch = 0.05f;
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	FVector2D _YawRange = FVector2D(-30.0f, 30.0f);
@@ -49,9 +52,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	FVector2D _PitchRange = FVector2D(-10.0f, 10.0f);
 
+
+	float _BaseYaw = 0.0f;
 	float _CurrentYaw = 0.0f;
 	float _TargetYaw = 0.0f;
 
+	float _BasePitch = 0.0f;
 	float _CurrentPitch = 0.0f;
 	float _TargetPitch = 0.0f;
 
