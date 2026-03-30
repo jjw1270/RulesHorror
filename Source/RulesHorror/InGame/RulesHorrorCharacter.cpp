@@ -9,7 +9,7 @@
 #include "Components/SpotLightComponent.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "InteractionComponent.h"
+#include "InteractorComponent.h"
 
 ARulesHorrorCharacter::ARulesHorrorCharacter()
 {
@@ -55,8 +55,8 @@ ARulesHorrorCharacter::ARulesHorrorCharacter()
 	SpotLight->OuterConeAngle = 45.24f;
 
 	// create interaction
-	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("Interaction"));
-	Interaction->SetupAttachment(GetCapsuleComponent());
+	InteractorComponent = CreateDefaultSubobject<UInteractorComponent>(TEXT("Interactor"));
+	InteractorComponent->SetupAttachment(GetCapsuleComponent());
 }
 
 void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_component)
@@ -106,23 +106,23 @@ void ARulesHorrorCharacter::LookInput(const FInputActionValue& _value)
 
 void ARulesHorrorCharacter::InteractInput(const FInputActionValue& _value)
 {
-	if (IsInvalid(Interaction))
+	if (IsInvalid(InteractorComponent))
 		return;
 	
-	if (Interaction->GetDetectMode() == EInteractionDetectMode::CameraCenter)
+	if (InteractorComponent->GetDetectMode() == EInteractionDetectMode::CameraCenter)
 	{
-		Interaction->TryInteract();
+		InteractorComponent->TryInteract();
 	}
 }
 
 void ARulesHorrorCharacter::ClickInteractInput(const FInputActionValue& _value)
 {
-	if (IsInvalid(Interaction))
+	if (IsInvalid(InteractorComponent))
 		return;
 
-	if (Interaction->GetDetectMode() == EInteractionDetectMode::Cursor)
+	if (InteractorComponent->GetDetectMode() == EInteractionDetectMode::Cursor)
 	{
-		Interaction->TryInteract();
+		InteractorComponent->TryInteract();
 	}
 }
 

@@ -32,7 +32,7 @@ protected:
 
 	/** Interaction */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<class UInteractionComponent> Interaction = nullptr;
+	TObjectPtr<class UInteractorComponent> InteractorComponent = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, Category ="Input")
@@ -77,5 +77,5 @@ public:
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	UFUNCTION(BlueprintPure)
-	UInteractionComponent* GetInteractionComponent() const { return Interaction; }
+	UInteractorComponent* GetInteractorComponent() const { return InteractorComponent; }
 };

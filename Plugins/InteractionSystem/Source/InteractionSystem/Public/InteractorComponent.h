@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "InteractionSystemDefines.h"
-#include "InteractionComponent.generated.h"
+#include "InteractorComponent.generated.h"
 
 USTRUCT()
 struct FInteractionActorInfo
@@ -17,15 +17,18 @@ struct FInteractionActorInfo
 };
 
 UCLASS(BlueprintType, Blueprintable, meta = (BlueprintSpawnableComponent))
-class INTERACTIONSYSTEM_API UInteractionComponent : public USphereComponent
+class INTERACTIONSYSTEM_API UInteractorComponent : public USphereComponent
 {
 	GENERATED_BODY()
 
 #if WITH_EDITOR
-	friend class FInteractionComponentVisualizer;
+	friend class FInteractorComponentVisualizer;
 #endif
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TEnumAsByte<ECollisionChannel> _CollisionChannel;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	EInteractionDetectMode _DetectMode = EInteractionDetectMode::CameraCenter;
 
@@ -54,7 +57,7 @@ protected:
 	bool _ShowDebug = false;
 
 public:
-	UInteractionComponent();
+	UInteractorComponent();
 
 protected:
 	virtual void BeginPlay() override;

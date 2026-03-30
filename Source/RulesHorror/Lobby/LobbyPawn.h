@@ -16,23 +16,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<class USceneComponent> Root = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<class UCameraComponent> Camera = nullptr;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<class UInteractionComponent> InteractionComponent = nullptr;
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<class UInputMappingContext> _InputMappingContext = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<class UInputAction> _IA_Interact = nullptr;
+public:
+	ALobbyPawn();
 
 protected:
-	bool _CanInteract = true;
+	virtual void BeginPlay() override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* _input_component) override;
+	virtual void Tick(float _delta_time) override;
 
-	bool _CanLook = true;
+#pragma region Camera
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UCameraComponent> Camera = nullptr;
+
+	bool _UseLookAtCursor = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float _MouseSensitivity = 0.08f;
@@ -52,7 +53,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	FVector2D _PitchRange = FVector2D(-10.0f, 10.0f);
 
-
 	float _BaseYaw = 0.0f;
 	float _CurrentYaw = 0.0f;
 	float _TargetYaw = 0.0f;
@@ -61,29 +61,91 @@ protected:
 	float _CurrentPitch = 0.0f;
 	float _TargetPitch = 0.0f;
 
-public:
-	ALobbyPawn();
-
 protected:
-	virtual void BeginPlay() override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* _input_component) override;
-	virtual void Tick(float _delta_time) override;
+	void UpdateLookAtCursor();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetUseLookAtCursor(bool _value);
+
+	UFUNCTION(BlueprintPure)
+	UCameraComponent* GetCamera() const { return Camera; }
+
+#pragma endregion Camera
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Interation
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UInteractorComponent> InteractorComponent = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<class UInputAction> _IA_Interact = nullptr;
+
+	bool _CanInteract = true;
 
 protected:
 	void InteractInput(const FInputActionValue& _value);
 
-	void UpdateLookTargetFromMouse();
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetInteractEnabled(bool _is_enabled);
+
+	UFUNCTION(BlueprintPure)
+	UInteractorComponent* GetInteractorComponent() const { return InteractorComponent; }
+
+#pragma endregion Interation
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma region MovePoints
+protected:
+	UPROPERTY(EditAnywhere, Category = "MovePoints")
+	float _MoveSpeed = 5.0f;
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<class ALobbyPawnMovePoint>> _MovePoints;
+
+	UPROPERTY()
+	TObjectPtr<ALobbyPawnMovePoint> _TargetMovePoint = nullptr;
+
+	DECLARE_DYNAMIC_DELEGATE_OneParam(FD_OnMoveToPointFinished, ALobbyPawn*, _lobby_pawn);
+	FD_OnMoveToPointFinished _OnMoveToPointFinishedEvent;
+
+protected:
+	void InitMovePoints();
+	void DriveMoveToPoint(float _delta_time);
 
 public:
-	void SetInteractEnabled(bool _is_enabled);
-	
+	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "_on_move_finished"))
+	void SetTargetMovePoint(const FName _point_name, const FD_OnMoveToPointFinished& _on_move_finished);
+
+#pragma endregion MovePoints
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma region Computer
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UWidgetInteractionComponent> WidgetInteractionComponent = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<class AComputer> _InteractingComputer = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Monitor")
+	TEnumAsByte<EObjectTypeQuery> _MonitorScreenWidgetObjectType;
+
+	// 보정 강도
+	UPROPERTY(EditAnywhere, Category = "Monitor")
+	FMargin _MonitorWidgetHitCorrection = FMargin(0.08f, 0.02f, 0.028f, 0.03f);
+
+protected:
+	void DriveWidgetInteraction();
+
+	void BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const;
+
+public:
 	UFUNCTION(BlueprintCallable)
-	void SetLookEnabled(bool _is_enabled);
+	void SetInteractingComputer(AComputer* _computer);
 
 	UFUNCTION(BlueprintPure)
-	UCameraComponent* GetLobbyCamera() const { return Camera; }
+	bool IsOnInteracintingComputer() const;
 
-	UFUNCTION(BlueprintPure)
-	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
+#pragma endregion Computer
 
 };

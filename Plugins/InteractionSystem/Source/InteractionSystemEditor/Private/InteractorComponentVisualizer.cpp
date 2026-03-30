@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "InteractionComponentVisualizer.h"
+#include "InteractorComponentVisualizer.h"
 #include "CommonUtils.h"
-#include "InteractionComponent.h"
+#include "InteractorComponent.h"
 #include "InteractableInterface.h"
 #include "SceneManagement.h"
 
-void FInteractionComponentVisualizer::DrawVisualization(const UActorComponent* _component, const FSceneView* _view, FPrimitiveDrawInterface* _pdi)
+void FInteractorComponentVisualizer::DrawVisualization(const UActorComponent* _component, const FSceneView* _view, FPrimitiveDrawInterface* _pdi)
 {
-	const auto interaction_comp = Cast<UInteractionComponent>(_component);
+	const auto interaction_comp = Cast<UInteractorComponent>(_component);
 	if (IsInvalid(interaction_comp))
 		return;
 
@@ -35,7 +35,7 @@ void FInteractionComponentVisualizer::DrawVisualization(const UActorComponent* _
 	}
 }
 
-void FInteractionComponentVisualizer::DrawCommon(const UInteractionComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
+void FInteractorComponentVisualizer::DrawCommon(const UInteractorComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
 {
 	if (IsInvalid(_interaction_comp))
 		return;
@@ -84,7 +84,7 @@ void FInteractionComponentVisualizer::DrawCommon(const UInteractionComponent* _i
 	}
 }
 
-void FInteractionComponentVisualizer::DrawCameraCenterMode(const UInteractionComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
+void FInteractorComponentVisualizer::DrawCameraCenterMode(const UInteractorComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
 {
 	if (IsInvalid(_interaction_comp))
 		return;
@@ -109,7 +109,7 @@ void FInteractionComponentVisualizer::DrawCameraCenterMode(const UInteractionCom
 	DrawCircle(_pdi, circle_center, circle_y, circle_z, FColor::Green, circle_radius, 32, SDPG_World, 1.5f, false);
 }
 
-void FInteractionComponentVisualizer::DrawCursorMode(const UInteractionComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
+void FInteractorComponentVisualizer::DrawCursorMode(const UInteractorComponent* _interaction_comp, const FSceneView* _view, FPrimitiveDrawInterface* _pdi) const
 {
 	if (IsInvalid(_interaction_comp))
 		return;
