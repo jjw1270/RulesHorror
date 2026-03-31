@@ -5,7 +5,6 @@
 #include "RulesHorrorUtils.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-
 void URulesHorrorGameInstance::QuitGame()
 {
 #if UE_BUILD_SHIPPING

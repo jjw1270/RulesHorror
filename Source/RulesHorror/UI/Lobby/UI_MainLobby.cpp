@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Page_MainLobby.h"
+#include "UI_MainLobby.h"
 #include "UI/Lobby/WindowBase/WindowBase.h"
 #include "UI/Lobby/WindowBase/BTN_WindowTab.h"
 #include "Components/CanvasPanel.h"
@@ -10,7 +10,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "UI/Lobby/WindowBase/WindowDragDropOperation.h"
 
-void UPage_MainLobby::NativeOnInitialized()
+void UUI_MainLobby::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
@@ -28,7 +28,7 @@ void UPage_MainLobby::NativeOnInitialized()
 	}
 }
 
-void UPage_MainLobby::CreateWindow(EWindowWidgetType _type)
+void UUI_MainLobby::CreateWindow(EWindowWidgetType _type)
 {
 	auto data_ptr = _WindowDataMap.Find(_type);
 	if (IsInvalid(data_ptr))
@@ -70,7 +70,7 @@ void UPage_MainLobby::CreateWindow(EWindowWidgetType _type)
 	}
 	data_ptr->WindowWidget->SetLastNormalPos(widget_pos);
 
-	data_ptr->WindowWidget->_OnWindowFocusedEvent.AddDynamic(this, &UPage_MainLobby::OnWindowFocused);
+	data_ptr->WindowWidget->_OnWindowFocusedEvent.AddDynamic(this, &UUI_MainLobby::OnWindowFocused);
 	data_ptr->WindowWidget->Hide(EWidgetHideType::Collapsed);
 
 	auto cp_slot = CP_Window->AddChildToCanvas(data_ptr->WindowWidget);
@@ -95,13 +95,13 @@ void UPage_MainLobby::CreateWindow(EWindowWidgetType _type)
 		data_ptr->WindowTab->SetTabIcon(data_ptr->WindowTabIcon);
 		data_ptr->WindowTab->SetTabText(data_ptr->WindowTabText);
 
-		data_ptr->WindowTab->_OnClicked.AddDynamic(this, &UPage_MainLobby::OnClickWindowTab);
+		data_ptr->WindowTab->_OnClicked.AddDynamic(this, &UUI_MainLobby::OnClickWindowTab);
 
 		HB_WindowTab->AddChildToHorizontalBox(data_ptr->WindowTab);
 	}
 }
 
-void UPage_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
+void UUI_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
 {
 	auto data_ptr = _WindowDataMap.Find(_type);
 	if (IsInvalid(data_ptr))
@@ -128,7 +128,7 @@ void UPage_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
 	}
 }
 
-void UPage_MainLobby::SetTopWindow(UWindowBase* _target_window)
+void UUI_MainLobby::SetTopWindow(UWindowBase* _target_window)
 {
 	for (auto child : CP_Window->GetAllChildren())
 	{
@@ -155,7 +155,7 @@ void UPage_MainLobby::SetTopWindow(UWindowBase* _target_window)
 	}
 }
 
-void UPage_MainLobby::UpdateTopWindow()
+void UUI_MainLobby::UpdateTopWindow()
 {
 	auto top_window = GetTopWindow();
 	if (IsValid(top_window))
@@ -178,7 +178,7 @@ void UPage_MainLobby::UpdateTopWindow()
 	}
 }
 
-UWindowBase* UPage_MainLobby::GetTopWindow() const
+UWindowBase* UUI_MainLobby::GetTopWindow() const
 {
 	UWindowBase* top_window = nullptr;
 	int32 top_z_order = -1;
@@ -205,7 +205,7 @@ UWindowBase* UPage_MainLobby::GetTopWindow() const
 	return top_window;
 }
 
-bool UPage_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
+bool UUI_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
 {
 	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
 
@@ -238,7 +238,7 @@ bool UPage_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEve
 	return true;
 }
 
-bool UPage_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
+bool UUI_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
 {
 	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
 
@@ -271,7 +271,7 @@ bool UPage_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& 
 	return true;
 }
 
-void UPage_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
+void UUI_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 {
 	auto window_tab = Cast<UBTN_WindowTab>(_tab_button);
 	if (IsInvalid(window_tab))
@@ -312,7 +312,7 @@ void UPage_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 	}
 }
 
-void UPage_MainLobby::OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused)
+void UUI_MainLobby::OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused)
 {
 	if (IsInvalid(_focused_window_widget))
 		return;

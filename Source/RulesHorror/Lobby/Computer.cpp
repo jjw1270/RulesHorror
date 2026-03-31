@@ -6,6 +6,7 @@
 #include "Components/WidgetComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "UI/Lobby/UI_Monitor.h"
 
 AComputer::AComputer()
 {
@@ -49,19 +50,26 @@ void AComputer::UpdateScreenFromWidget()
 		_DynamicScreenMaterialInstance->SetTextureParameterValue(TextureParamName, widget_render_target);
 	}
 
-	SetPower(false);
+	SetPower(false, false);
 }
 
-void AComputer::SetPower(bool _on)
+void AComputer::SetPower(bool _on, bool _show_anim)
 {
 	if (IsValid(_DynamicScreenMaterialInstance))
 	{
 		_DynamicScreenMaterialInstance->SetScalarParameterValue(FilterParamName, _on ? 1.0f : 0.0f);
 	}
 
-	auto widget = (ScreenWidgetComponent->GetWidget());
-	if (IsValid(widget))
+	auto monitor_widget = Cast<UUI_Monitor>(ScreenWidgetComponent->GetWidget());
+	if (IsValid(monitor_widget))
 	{
-		widget->SetRenderOpacity(_on ? 1.0f : 0.0f);
+		if (_on)
+		{
+			monitor_widget->Show(EWidgetShowType::SelfHitTestInvisible, !_show_anim);
+		}
+		else
+		{
+			monitor_widget->Hide(EWidgetHideType::Collapsed, !_show_anim);
+		}
 	}
 }

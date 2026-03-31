@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Page_InitUser.h"
+#include "UI_InitUser.h"
 #include "SaveGame/SaveGameSubsystem.h"
 
-void UPage_InitUser::NativeConstruct()
+void UUI_InitUser::NativeConstruct()
 {
 	Super::NativeConstruct();
 
@@ -16,7 +16,7 @@ void UPage_InitUser::NativeConstruct()
 	}
 }
 
-bool UPage_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_error_text)
+bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_error_text)
 {
 	auto save_game = USaveGameHelper::GetSaveGame_Editable(this);
 	if (IsInvalid(save_game))

@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/PageBase.h"
-#include "Page_Loading.generated.h"
+#include "UI_Loading.generated.h"
 
 /**
  * 초기 데이터 로딩 중
  */
 UCLASS(abstract)
-class RULESHORROR_API UPage_Loading : public UPageBase
+class RULESHORROR_API UUI_Loading : public UPageBase
 {
 	GENERATED_BODY()
 
@@ -20,19 +20,13 @@ protected:
 
 	float _MinLoadingTime = 0.0f;
 
-	bool _IsOnLoading = false;
-
-	TOptional<FDateTime> _LoadingStartDateTime;
-	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UPageBase> _LoadingFinishedPageClass = nullptr;
+	float _LoadingTimer = 0.0f;
 
 protected:
-	virtual void NativeConstruct() override;
+	virtual void OnShow_Implementation() override;
 	virtual void NativeTick(const FGeometry& _geo, float _delta) override;
 
 protected:
-	void StartLoading();
-
+	UFUNCTION(BlueprintImplementableEvent)
 	void OnLoadingFinished();
 };

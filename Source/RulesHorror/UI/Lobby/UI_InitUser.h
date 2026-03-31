@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/PageBase.h"
-#include "Page_InitUser.generated.h"
+#include "WidgetBase.h"
+#include "UI_InitUser.generated.h"
 
 /**
  * 
  */
 UCLASS(abstract)
-class RULESHORROR_API UPage_InitUser : public UPageBase
+class RULESHORROR_API UUI_InitUser : public UWidgetBase
 {
 	GENERATED_BODY()
 

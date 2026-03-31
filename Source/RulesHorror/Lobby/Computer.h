@@ -41,7 +41,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (Tooltip = "전원 켜기/끄기"))
-	void SetPower(bool _on);
+	void SetPower(bool _on, bool _show_anim = true);
 
 protected:
 	void UpdateScreenFromWidget();
