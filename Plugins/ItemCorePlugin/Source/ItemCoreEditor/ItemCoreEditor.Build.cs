@@ -45,8 +45,10 @@ public class ItemCoreEditor : ModuleRules
 				"ItemCore",
 				"ToolMenus",
 				"Projects",
+                "KismetCompiler",
+                "BlueprintGraph",
             }
-			);
+            );
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(

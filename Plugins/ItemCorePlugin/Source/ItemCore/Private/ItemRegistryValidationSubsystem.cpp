@@ -21,11 +21,6 @@ void UItemRegistryValidationSubsystem::Initialize(FSubsystemCollectionBase& _col
 	if (is_success == false)
 	{
 		EDITOR_POPUP(TEXT("Refresh Item Registry 실패!"));
-
-		if (IsValid(GEditor))
-		{
-			GEditor->RequestEndPlayMap();
-		}
 	}
 #else
 	checkf(is_success, TEXT("Refresh Item Registry Failed."));
