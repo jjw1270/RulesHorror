@@ -7,6 +7,8 @@
 #include "InputActionValue.h"
 #include "LobbyPawn.generated.h"
 
+class UInputAction;
+
 UCLASS(abstract)
 class RULESHORROR_API ALobbyPawn : public APawn
 {
@@ -79,12 +81,13 @@ protected:
 	TObjectPtr<class UInteractorComponent> InteractorComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<class UInputAction> _IA_Interact = nullptr;
+	TObjectPtr<UInputAction> _IA_Interact = nullptr;
 
 	bool _CanInteract = true;
 
 protected:
-	void InteractInput(const FInputActionValue& _value);
+	UFUNCTION()
+	void Input_Interact(const FInputActionValue& _value);
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -121,6 +124,12 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma region Computer
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> _IA_LeftMouseClick = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> _IA_MouseWheel = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<class UWidgetInteractionComponent> WidgetInteractionComponent = nullptr;
 
@@ -131,14 +140,22 @@ protected:
 	TEnumAsByte<EObjectTypeQuery> _MonitorScreenWidgetObjectType;
 
 	// 보정 강도
-	UPROPERTY(EditAnywhere, Category = "Monitor")
-	FMargin _MonitorWidgetHitCorrection = FMargin(0.08f, 0.02f, 0.028f, 0.03f);
+	UPROPERTY(EditAnywhere, Category = "Monitor", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	FVector2D _MonitorHitCorrectionStrength = FVector2D(0.1f, 0.1f);
 
 protected:
-	void DriveWidgetInteraction();
+	UFUNCTION()
+	void Input_LeftMouseButtonStarted();
 
+	UFUNCTION()
+	void Input_LeftMouseButtonCompleted();
+
+	UFUNCTION()
+	void Input_MouseWheel(const FInputActionValue& _value);
+
+	void DriveWidgetInteraction(float _delta_time);
 	void BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const;
-
+	
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetInteractingComputer(AComputer* _computer);

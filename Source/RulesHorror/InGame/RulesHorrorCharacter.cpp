@@ -76,17 +76,17 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_co
 	}
 
 	// Moving
-	enhanced_input_comp->BindAction(_IA_Move, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::MoveInput);
+	enhanced_input_comp->BindAction(_IA_Move, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::Input_Move);
 
 	// Looking/Aiming
-	enhanced_input_comp->BindAction(_IA_Look, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::LookInput);
+	enhanced_input_comp->BindAction(_IA_Look, ETriggerEvent::Triggered, this, &ARulesHorrorCharacter::Input_Look);
 
 	// Interact
-	enhanced_input_comp->BindAction(_IA_Interact, ETriggerEvent::Started, this, &ARulesHorrorCharacter::InteractInput);
-	enhanced_input_comp->BindAction(_IA_ClickInteract, ETriggerEvent::Started, this, &ARulesHorrorCharacter::ClickInteractInput);
+	enhanced_input_comp->BindAction(_IA_Interact, ETriggerEvent::Started, this, &ARulesHorrorCharacter::Input_Interact);
+	enhanced_input_comp->BindAction(_IA_ClickInteract, ETriggerEvent::Started, this, &ARulesHorrorCharacter::Input_ClickInteract);
 }
 
-void ARulesHorrorCharacter::MoveInput(const FInputActionValue& _value)
+void ARulesHorrorCharacter::Input_Move(const FInputActionValue& _value)
 {
 	// get the Vector2D move axis
 	FVector2D movement_vector = _value.Get<FVector2D>();
@@ -95,7 +95,7 @@ void ARulesHorrorCharacter::MoveInput(const FInputActionValue& _value)
 	DoMove(movement_vector.X, movement_vector.Y);
 }
 
-void ARulesHorrorCharacter::LookInput(const FInputActionValue& _value)
+void ARulesHorrorCharacter::Input_Look(const FInputActionValue& _value)
 {
 	// get the Vector2D look axis
 	FVector2D look_axis_vector = _value.Get<FVector2D>();
@@ -104,7 +104,7 @@ void ARulesHorrorCharacter::LookInput(const FInputActionValue& _value)
 	DoAim(look_axis_vector.X, look_axis_vector.Y);
 }
 
-void ARulesHorrorCharacter::InteractInput(const FInputActionValue& _value)
+void ARulesHorrorCharacter::Input_Interact(const FInputActionValue& _value)
 {
 	if (IsInvalid(InteractorComponent))
 		return;
@@ -115,7 +115,7 @@ void ARulesHorrorCharacter::InteractInput(const FInputActionValue& _value)
 	}
 }
 
-void ARulesHorrorCharacter::ClickInteractInput(const FInputActionValue& _value)
+void ARulesHorrorCharacter::Input_ClickInteract(const FInputActionValue& _value)
 {
 	if (IsInvalid(InteractorComponent))
 		return;

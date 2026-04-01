@@ -31,8 +31,6 @@ protected:
 	const FName TextureParamName = TEXT("Display Input");
 	const FName FilterParamName = TEXT("Filter On");
 
-
-
 public:	
 	AComputer();
 

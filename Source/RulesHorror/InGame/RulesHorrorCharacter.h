@@ -55,10 +55,17 @@ public:
 	ARulesHorrorCharacter();
 
 protected:
-	void MoveInput(const FInputActionValue& _value);
-	void LookInput(const FInputActionValue& _value);
-	void InteractInput(const FInputActionValue& _value);
-	void ClickInteractInput(const FInputActionValue& _value);
+	UFUNCTION()
+	void Input_Move(const FInputActionValue& _value);
+
+	UFUNCTION()
+	void Input_Look(const FInputActionValue& _value);
+
+	UFUNCTION()
+	void Input_Interact(const FInputActionValue& _value);
+
+	UFUNCTION()
+	void Input_ClickInteract(const FInputActionValue& _value);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float _right, float _forward);

@@ -3,8 +3,10 @@
 
 #include "UI_Monitor.h"
 #include "Components/WidgetSwitcher.h"
+#include "UI/Lobby/UI_Cursor.h"
+#include "Components/CanvasPanelSlot.h"
 
-int32 UUI_Monitor::_LastActiveWidgetIndex = -1;
+TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
 
 void UUI_Monitor::NativeOnInitialized()
 {
@@ -23,16 +25,27 @@ void UUI_Monitor::NativeOnInitialized()
 	}
 }
 
+void UUI_Monitor::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	ShowMonitorCursor(false);
+}
+
 void UUI_Monitor::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
 
-	if (_LastActiveWidgetIndex < 0)
+	if (_LastActiveWidgetIndex.IsSet() == false)
 	{
+#if WITH_EDITOR
+		_LastActiveWidgetIndex = (_DEBUG_Start_Widget_Index > 0) ? _DEBUG_Start_Widget_Index : 0;
+#else
 		_LastActiveWidgetIndex = 0;
+#endif
 	}
 
-	WidgetSwitcher->SetActiveWidgetIndex(_LastActiveWidgetIndex);
+	WidgetSwitcher->SetActiveWidgetIndex(_LastActiveWidgetIndex.GetValue());
 
 	auto actived_widget = Cast<UWidgetBase>(WidgetSwitcher->GetActiveWidget());
 	if (IsValid(actived_widget))
@@ -57,4 +70,25 @@ void UUI_Monitor::SetActiveWidgetAndShow(UWidgetBase* _widget, bool _is_skip_ani
 	_widget->Show(EWidgetShowType::SelfHitTestInvisible, _is_skip_anim);
 
 	_LastActiveWidgetIndex = idx;
+}
+
+void UUI_Monitor::ShowMonitorCursor(bool _is_show)
+{
+	if (_is_show)
+	{
+		UI_Cursor->Show(EWidgetShowType::HitTestInvisible);
+	}
+	else
+	{
+		UI_Cursor->Hide(EWidgetHideType::Collapsed);
+	}
+}
+
+void UUI_Monitor::SetMonitorCursorPosition(const FVector2D& _pos)
+{
+	auto cp_slot = Cast<UCanvasPanelSlot>(UI_Cursor->Slot);
+	if (IsInvalid(cp_slot))
+		return;
+
+	cp_slot->SetPosition(_pos);
 }

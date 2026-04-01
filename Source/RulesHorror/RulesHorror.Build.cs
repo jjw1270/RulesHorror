@@ -22,7 +22,6 @@ public class RulesHorror : ModuleRules
 			"SlateCore",
             "CommonLibrary",
             "CustomUI",
-            "UnrealEd",
             "DeveloperSettings",
 			"ItemCore",
 			"InteractionSystem",
