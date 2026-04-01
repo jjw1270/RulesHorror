@@ -39,9 +39,6 @@ public class ItemCore : ModuleRules
 				"Slate",
 				"SlateCore",
                 "CommonLibrary",
-                "UnrealEd",
-                "BlueprintGraph",
-                "KismetCompiler",
                 "DeveloperSettings",
             }
             );

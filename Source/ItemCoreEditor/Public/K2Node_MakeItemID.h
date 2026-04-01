@@ -8,7 +8,7 @@
 
 
 UCLASS()
-class ITEMCORE_API UK2Node_MakeItemID : public UK2Node
+class ITEMCOREEDITOR_API UK2Node_MakeItemID : public UK2Node
 {
 	GENERATED_BODY()
 
