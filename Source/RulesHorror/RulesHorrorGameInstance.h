@@ -17,4 +17,7 @@ class RULESHORROR_API URulesHorrorGameInstance : public UGameInstance
 public:
 	UFUNCTION(BlueprintCallable)
 	void QuitGame();
+
+	UFUNCTION(BlueprintCallable)
+	void PauseGame(bool _is_pause);
 };

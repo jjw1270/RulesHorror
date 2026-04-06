@@ -4,6 +4,7 @@
 #include "RulesHorrorGameInstance.h"
 #include "RulesHorrorUtils.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 void URulesHorrorGameInstance::QuitGame()
 {
@@ -12,4 +13,15 @@ void URulesHorrorGameInstance::QuitGame()
 		return;
 
 	UKismetSystemLibrary::QuitGame(this, pc, EQuitPreference::Quit, false);
+}
+
+void URulesHorrorGameInstance::PauseGame(bool _is_pause)
+{
+	auto pc = URulesHorrorUtils::GetLocalPlayerController(this);
+	if (IsInvalid(pc))
+		return;	
+
+	pc->SetPause(_is_pause);
+
+	// UGameplayStatics::SetGlobalTimeDilation(GetWorld(), _is_pause ? 0.0f : 1.0f);
 }

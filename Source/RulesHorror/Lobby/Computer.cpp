@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "UI/Lobby/UI_Monitor.h"
+#include "UI/Lobby/UI_OnInteractingComputer.h"
 
 AComputer::AComputer()
 {
@@ -25,6 +26,8 @@ AComputer::AComputer()
 void AComputer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	_OnMoveToPointFinishedEvent.BindDynamic(this, &AComputer::OnLobbyPawnMoveToPointFinished);
 	
 	GetWorldTimerManager().SetTimerForNextTick(this, &AComputer::UpdateScreenFromWidget);
 }
@@ -60,6 +63,7 @@ void AComputer::SetPower(bool _on, bool _show_anim)
 		_DynamicScreenMaterialInstance->SetScalarParameterValue(FilterParamName, _on ? 1.0f : 0.0f);
 	}
 
+	// 모니터 스크린
 	auto monitor_widget = Cast<UUI_Monitor>(ScreenWidgetComponent->GetWidget());
 	if (IsValid(monitor_widget))
 	{
@@ -72,4 +76,85 @@ void AComputer::SetPower(bool _on, bool _show_anim)
 			monitor_widget->Hide(EWidgetHideType::Collapsed, !_show_anim);
 		}
 	}
+}
+
+void AComputer::SetInteractionState_Implementation(EInteractionState _state)
+{
+	_InteractionState = _state;
+}
+
+void AComputer::Interact_Implementation(AActor* _interactor)
+{
+	_InteractorLobbyPawn = Cast<ALobbyPawn>(_interactor);
+	if (IsInvalid(_InteractorLobbyPawn))
+		return;
+
+	_InteractorLobbyPawn->SetTargetMovePoint(_InteractMovePoint, _OnMoveToPointFinishedEvent);
+}
+
+void AComputer::FinishInteract()
+{
+	if (IsValid(_InteractorLobbyPawn))
+	{
+		_InteractorLobbyPawn->SetTargetMovePoint(_FinishInteractMovePoint, _OnMoveToPointFinishedEvent);
+	}
+}
+
+void AComputer::OnLobbyPawnMoveToPointFinished(const FName& _point_name)
+{
+	if (IsInvalid(_InteractorLobbyPawn))
+		return;
+
+	if (_point_name == _InteractMovePoint)
+	{
+		_InteractorLobbyPawn->SetInteractingComputer(this);
+		SetPower(true, true);
+
+		OpenInteractingWidget();
+	}
+	else if (_point_name == _FinishInteractMovePoint)
+	{
+		_InteractorLobbyPawn->SetInteractingComputer(nullptr);
+
+		// Set Power off 는 하지 않는다.
+		// 다만 material 설정은 변경 해야 할수도(연출 요소)
+
+		CloseInteractingWidget();
+	}
+}
+
+void AComputer::OpenInteractingWidget()
+{
+	auto pc = URulesHorrorUtils::GetLocalPlayerController(this);
+	if (IsInvalid(pc))
+		return;
+
+	if (IsInvalid(_OnInteractingWidget))
+	{
+		if (IsValid(_OnInteractingWidgetClass))
+		{
+			_OnInteractingWidget = CreateWidget<UUI_OnInteractingComputer>(pc, _OnInteractingWidgetClass);
+		}
+		else
+		{
+			TRACE_ERROR(TEXT("_OnInteractingWidgetClass is invalid."));
+		}
+	}
+
+	if (IsInvalid(_OnInteractingWidget))
+		return;
+
+	if (_OnInteractingWidget->IsInViewport() == false)
+	{
+		_OnInteractingWidget->SetComputer(this);
+		_OnInteractingWidget->AddToViewport((int32)ERulesHorrorWidgetZOrder::Page);
+	}
+}
+
+void AComputer::CloseInteractingWidget()
+{
+	if (IsInvalid(_OnInteractingWidget))
+		return;
+
+	_OnInteractingWidget->RemoveFromParent();
 }

@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/PageBase.h"
+#include "Widgets/WidgetBase.h"
 #include "UI_Loading.generated.h"
 
 /**
  * 초기 데이터 로딩 중
  */
 UCLASS(abstract)
-class RULESHORROR_API UUI_Loading : public UPageBase
+class RULESHORROR_API UUI_Loading : public UWidgetBase
 {
 	GENERATED_BODY()
 

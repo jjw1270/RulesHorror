@@ -15,7 +15,7 @@
 #include "Components/WidgetComponent.h"
 #include "Lobby/Computer.h"
 #include "UI/Lobby/UI_Monitor.h"
-
+#include "WidgetHelper.h"
 #include "DrawDebugHelpers.h"
 
 ALobbyPawn::ALobbyPawn()
@@ -230,7 +230,7 @@ void ALobbyPawn::DriveMoveToPoint(float _delta_time)
 
 	if (is_location_arrived && is_rotation_arrived)
 	{
-		_OnMoveToPointFinishedEvent.ExecuteIfBound(this);
+		_OnMoveToPointFinishedEvent.ExecuteIfBound(_TargetMovePoint->GetPointName());
 		_OnMoveToPointFinishedEvent.Unbind();
 
 		SetUseLookAtCursor(!_TargetMovePoint->GetUseFixedCamera());
@@ -397,6 +397,8 @@ void ALobbyPawn::BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const
 void ALobbyPawn::SetInteractingComputer(AComputer* _computer)
 {
 	_InteractingComputer = _computer;
+
+	// UWidgetHelper::OpenPage(this, )
 }
 
 bool ALobbyPawn::IsOnInteracintingComputer() const

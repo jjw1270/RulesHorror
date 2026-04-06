@@ -47,7 +47,7 @@ protected:
 	void ShowLeftPageButton(bool _show);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowRighPagetButton(bool _show);
+	void ShowRightPageButton(bool _show);
 
 	UFUNCTION(BlueprintCallable)
 	void OnClickPageButton(bool _is_left);

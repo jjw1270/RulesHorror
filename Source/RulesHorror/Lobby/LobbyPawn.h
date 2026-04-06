@@ -7,6 +7,8 @@
 #include "InputActionValue.h"
 #include "LobbyPawn.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FD_OnMoveToPointFinished, const FName&, _point_name);
+
 class UInputAction;
 
 UCLASS(abstract)
@@ -109,7 +111,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<ALobbyPawnMovePoint> _TargetMovePoint = nullptr;
 
-	DECLARE_DYNAMIC_DELEGATE_OneParam(FD_OnMoveToPointFinished, ALobbyPawn*, _lobby_pawn);
 	FD_OnMoveToPointFinished _OnMoveToPointFinishedEvent;
 
 protected:

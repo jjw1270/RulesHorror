@@ -6,6 +6,15 @@
 #include "CommonUtils.h"
 #include "RulesHorrorUtils.generated.h"
 
+UENUM(BlueprintType)
+enum class ERulesHorrorWidgetZOrder : uint8
+{
+	Zero = 0,
+	InteractionIndicator = 3,
+	Page = 10,
+	Popup = 20,
+};
+
 using Utils = URulesHorrorUtils;
 
 UCLASS()

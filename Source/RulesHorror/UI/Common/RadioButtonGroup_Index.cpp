@@ -96,7 +96,7 @@ void URadioButtonGroup_Index::SetCurrentIndex(int32 _current_index)
 void URadioButtonGroup_Index::UpdatePageButtons()
 {
 	ShowLeftPageButton(_PageIndex > 0);
-	ShowRighPagetButton(_PageIndex < (_MaxIndex - 1) / _MaxButtonCount);
+	ShowRightPageButton(_PageIndex < (_MaxIndex - 1) / _MaxButtonCount);
 }
 
 void URadioButtonGroup_Index::OnClickPageButton(bool _is_left)
