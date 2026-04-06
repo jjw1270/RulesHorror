@@ -33,14 +33,13 @@ public:
 protected:
 	UFUNCTION(BlueprintCallable)
 	void RequestCommand(EWindowCommand _command);
+
 #pragma endregion Window Command
 /////////////////////////////////////////////////////////////////////////////////////
 #pragma region Scaler
 public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void EnableWindowScaler(bool _is_enable);
-
-protected:
 
 #pragma endregion Scaler
 /////////////////////////////////////////////////////////////////////////////////////

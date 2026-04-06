@@ -46,6 +46,8 @@ protected:
 	UFUNCTION()
 	void ShowStoryListSite();
 
+	void BroadcastOnSiteChangedEvent(UUI_SiteBase* _site);
+
 #pragma endregion Site_StoryList
 //////////////////////////////////////////////////////////////////////
 #pragma region Site_StoryDetail

@@ -11,7 +11,6 @@ enum class EWindowWidgetType : uint8
 {
 	NA = 0,
 	Explorer,
-	ControlPanel
 };
 
 UENUM(BlueprintType)

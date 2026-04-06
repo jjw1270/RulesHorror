@@ -3,8 +3,7 @@
 
 #include "UI_SiteBase.h"
 
-const FString& UUI_SiteBase::GetAdditionalSiteAddress()
+void UUI_SiteBase::SetAdditionalSiteAddress(const FString& _new_address)
 {
-	static FString s_null;
-	return s_null;
+	_AdditionalSiteAddress = _new_address;
 }

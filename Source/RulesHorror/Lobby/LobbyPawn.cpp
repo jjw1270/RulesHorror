@@ -318,11 +318,20 @@ void ALobbyPawn::DriveWidgetInteraction(float _delta_time)
 		auto widget_component = Cast<UWidgetComponent>(hit.GetComponent());
 		if (IsValid(widget_component))
 		{
-			auto monitor_widget = Cast<UUI_Monitor>(widget_component->GetWidget());
-			if (IsValid(monitor_widget))
+			_InteractingMonitorWidget = Cast<UUI_Monitor>(widget_component->GetWidget());
+			if (IsValid(_InteractingMonitorWidget))
 			{
-				monitor_widget->SetMonitorCursorPosition(WidgetInteractionComponent->Get2DHitLocation());
+				_InteractingMonitorWidget->SetRealMousePointerHovered(true);
+				_InteractingMonitorWidget->SetMonitorCursorPosition(WidgetInteractionComponent->Get2DHitLocation());
 			}
+		}
+	}
+	else
+	{
+		if (IsValid(_InteractingMonitorWidget))
+		{
+			_InteractingMonitorWidget->SetRealMousePointerHovered(false);
+			_InteractingMonitorWidget = nullptr;
 		}
 	}
 }
@@ -397,8 +406,6 @@ void ALobbyPawn::BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const
 void ALobbyPawn::SetInteractingComputer(AComputer* _computer)
 {
 	_InteractingComputer = _computer;
-
-	// UWidgetHelper::OpenPage(this, )
 }
 
 bool ALobbyPawn::IsOnInteracintingComputer() const

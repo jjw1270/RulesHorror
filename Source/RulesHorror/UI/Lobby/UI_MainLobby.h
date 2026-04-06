@@ -40,6 +40,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UBTN_WindowTab> WindowTab = nullptr;
+
+	UPROPERTY(Transient)
+	bool HasBeenOpened = false;
 };
 
 UCLASS(abstract)
@@ -77,15 +80,14 @@ protected:
 
 	void SetTopWindow(UWindowBase* _target_window);
 	void UpdateTopWindow();
-	UWindowBase* GetTopWindow() const;
-
-	virtual bool NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
-	virtual bool NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation) override;
 
 	UFUNCTION()
 	void OnClickWindowTab(class UButtonBase* _tab_button);
 
 	UFUNCTION()
 	void OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused);
+
+public:
+	UWindowBase* GetTopWindow() const;
 
 };

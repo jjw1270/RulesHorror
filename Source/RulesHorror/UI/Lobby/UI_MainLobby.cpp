@@ -8,7 +8,6 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
-#include "UI/Lobby/WindowBase/WindowDragDropOperation.h"
 
 void UUI_MainLobby::NativeOnInitialized()
 {
@@ -34,7 +33,10 @@ void UUI_MainLobby::CreateWindow(EWindowWidgetType _type)
 	if (IsInvalid(data_ptr))
 		return;
 
-	if (IsAllValid(data_ptr->WindowWidget, data_ptr->WindowTab))
+	auto& window_widget = data_ptr->WindowWidget;
+	auto& window_tab = data_ptr->WindowTab;
+
+	if (IsAllValid(window_widget, window_tab))
 		return;
 
 	if (IsAnyInvalid(data_ptr->WindowWidgetClass, _WindowTabClass))
@@ -44,15 +46,15 @@ void UUI_MainLobby::CreateWindow(EWindowWidgetType _type)
 	}
 
 	// window widget
-	data_ptr->WindowWidget = CreateWidget<UWindowBase>(this, data_ptr->WindowWidgetClass);
-	if (IsInvalid(data_ptr->WindowWidget))
+	window_widget = CreateWidget<UWindowBase>(this, data_ptr->WindowWidgetClass);
+	if (IsInvalid(window_widget))
 	{
 		TRACE_ERROR(TEXT("window widget 생성 실패."))
 		return;
 	}
 
-	data_ptr->WindowWidget->_WindowWidgetType = _type;
-	data_ptr->WindowWidget->SetMaximize(false);
+	window_widget->_WindowWidgetType = _type;
+	window_widget->SetMaximize(false);
 
 	// set widget last normal pos
 	FVector2D widget_pos = FVector2D(160.0f); // 적당한 임의의 값
@@ -68,12 +70,12 @@ void UUI_MainLobby::CreateWindow(EWindowWidgetType _type)
 			}
 		}
 	}
-	data_ptr->WindowWidget->SetLastNormalPos(widget_pos);
+	window_widget->SetLastNormalPos(widget_pos);
 
-	data_ptr->WindowWidget->_OnWindowFocusedEvent.AddDynamic(this, &UUI_MainLobby::OnWindowFocused);
-	data_ptr->WindowWidget->Hide(EWidgetHideType::Collapsed);
+	window_widget->_OnWindowFocusedEvent.AddDynamic(this, &UUI_MainLobby::OnWindowFocused);
+	window_widget->Hide(EWidgetHideType::Collapsed);
 
-	auto cp_slot = CP_Window->AddChildToCanvas(data_ptr->WindowWidget);
+	auto cp_slot = CP_Window->AddChildToCanvas(window_widget);
 	if (IsValid(cp_slot))
 	{
 		cp_slot->SetAutoSize(false);
@@ -84,20 +86,20 @@ void UUI_MainLobby::CreateWindow(EWindowWidgetType _type)
 	// window tab
 	if (data_ptr->CreateTab)
 	{
-		data_ptr->WindowTab = CreateWidget<UBTN_WindowTab>(this, _WindowTabClass);
-		if (IsInvalid(data_ptr->WindowTab))
+		window_tab = CreateWidget<UBTN_WindowTab>(this, _WindowTabClass);
+		if (IsInvalid(window_tab))
 		{
 			TRACE_ERROR(TEXT("window tab 생성 실패."))
 				return;
 		}
 
-		data_ptr->WindowTab->_WindowWidgetType = _type;
-		data_ptr->WindowTab->SetTabIcon(data_ptr->WindowTabIcon);
-		data_ptr->WindowTab->SetTabText(data_ptr->WindowTabText);
+		window_tab->_WindowWidgetType = _type;
+		window_tab->SetTabIcon(data_ptr->WindowTabIcon);
+		window_tab->SetTabText(data_ptr->WindowTabText);
 
-		data_ptr->WindowTab->_OnClicked.AddDynamic(this, &UUI_MainLobby::OnClickWindowTab);
+		window_tab->_OnClicked.AddDynamic(this, &UUI_MainLobby::OnClickWindowTab);
 
-		HB_WindowTab->AddChildToHorizontalBox(data_ptr->WindowTab);
+		HB_WindowTab->AddChildToHorizontalBox(window_tab);
 	}
 }
 
@@ -107,23 +109,26 @@ void UUI_MainLobby::OpenWindow(EWindowWidgetType _type, bool _is_open)
 	if (IsInvalid(data_ptr))
 		return;
 
-	if (IsInvalid(data_ptr->WindowWidget))
+	auto window_widget = data_ptr->WindowWidget;
+
+	if (IsInvalid(window_widget))
 		return;
 
 	if (_is_open)
 	{
-		data_ptr->WindowWidget->Show(EWidgetShowType::SelfHitTestInvisible);
+		window_widget->Show(EWidgetShowType::SelfHitTestInvisible);
 
-		if (data_ptr->IsMaximized)
+		if (!data_ptr->HasBeenOpened && data_ptr->IsMaximized)
 		{
-			data_ptr->WindowWidget->SetMaximize(true);
+			window_widget->SetMaximize(true);
 		}
+		data_ptr->HasBeenOpened = true;
 
-		SetTopWindow(data_ptr->WindowWidget);
+		SetTopWindow(window_widget);
 	}
 	else
 	{
-		data_ptr->WindowWidget->Hide(EWidgetHideType::Collapsed);
+		window_widget->Hide(EWidgetHideType::Collapsed);
 		UpdateTopWindow();
 	}
 }
@@ -205,72 +210,6 @@ UWindowBase* UUI_MainLobby::GetTopWindow() const
 	return top_window;
 }
 
-bool UUI_MainLobby::NativeOnDragOver(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
-{
-	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
-
-	auto drag_operation = Cast<UWindowDragDropOperation>(_operation);
-	if (IsInvalid(drag_operation))
-		return false;
-
-	auto window_widget = Cast<UWindowBase>(drag_operation->Payload);
-	if (IsInvalid(window_widget))
-		return false;
-
-	if (drag_operation->_DragType == EWindowDragType::Move)
-	{
-		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
-		if (IsInvalid(cp_slot))
-			return false;
-
-		const FVector2D canvas_local = _geo.AbsoluteToLocal(_drag_drop_event.GetScreenSpacePosition());
-		const FVector2D new_pos = canvas_local - drag_operation->_LocalOffset;
-
-		cp_slot->SetPosition(new_pos);
-	}
-	else
-	{
-		const FVector2D drag_delta = _drag_drop_event.GetScreenSpacePosition() - drag_operation->_DragStartScreenPos;
-
-		window_widget->ResizeWindow(drag_operation->_DragType, drag_operation->_InitialWindowPos, drag_operation->_InitialWindowSize, drag_delta);
-	}
-
-	return true;
-}
-
-bool UUI_MainLobby::NativeOnDrop(const FGeometry& _geo, const FDragDropEvent& _drag_drop_event, UDragDropOperation* _operation)
-{
-	Super::NativeOnDragOver(_geo, _drag_drop_event, _operation);
-
-	auto drag_operation = Cast<UWindowDragDropOperation>(_operation);
-	if (IsInvalid(drag_operation))
-		return false;
-
-	auto window_widget = Cast<UWindowBase>(drag_operation->Payload);
-	if (IsInvalid(window_widget))
-		return false;
-
-	if (drag_operation->_DragType == EWindowDragType::Move)
-	{
-		auto cp_slot = Cast<UCanvasPanelSlot>(window_widget->Slot);
-		if (IsInvalid(cp_slot))
-			return false;
-
-		const FVector2D canvas_local = _geo.AbsoluteToLocal(_drag_drop_event.GetScreenSpacePosition());
-		const FVector2D new_pos = canvas_local - drag_operation->_LocalOffset;
-
-		cp_slot->SetPosition(new_pos);
-	}
-	else
-	{
-		const FVector2D drag_delta = _drag_drop_event.GetScreenSpacePosition() - drag_operation->_DragStartScreenPos;
-
-		window_widget->ResizeWindow(drag_operation->_DragType, drag_operation->_InitialWindowPos, drag_operation->_InitialWindowSize, drag_delta);
-	}
-
-	return true;
-}
-
 void UUI_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 {
 	auto window_tab = Cast<UBTN_WindowTab>(_tab_button);
@@ -284,7 +223,6 @@ void UUI_MainLobby::OnClickWindowTab(UButtonBase* _tab_button)
 		return;
 
 	auto window_widget = window_data_ptr->WindowWidget;
-
 	if (IsInvalid(window_widget))
 		return;
 

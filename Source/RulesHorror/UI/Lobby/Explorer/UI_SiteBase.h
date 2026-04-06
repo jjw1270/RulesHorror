@@ -12,7 +12,13 @@ class RULESHORROR_API UUI_SiteBase : public UWidgetBase
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY(EditAnywhere)
+	FString _AdditionalSiteAddress = FString();
+
 public:
-	UFUNCTION(BlueprintPure)
-	virtual const FString& GetAdditionalSiteAddress();
+	UFUNCTION(BlueprintCallable)
+	void SetAdditionalSiteAddress(const FString& _new_address);
+
+	const FString& GetAdditionalSiteAddress() const { return _AdditionalSiteAddress; }
 };

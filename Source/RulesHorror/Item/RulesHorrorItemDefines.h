@@ -14,6 +14,9 @@ struct RULESHORROR_API FStoryTableRow : public FItemTableRow
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString AdditionalSiteAddress = FString();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UWorld> StoryMap;
 
 public:

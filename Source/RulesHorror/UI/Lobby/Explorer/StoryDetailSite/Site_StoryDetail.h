@@ -15,14 +15,11 @@ class RULESHORROR_API USite_StoryDetail : public UUI_SiteBase
 
 protected:
 	static FItemID_Story _LastStoryID;
-
 	FItemID_Story _CurrentStoryID;
 
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
-
-	virtual const FString& GetAdditionalSiteAddress() override;
 
 #pragma region GoToStoryList
 protected:

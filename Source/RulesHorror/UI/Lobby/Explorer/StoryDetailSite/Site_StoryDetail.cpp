@@ -28,12 +28,6 @@ void USite_StoryDetail::NativeConstruct()
 	}
 }
 
-const FString& USite_StoryDetail::GetAdditionalSiteAddress()
-{
-	// todo story name string
-	return Super::GetAdditionalSiteAddress();
-}
-
 void USite_StoryDetail::OnClickGoToStoryListButton(UButtonBase* _btn)
 {
 	_LastStoryID = FItemID_Story::Zero;
@@ -52,9 +46,8 @@ void USite_StoryDetail::SetStoryID(FItemID_Story _story_id)
 
 	const auto& story_item_row = URulesHorrorItemHelper::GetStoryItemRow(_CurrentStoryID);
 	
+	SetAdditionalSiteAddress(story_item_row.AdditionalSiteAddress);
 	SetTitle(story_item_row.GetDisplayName());
-
-
 }
 
 void USite_StoryDetail::PlayCurrentStory()

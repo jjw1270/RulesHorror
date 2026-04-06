@@ -2,9 +2,14 @@
 
 
 #include "UI_Monitor.h"
+#include "RulesHorrorUtils.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "GameFramework/PlayerController.h"
 #include "Components/WidgetSwitcher.h"
 #include "UI/Lobby/UI_Cursor.h"
 #include "Components/CanvasPanelSlot.h"
+#include "UI/Lobby/UI_MainLobby.h"
+#include "UI/Lobby/WindowBase/WindowBase.h"
 
 TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
 
@@ -29,7 +34,7 @@ void UUI_Monitor::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	ShowMonitorCursor(false);
+	ShowMonitorCursor(false, false);
 }
 
 void UUI_Monitor::OnShow_Implementation()
@@ -72,11 +77,43 @@ void UUI_Monitor::SetActiveWidgetAndShow(UWidgetBase* _widget, bool _is_skip_ani
 	_LastActiveWidgetIndex = idx;
 }
 
-void UUI_Monitor::ShowMonitorCursor(bool _is_show)
+UWidgetBase* UUI_Monitor::GetCurrentWidget() const
+{
+	return Cast<UWidgetBase>(WidgetSwitcher->GetActiveWidget());
+}
+
+void UUI_Monitor::ShowMonitorCursor(bool _is_show, bool _set_cursor_center)
 {
 	if (_is_show)
 	{
 		UI_Cursor->Show(EWidgetShowType::HitTestInvisible);
+
+		if (_set_cursor_center)
+		{
+			const auto& geometry = GetCachedGeometry();
+			const FVector2D local_center = geometry.GetLocalSize() * 0.5f;
+
+			if (_RealMousePointerHovered)
+			{
+				auto pc = URulesHorrorUtils::GetLocalPlayerController(this);
+				if (IsValid(pc))
+				{
+					// 완벽히 일치하진 않고 근사값
+					int32 viewport_x, viewport_y;
+					pc->GetViewportSize(viewport_x, viewport_y);
+
+					pc->SetMouseLocation(viewport_x / 2, viewport_y / 2);
+				}
+			}
+			else
+			{
+				auto cursor_slot = Cast<UCanvasPanelSlot>(UI_Cursor->Slot);
+				if (IsValid(cursor_slot))
+				{
+					cursor_slot->SetPosition(local_center);
+				}
+			}
+		}
 	}
 	else
 	{
@@ -86,9 +123,23 @@ void UUI_Monitor::ShowMonitorCursor(bool _is_show)
 
 void UUI_Monitor::SetMonitorCursorPosition(const FVector2D& _pos)
 {
-	auto cp_slot = Cast<UCanvasPanelSlot>(UI_Cursor->Slot);
-	if (IsInvalid(cp_slot))
+	if (UI_Cursor->IsVisible() == false)
 		return;
 
-	cp_slot->SetPosition(_pos);
+	auto cp_slot = Cast<UCanvasPanelSlot>(UI_Cursor->Slot);
+	if (IsValid(cp_slot))
+	{
+		cp_slot->SetPosition(_pos);
+	}
+
+	// update drag on main lobby
+	auto main_lobby = Cast<UUI_MainLobby>(GetCurrentWidget());
+	if (IsValid(main_lobby))
+	{
+		auto top_window = main_lobby->GetTopWindow();
+		if (IsValid(top_window))
+		{
+			top_window->UpdateDrag(_pos);
+		}
+	}
 }

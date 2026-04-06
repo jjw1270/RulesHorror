@@ -137,6 +137,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class AComputer> _InteractingComputer = nullptr;
 
+	UPROPERTY()
+	TObjectPtr<class UUI_Monitor> _InteractingMonitorWidget = nullptr;
+
 	UPROPERTY(EditAnywhere, Category = "Monitor")
 	TEnumAsByte<EObjectTypeQuery> _MonitorScreenWidgetObjectType;
 

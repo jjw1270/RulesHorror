@@ -33,12 +33,22 @@ protected:
 protected:
 	EWindowDragType _DragType = EWindowDragType::NA;
 
+	bool _IsDragging = false;
+
+	FVector2D _DragStartCursorPos = FVector2D::ZeroVector;
+	FVector2D _InitialWindowPos = FVector2D::ZeroVector;
+	FVector2D _InitialWindowSize = FVector2D::ZeroVector;
+	FVector2D _DragStartLocalRatio = FVector2D::ZeroVector;
+
+	UPROPERTY(EditAnywhere)
+	float _DragDeadZone = 10.0f;
+
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
-	virtual void NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation) override;
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -50,6 +60,8 @@ public:
 	}
 
 public:
+	void UpdateDrag(const FVector2D& _current_cursor_pos);
+
 	void ResizeWindow(EWindowDragType _drag_type, const FVector2D& _initial_window_pos, 	const FVector2D& _initial_window_size, const FVector2D& _drag_delta);
 
 public:

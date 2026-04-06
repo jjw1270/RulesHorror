@@ -90,6 +90,9 @@ void AComputer::Interact_Implementation(AActor* _interactor)
 		return;
 
 	_InteractorLobbyPawn->SetTargetMovePoint(_InteractMovePoint, _OnMoveToPointFinishedEvent);
+
+	_InteractorLobbyPawn->SetInteractingComputer(this);
+	SetPower(true, true);
 }
 
 void AComputer::FinishInteract()
@@ -97,6 +100,9 @@ void AComputer::FinishInteract()
 	if (IsValid(_InteractorLobbyPawn))
 	{
 		_InteractorLobbyPawn->SetTargetMovePoint(_FinishInteractMovePoint, _OnMoveToPointFinishedEvent);
+
+		_InteractorLobbyPawn->SetInteractingComputer(nullptr);
+		CloseInteractingWidget();
 	}
 }
 
@@ -105,21 +111,15 @@ void AComputer::OnLobbyPawnMoveToPointFinished(const FName& _point_name)
 	if (IsInvalid(_InteractorLobbyPawn))
 		return;
 
+	// material 설정은 변경 해야 할수도(연출 요소)
+
 	if (_point_name == _InteractMovePoint)
 	{
-		_InteractorLobbyPawn->SetInteractingComputer(this);
-		SetPower(true, true);
-
 		OpenInteractingWidget();
 	}
 	else if (_point_name == _FinishInteractMovePoint)
 	{
-		_InteractorLobbyPawn->SetInteractingComputer(nullptr);
 
-		// Set Power off 는 하지 않는다.
-		// 다만 material 설정은 변경 해야 할수도(연출 요소)
-
-		CloseInteractingWidget();
 	}
 }
 

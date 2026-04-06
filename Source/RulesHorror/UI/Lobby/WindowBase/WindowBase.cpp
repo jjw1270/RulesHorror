@@ -4,8 +4,8 @@
 #include "WindowBase.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/PanelWidget.h"
 #include "UI/Lobby/WindowBase/UI_WindowLayout.h"
-#include "UI/Lobby/WindowBase/WindowDragDropOperation.h"
 
 void UWindowBase::NativeOnInitialized()
 {
@@ -34,50 +34,6 @@ FReply UWindowBase::NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const 
 	SetWindowFocused(true);
 
 	return FReply::Unhandled();
-}
-
-FReply UWindowBase::NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
-{
-	Super::NativeOnMouseButtonDown(_geo, _mouse_event);
-
-	if (_DragType != EWindowDragType::NA)
-	{
-		return FReply::Handled().DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
-	}
-
-	return FReply::Unhandled();
-}
-
-void UWindowBase::NativeOnDragDetected(const FGeometry& _geo, const FPointerEvent& _mouse_event, UDragDropOperation*& _out_operation)
-{
-	Super::NativeOnDragDetected(_geo, _mouse_event, _out_operation);
-
-	auto drag_operation = NewObject<UWindowDragDropOperation>();
-	if (IsInvalid(drag_operation))
-		return;
-
-	if (_DragType == EWindowDragType::Move)
-	{
-		if (_IsMaximized)
-		{
-			SetMaximize(false);
-		}
-	}
-
-	auto cp_slot = Cast<UCanvasPanelSlot>(Slot);
-	if (IsInvalid(cp_slot))
-		return;
-
-	drag_operation->_DragType = _DragType;
-	drag_operation->Pivot = EDragPivot::MouseDown;
-	drag_operation->Payload = this;
-
-	drag_operation->_LocalOffset = _geo.AbsoluteToLocal(_mouse_event.GetScreenSpacePosition());
-	drag_operation->_DragStartScreenPos = _mouse_event.GetScreenSpacePosition();
-	drag_operation->_InitialWindowPos = cp_slot->GetPosition();
-	drag_operation->_InitialWindowSize = cp_slot->GetSize();
-
-	_out_operation = drag_operation;
 }
 
 void UWindowBase::ExecuteCommand(EWindowCommand _command)
@@ -138,6 +94,82 @@ void UWindowBase::ExecuteCommand(EWindowCommand _command)
 
 	default:
 		break;
+	}
+}
+
+FReply UWindowBase::NativeOnMouseButtonDown(const FGeometry& _geo, const FPointerEvent& _mouse_event)
+{
+	Super::NativeOnMouseButtonDown(_geo, _mouse_event);
+
+	if (_DragType == EWindowDragType::NA)
+		return FReply::Unhandled();
+
+	auto cp_slot = Cast<UCanvasPanelSlot>(Slot);
+	if (IsInvalid(cp_slot))
+		return FReply::Unhandled();
+
+	_IsDragging = true;
+	_DragStartCursorPos =_mouse_event.GetScreenSpacePosition();
+	_InitialWindowPos = cp_slot->GetPosition();
+	_InitialWindowSize = cp_slot->GetSize();
+
+	// 클릭한 위치 비율 저장
+	const FVector2D local_mouse_pos = _geo.AbsoluteToLocal(_DragStartCursorPos);
+	const FVector2D local_size = _geo.GetLocalSize();
+	_DragStartLocalRatio.X = (local_size.X > KINDA_SMALL_NUMBER) ? FMath::Clamp(local_mouse_pos.X / local_size.X, 0.0f, 1.0f) : 0.0f;
+	_DragStartLocalRatio.Y = (local_size.Y > KINDA_SMALL_NUMBER) ? FMath::Clamp(local_mouse_pos.Y / local_size.Y, 0.0f, 1.0f) : 0.0f;
+
+	return FReply::Handled();
+}
+
+FReply UWindowBase::NativeOnMouseButtonUp(const FGeometry& _geo, const FPointerEvent& _mouse_event)
+{
+	Super::NativeOnMouseButtonUp(_geo, _mouse_event);
+
+	_IsDragging = false;
+	_DragType = EWindowDragType::NA;
+
+	return FReply::Handled();
+}
+
+void UWindowBase::UpdateDrag(const FVector2D& _current_cursor_pos)
+{
+	if (_IsDragging == false)
+		return;
+
+	const FVector2D drag_delta = _current_cursor_pos - _DragStartCursorPos;
+
+	if (drag_delta.SizeSquared() < _DragDeadZone)
+		return;
+
+	if (_DragType == EWindowDragType::Move)
+	{
+		auto cp_slot = Cast<UCanvasPanelSlot>(Slot);
+		if (IsValid(cp_slot))
+		{
+			if (_IsMaximized)
+			{
+				SetMaximize(false);
+
+				const FVector2D restored_size = _LastNormalSize;
+				const FVector2D restored_pos = _current_cursor_pos - FVector2D(restored_size.X * _DragStartLocalRatio.X, restored_size.Y * _DragStartLocalRatio.Y);
+
+				cp_slot->SetPosition(restored_pos);
+				cp_slot->SetSize(restored_size);
+
+				_InitialWindowPos = restored_pos;
+				_InitialWindowSize = restored_size;
+				_DragStartCursorPos = _current_cursor_pos;
+
+				return;
+			}
+
+			cp_slot->SetPosition(_InitialWindowPos + drag_delta);
+		}
+	}
+	else
+	{
+		ResizeWindow(_DragType, _InitialWindowPos, _InitialWindowSize, drag_delta);
 	}
 }
 
