@@ -29,7 +29,7 @@ public:
 
 protected:
 	virtual void NativeOnInitialized() override;
-	virtual void NativeConstruct() override;
+	virtual void OnShow_Implementation() override;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)

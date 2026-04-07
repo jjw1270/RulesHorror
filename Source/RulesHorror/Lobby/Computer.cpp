@@ -156,5 +156,5 @@ void AComputer::CloseInteractingWidget()
 	if (IsInvalid(_OnInteractingWidget))
 		return;
 
-	_OnInteractingWidget->RemoveFromParent();
+	_OnInteractingWidget->Close();
 }

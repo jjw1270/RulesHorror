@@ -13,23 +13,6 @@
 
 TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
 
-void UUI_Monitor::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
-
-	if (IsValid(WidgetSwitcher))
-	{
-		for (auto child : WidgetSwitcher->GetAllChildren())
-		{
-			auto widget = Cast<UWidgetBase>(child);
-			if (IsInvalid(widget))
-				continue;
-
-			widget->Hide(EWidgetHideType::Collapsed, true);
-		}
-	}
-}
-
 void UUI_Monitor::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -55,6 +38,7 @@ void UUI_Monitor::OnShow_Implementation()
 	auto actived_widget = Cast<UWidgetBase>(WidgetSwitcher->GetActiveWidget());
 	if (IsValid(actived_widget))
 	{
+		actived_widget->Hide(EWidgetHideType::Collapsed, true);
 		actived_widget->Show(EWidgetShowType::SelfHitTestInvisible);
 	}
 }

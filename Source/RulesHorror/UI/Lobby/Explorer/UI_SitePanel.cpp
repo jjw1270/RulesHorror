@@ -2,7 +2,7 @@
 
 
 #include "UI_SitePanel.h"
-#include "SaveGame/SaveGameSubsystem.h"
+#include "SaveGameSubsystem.h"
 #include "Item/RulesHorrorItemHelper.h"
 #include "Components/WidgetSwitcher.h"
 #include "UI/Lobby/Explorer/StoryListSite/Site_StoryList.h"
@@ -23,14 +23,16 @@ void UUI_SitePanel::NativeOnInitialized()
 	}
 }
 
-void UUI_SitePanel::NativeConstruct()
+void UUI_SitePanel::OnShow_Implementation()
 {
-	Super::NativeConstruct();
+	Super::OnShow_Implementation();
 
 	const auto save_game = USaveGameHelper::GetSaveGame(this);
 	if (IsValid(save_game))
 	{
-		SetNickName(FText::FromString(save_game->GetNickName()));
+		FString nickname;
+		save_game->FindSavedStringData(TEXT("Nickname"), nickname);
+		SetNickName(FText::FromString(nickname));
 	}
 
 	BroadcastOnSiteChangedEvent(Site_StoryList);

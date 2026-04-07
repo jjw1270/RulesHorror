@@ -19,7 +19,7 @@ protected:
 	FString _CurrentNickname;
 
 protected:
-	virtual void NativeConstruct() override;
+	virtual void OnShow_Implementation() override;
 
 protected:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
@@ -28,4 +28,5 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	bool SetNewNickname(const FString& _new_nickname, FText& _out_error_text);
 
+	bool CheckNickname(const FString& _nickname, FText& _out_error_text) const;
 };

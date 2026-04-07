@@ -15,7 +15,6 @@ class RULESHORROR_API UUI_Monitor : public UWidgetBase
 	GENERATED_BODY()
 
 protected:
-	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual void OnShow_Implementation() override;
 

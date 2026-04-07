@@ -2,43 +2,91 @@
 
 
 #include "UI_InitUser.h"
-#include "SaveGame/SaveGameSubsystem.h"
+#include "WidgetHelper.h"
+#include "SaveGameSubsystem.h"
+#include "Internationalization/BreakIterator.h"
 
-void UUI_InitUser::NativeConstruct()
+
+void UUI_InitUser::OnShow_Implementation()
 {
-	Super::NativeConstruct();
+	Super::OnShow_Implementation();
 
 	const auto save_game = USaveGameHelper::GetSaveGame(this);
 	if (IsValid(save_game))
 	{
-		_CurrentNickname = save_game->GetNickName();
+		save_game->FindSavedStringData(TEXT("Nickname"), _CurrentNickname);
 		ShowSetNewNickname(_CurrentNickname.IsEmpty());
 	}
 }
 
 bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_error_text)
 {
-	auto save_game = USaveGameHelper::GetSaveGame_Editable(this);
-	if (IsInvalid(save_game))
+	const FString prev_nickname = _CurrentNickname;
+
+	const FString nickname = _new_nickname.TrimStartAndEnd();
+	if (CheckNickname(nickname, _out_error_text))
 	{
-		TRACE_ERROR(TEXT("Invalid Save Game"));
-		return false;
-	}
+		_CurrentNickname = nickname;
 
-	FString prev_nickname = _CurrentNickname;
-
-	bool success = save_game->SetNickName(_new_nickname, _out_error_text);
-
-	if (success)
-	{
-		_CurrentNickname = save_game->GetNickName();
-		ShowSetNewNickname(_CurrentNickname.IsEmpty());
-
-		if(prev_nickname != _CurrentNickname)
+		const auto save_game = USaveGameHelper::GetSaveGame(this);
+		if (IsValid(save_game))
 		{
-			USaveGameHelper::SaveGame(this);
+			save_game->SaveStringData(TEXT("Nickname"), _new_nickname);
+			ShowSetNewNickname(_CurrentNickname.IsEmpty());
+
+			if (prev_nickname != _CurrentNickname)
+			{
+				USaveGameHelper::SaveGameToSlot(this);
+			}
+
+			return true;
 		}
 	}
 
-	return success;
+	return false;
+}
+
+bool UUI_InitUser::CheckNickname(const FString& _nickname, FText& _out_error_text) const
+{
+	_out_error_text = FText::GetEmpty();
+
+	if (_nickname.IsEmpty())
+	{
+		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_IsEmpty");
+		return false;
+	}
+
+	// “사람이 인지하는 글자 수(그래핌)” 기준 길이 계산
+	int32 grapheme_count = 0;
+	{
+		TSharedRef<IBreakIterator> it = FBreakIterator::CreateCharacterBoundaryIterator();
+		it->SetString(_nickname);
+
+		int32 start = it->ResetToBeginning();
+		for (int32 end = it->MoveToNext(); end != INDEX_NONE; end = it->MoveToNext())
+		{
+			// [start, end) 가 1개의 사용자 인지 문자(그래핌)로 취급됨
+			++grapheme_count;
+
+			// 조기 탈출(최대 길이 초과)
+			if (grapheme_count > 16)
+				break;
+
+			start = end;
+		}
+	}
+
+	if (grapheme_count < 2)
+	{
+		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_Too_Short");
+		return false;
+	}
+
+	if (grapheme_count > 16)
+	{
+		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_Too_Long");
+		return false;
+	}
+
+	return true;
 }

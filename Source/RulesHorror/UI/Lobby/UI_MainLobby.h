@@ -7,9 +7,12 @@
 #include "UI/Lobby/WindowBase/WindowDefines.h"
 #include "UI_MainLobby.generated.h"
 
-
+class UCanvasPanel;
+class UHorizontalBox;
+class UTexture2D;
 class UWindowBase;
 class UBTN_WindowTab;
+class UButtonBase;
 
 USTRUCT(BlueprintType)
 struct FWindowData
@@ -17,7 +20,7 @@ struct FWindowData
 	GENERATED_BODY()
 
 public:
-	// window widget
+	// Window widget
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UWindowBase> WindowWidgetClass = nullptr;
 
@@ -28,7 +31,7 @@ public:
 	TObjectPtr<UWindowBase> WindowWidget = nullptr;
 
 public:
-	// window tab
+	// Window tab
 	UPROPERTY(EditAnywhere)
 	bool CreateTab = true;
 
@@ -45,17 +48,17 @@ public:
 	bool HasBeenOpened = false;
 };
 
-UCLASS(abstract)
+UCLASS(Abstract)
 class RULESHORROR_API UUI_MainLobby : public UWidgetBase
 {
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UCanvasPanel> CP_Window = nullptr;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UCanvasPanel> CP_Window = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UHorizontalBox> HB_WindowTab = nullptr;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UHorizontalBox> HB_WindowTab = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -63,6 +66,11 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	TMap<EWindowWidgetType, FWindowData> _WindowDataMap;
+
+	FVector2D _InitialWindowPos = FVector2D(80.0f, 80.0f);
+	FVector2D _InitialNormalPos = FVector2D(120.0f, 120.0f);
+	FVector2D _WindowOffset = FVector2D(24.0f, 24.0f);
+	FVector2D _DefaultWindowSize = FVector2D(600.0f, 600.0f);
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -82,12 +90,19 @@ protected:
 	void UpdateTopWindow();
 
 	UFUNCTION()
-	void OnClickWindowTab(class UButtonBase* _tab_button);
+	void OnClickWindowTab(UButtonBase* _tab_button);
 
 	UFUNCTION()
 	void OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused);
 
 public:
 	UWindowBase* GetTopWindow() const;
+
+private:
+	FVector2D GetNextWindowPosition() const;
+	void InitializeWindowWidget(UWindowBase* _window_widget, EWindowWidgetType _type, const FVector2D& _window_pos);
+	void AttachWindowToCanvas(UWindowBase* _window_widget);
+	void CreateWindowTab(EWindowWidgetType _type, FWindowData& _window_data);
+	int32 GetMaxWindowZOrder() const;
 
 };

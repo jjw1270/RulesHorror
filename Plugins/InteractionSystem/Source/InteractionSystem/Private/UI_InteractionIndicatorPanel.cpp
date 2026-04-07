@@ -52,7 +52,7 @@ void UUI_InteractionIndicatorPanel::NativeTick(const FGeometry& _geo, float _del
 			if (IsValid(indicator))
 			{
 				indicator->ClearWidget();
-				indicator->RemoveFromParent();
+				indicator->Close(true);
 			}
 
 			it.RemoveCurrent();
@@ -96,7 +96,7 @@ void UUI_InteractionIndicatorPanel::NativeDestruct()
 		if (IsValid(pair.Value))
 		{
 			pair.Value->ClearWidget();
-			pair.Value->RemoveFromParent();
+			pair.Value->Close(true);
 		}
 	}
 	_ActivatedIndicatorMap.Empty();
@@ -106,7 +106,7 @@ void UUI_InteractionIndicatorPanel::NativeDestruct()
 		if (IsValid(indicator))
 		{
 			indicator->ClearWidget();
-			indicator->RemoveFromParent();
+			indicator->Close(true);
 		}
 	}
 	_IndicatorPool.Empty();
@@ -162,7 +162,7 @@ void UUI_InteractionIndicatorPanel::RemoveInteractionActor(AActor* _interaction_
 	if (IsValid(indicator))
 	{
 		indicator->ClearWidget();
-		indicator->RemoveFromParent();
+		indicator->Close();
 	}
 
 	_ActivatedIndicatorMap.Remove(_interaction_actor);

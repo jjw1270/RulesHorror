@@ -88,7 +88,7 @@ void UInteractorComponent::EndPlay(const EEndPlayReason::Type _end_play_reason)
 
 	if (IsValid(_IndicatorPanel))
 	{
-		_IndicatorPanel->RemoveFromParent();
+		_IndicatorPanel->Close(true);
 		_IndicatorPanel = nullptr;
 	}
 

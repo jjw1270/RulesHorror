@@ -49,7 +49,7 @@ void UWindowBase::ExecuteCommand(EWindowCommand _command)
 		break;
 
 	case EWindowCommand::Close:
-		RemoveFromParent();
+		Close();
 		break;
 
 	case EWindowCommand::Move:
