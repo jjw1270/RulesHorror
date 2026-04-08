@@ -106,7 +106,7 @@ REM ===============================
 call :PRINT_HEADER "Visual Studio 프로젝트 파일 생성"
 
 call :LOG_INFO "GenerateProjectFiles 실행 중..."
-call "%GENERATE_SCRIPT%" -projectfiles -project="%PROJECT_FILE%" -game -progress
+"%GENERATE_SCRIPT%" -projectfiles -project="%PROJECT_FILE%" -game -progress
 if errorlevel 1 (
     echo.
     call :LOG_ERROR "Visual Studio 프로젝트 파일 생성에 실패했습니다."
@@ -123,6 +123,7 @@ REM 종료 처리
 REM ===============================
 
 :SUCCESS_EXIT
+timeout /t 2 /nobreak >nul
 endlocal
 exit /b 0
 
