@@ -13,6 +13,7 @@ enum class ERulesHorrorWidgetZOrder : uint8
 	InteractionIndicator = 3,
 	Page = 10,
 	Popup = 20,
+	Option = 250,
 };
 
 using Utils = URulesHorrorUtils;

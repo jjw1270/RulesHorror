@@ -15,7 +15,7 @@ class RULESHORROR_API UUI_Monitor : public UWidgetBase
 	GENERATED_BODY()
 
 protected:
-	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 	virtual void OnShow_Implementation() override;
 
 #pragma region MonitorWidget
@@ -37,11 +37,16 @@ public:
 #endif
 
 protected:
-	UFUNCTION(BlueprintCallable)
-	void SetActiveWidgetAndShow(UWidgetBase* _widget, bool _is_skip_anim);
+	UFUNCTION()
+	void OnShowScreenWidget(UWidgetBase* _widget);
+
+	UFUNCTION()
+	void OnCloseScreenWidget(UWidgetBase* _widget, bool _is_removed);
+
+	void ShowNextScreenWidget();
 
 public:
-	UWidgetBase* GetCurrentWidget() const;
+	class UUI_MonitorScreenWidget* GetCurrentScreenWidget() const;
 
 #pragma endregion MonitorWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,9 +63,7 @@ public:
 		_RealMousePointerHovered = _value;
 	}
 
-	UFUNCTION(BlueprintCallable)
 	void ShowMonitorCursor(bool _is_show, bool _set_cursor_center);
-
 	void SetMonitorCursorPosition(const FVector2D& _pos = FVector2D::ZeroVector);
 
 #pragma endregion Cursor

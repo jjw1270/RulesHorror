@@ -1,0 +1,49 @@
+// Copyright (c) 2026 장윤제. All rights reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Widgets/WidgetBase.h"
+#include "WindowDefines.h"
+#include "UI_WindowLayout.generated.h"
+
+class UClickButton;
+
+UCLASS(abstract)
+class RULESHORROR_API UUI_WindowLayout : public UWidgetBase
+{
+	GENERATED_BODY()
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<UTexture2D> _TitleImage = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FText _TitleText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool _ShowTitle = true;
+
+#pragma region Window Command
+public:
+	DECLARE_DELEGATE_OneParam(F_OnRequestCommand, EWindowCommand);
+
+	F_OnRequestCommand _OnRequestCommandEvent;
+
+protected:
+	UFUNCTION(BlueprintCallable)
+	void RequestCommand(EWindowCommand _command);
+
+#pragma endregion Window Command
+/////////////////////////////////////////////////////////////////////////////////////
+#pragma region Scaler
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void EnableWindowScaler(bool _is_enable);
+
+#pragma endregion Scaler
+/////////////////////////////////////////////////////////////////////////////////////
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnFocused(bool _is_focused);
+};

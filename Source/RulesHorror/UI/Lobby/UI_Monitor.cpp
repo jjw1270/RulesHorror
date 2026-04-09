@@ -3,26 +3,44 @@
 
 #include "UI_Monitor.h"
 #include "RulesHorrorUtils.h"
-#include "Blueprint/SlateBlueprintLibrary.h"
-#include "GameFramework/PlayerController.h"
 #include "Components/WidgetSwitcher.h"
+#include "UI/Lobby/MonitorScreen/UI_MonitorScreenWidget.h"
 #include "UI/Lobby/UI_Cursor.h"
 #include "Components/CanvasPanelSlot.h"
-#include "UI/Lobby/UI_MainLobby.h"
-#include "UI/Lobby/WindowBase/WindowBase.h"
+#include "UI/Lobby/MonitorScreen/UI_WindowManager.h"
+#include "UI/Lobby/MonitorScreen/WindowBase/WindowBase.h"
 
 TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
 
-void UUI_Monitor::NativeConstruct()
+void UUI_Monitor::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 
-	ShowMonitorCursor(false, false);
+	if (IsValid(WidgetSwitcher))
+	{
+		for (auto child : WidgetSwitcher->GetAllChildren())
+		{
+			auto screen_widget = Cast<UUI_MonitorScreenWidget>(child);
+			if (IsInvalid(screen_widget))
+			{
+				TRACE_ERROR(TEXT("UUI_MonitorScreenWidget 만 WidgetSwitcher의 child로 들어올 수 있습니다."));
+				return;
+			}
+
+			screen_widget->Hide(EWidgetHideType::Collapsed, true);
+
+			screen_widget->_RequestShowMonitorCursorEvent.BindUObject(this, &UUI_Monitor::ShowMonitorCursor);
+			screen_widget->_OnShowEvent.AddDynamic(this, &UUI_Monitor::OnShowScreenWidget);
+			screen_widget->_OnCloseEvent.AddDynamic(this, &UUI_Monitor::OnCloseScreenWidget);
+		}
+	}
 }
 
 void UUI_Monitor::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
+
+	ShowMonitorCursor(false, false);
 
 	if (_LastActiveWidgetIndex.IsSet() == false)
 	{
@@ -35,35 +53,51 @@ void UUI_Monitor::OnShow_Implementation()
 
 	WidgetSwitcher->SetActiveWidgetIndex(_LastActiveWidgetIndex.GetValue());
 
-	auto actived_widget = Cast<UWidgetBase>(WidgetSwitcher->GetActiveWidget());
-	if (IsValid(actived_widget))
+	auto actived_screen_widget = Cast<UUI_MonitorScreenWidget>(WidgetSwitcher->GetActiveWidget());
+	if (IsValid(actived_screen_widget))
 	{
-		actived_widget->Hide(EWidgetHideType::Collapsed, true);
-		actived_widget->Show(EWidgetShowType::SelfHitTestInvisible);
+		actived_screen_widget->Show(EWidgetShowType::SelfHitTestInvisible);
 	}
 }
 
-void UUI_Monitor::SetActiveWidgetAndShow(UWidgetBase* _widget, bool _is_skip_anim)
+void UUI_Monitor::OnShowScreenWidget(UWidgetBase* _widget)
+{
+	auto screen_widget = Cast<UUI_MonitorScreenWidget>(_widget);
+	if (IsInvalid(screen_widget))
+		return;
+
+	ShowMonitorCursor(screen_widget->GetShowMouseCursorOnShow(), false);
+}
+
+void UUI_Monitor::OnCloseScreenWidget(UWidgetBase* _widget, bool _is_removed)
 {
 	if (IsInvalid(_widget))
 		return;
 
-	int32 idx = WidgetSwitcher->GetChildIndex(_widget);
-	if (idx == INDEX_NONE)
-	{
-		TRACE_WARNING(TEXT("WidgetSwitcher에 있는 위젯이어야 합니다."));
-		return;
-	}
-
-	WidgetSwitcher->SetActiveWidgetIndex(idx);
-	_widget->Show(EWidgetShowType::SelfHitTestInvisible, _is_skip_anim);
-
-	_LastActiveWidgetIndex = idx;
+	ShowNextScreenWidget();
 }
 
-UWidgetBase* UUI_Monitor::GetCurrentWidget() const
+void UUI_Monitor::ShowNextScreenWidget()
 {
-	return Cast<UWidgetBase>(WidgetSwitcher->GetActiveWidget());
+	const int32 next_idx = _LastActiveWidgetIndex.GetValue() + 1;
+
+	// 마지막 위젯이면 stop
+	if (next_idx >= WidgetSwitcher->GetChildrenCount())
+		return;
+
+	WidgetSwitcher->SetActiveWidgetIndex(next_idx);
+	_LastActiveWidgetIndex = next_idx;
+
+	auto widget = GetCurrentScreenWidget();
+	if (IsInvalid(widget))
+		return;
+
+	widget->Show(EWidgetShowType::SelfHitTestInvisible);
+}
+
+UUI_MonitorScreenWidget* UUI_Monitor::GetCurrentScreenWidget() const
+{
+	return Cast<UUI_MonitorScreenWidget>(WidgetSwitcher->GetActiveWidget());
 }
 
 void UUI_Monitor::ShowMonitorCursor(bool _is_show, bool _set_cursor_center)
@@ -116,11 +150,11 @@ void UUI_Monitor::SetMonitorCursorPosition(const FVector2D& _pos)
 		cp_slot->SetPosition(_pos);
 	}
 
-	// update drag on main lobby
-	auto main_lobby = Cast<UUI_MainLobby>(GetCurrentWidget());
-	if (IsValid(main_lobby))
+	// update drag on window manager
+	auto window_manager = Cast<UUI_WindowManager>(GetCurrentScreenWidget());
+	if (IsValid(window_manager))
 	{
-		auto top_window = main_lobby->GetTopWindow();
+		auto top_window = window_manager->GetTopWindow();
 		if (IsValid(top_window))
 		{
 			top_window->UpdateDrag(_pos);
