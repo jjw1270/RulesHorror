@@ -23,7 +23,10 @@ void UItemRegistryValidationSubsystem::Initialize(FSubsystemCollectionBase& _col
 		EDITOR_POPUP(TEXT("Refresh Item Registry 실패!"));
 	}
 #else
-	checkf(is_success, TEXT("Refresh Item Registry Failed."));
+	if (is_success == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Refresh Item Registry Failed."));
+	}
 #endif
 }
 
