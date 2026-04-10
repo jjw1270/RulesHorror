@@ -20,6 +20,7 @@ void UUI_EditableTextBox::NativeConstruct()
 	{
 		EditableTextBox->OnTextCommitted.RemoveDynamic(this, &UUI_EditableTextBox::OnTextCommitted);
 		EditableTextBox->OnTextCommitted.AddDynamic(this, &UUI_EditableTextBox::OnTextCommitted);
+		EditableTextBox->SetClearKeyboardFocusOnCommit(true);
 	}
 }
 
@@ -42,25 +43,33 @@ void UUI_EditableTextBox::OnShow_Implementation()
 		_WasShowMouseCursor = pc->ShouldShowMouseCursor();
 	}
 
+	EditableTextBox->SetIsEnabled(true);
 	EditableTextBox->SetFocus();
 }
 
-void UUI_EditableTextBox::OnClose_Implementation()
+void UUI_EditableTextBox::OnClosing_Implementation()
 {
+	Super::OnClosing_Implementation();
+
+	EditableTextBox->SetIsEnabled(false);
+
+	UWidgetBlueprintLibrary::SetFocusToGameViewport();
+
+	// 마우스를 움직이지 않으면 커서가 숨겨지지 않는 현상 수정
 	auto pc = URulesHorrorUtils::GetLocalPlayerController(this);
 	if (IsValid(pc))
 	{
 		pc->SetShowMouseCursor(_WasShowMouseCursor);
+
+		if (_WasShowMouseCursor == false)
+		{
+			float mouse_x, mouse_y;
+			if (pc->GetMousePosition(mouse_x, mouse_y))
+			{
+				pc->SetMouseLocation((int32)mouse_x, (int32)mouse_y);
+			}
+		}
 	}
-
-	Super::OnClose_Implementation();
-}
-
-void UUI_EditableTextBox::Close_Implementation(bool _is_skip_anim)
-{
-	Super::Close_Implementation(_is_skip_anim);
-
-	UWidgetBlueprintLibrary::SetFocusToGameViewport();
 }
 
 FEventReply UUI_EditableTextBox::OnClickedBG(FGeometry _geometry, const FPointerEvent& _mouse_event)

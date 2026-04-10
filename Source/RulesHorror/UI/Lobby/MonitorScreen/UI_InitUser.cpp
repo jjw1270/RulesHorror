@@ -42,7 +42,7 @@ void UUI_InitUser::OnEditableTextBoxWidgetCommitted(const FText& _text)
 	ETB_Nickname->SetText(_text);
 }
 
-void UUI_InitUser::OnCloseEditableTextBoxWidget(UWidgetBase* _widget, bool _is_removed)
+void UUI_InitUser::OnCloseEditableTextBoxWidget(UWidgetBase* _widget)
 {
 	if (IsInvalid(_EditableTextBoxWidget))
 		return;

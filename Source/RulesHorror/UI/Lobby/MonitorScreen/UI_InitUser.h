@@ -41,7 +41,7 @@ protected:
 	void OnEditableTextBoxWidgetCommitted(const FText& _text);
 
 	UFUNCTION()
-	void OnCloseEditableTextBoxWidget(UWidgetBase* _widget, bool _is_removed);
+	void OnCloseEditableTextBoxWidget(UWidgetBase* _widget);
 
 	UFUNCTION(BlueprintCallable)
 	bool SetNewNickname(const FString& _new_nickname, FText& _out_error_text);

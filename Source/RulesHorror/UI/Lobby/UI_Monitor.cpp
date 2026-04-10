@@ -69,7 +69,7 @@ void UUI_Monitor::OnShowScreenWidget(UWidgetBase* _widget)
 	ShowMonitorCursor(screen_widget->GetShowMouseCursorOnShow(), false);
 }
 
-void UUI_Monitor::OnCloseScreenWidget(UWidgetBase* _widget, bool _is_removed)
+void UUI_Monitor::OnCloseScreenWidget(UWidgetBase* _widget)
 {
 	if (IsInvalid(_widget))
 		return;

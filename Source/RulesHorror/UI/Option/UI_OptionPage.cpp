@@ -3,6 +3,7 @@
 
 #include "UI_OptionPage.h"
 #include "RulesHorrorGameInstance.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 void UUI_OptionPage::NativeConstruct()
 {
@@ -22,6 +23,8 @@ void UUI_OptionPage::NativeDestruct()
 	{
 		game_inst->PauseGame(false);
 	}
+
+	UWidgetBlueprintLibrary::SetFocusToGameViewport();
 
 	Super::NativeDestruct();
 }

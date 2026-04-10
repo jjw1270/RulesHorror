@@ -36,12 +36,8 @@ public:
 
 protected:
 	virtual void NativeConstruct() override;
-
 	virtual void OnShow_Implementation() override;
-	virtual void OnClose_Implementation() override;
-
-public:
-	virtual void Close_Implementation(bool _is_skip_anim = false) override;
+	virtual void OnClosing_Implementation() override;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
