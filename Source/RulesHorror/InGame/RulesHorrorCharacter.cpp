@@ -69,7 +69,7 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_co
 		return;
 	}
 
-	if (IsAnyInvalid(_IA_Move, _IA_Look, _IA_Interact))
+	if (IsAnyInvalid(_IA_Move, _IA_Look, _IA_Interact, _IA_ClickInteract))
 	{
 		TRACE_ERROR(TEXT("Some Input Action is not set!!"));
 		return;

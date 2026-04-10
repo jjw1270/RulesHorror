@@ -58,9 +58,12 @@ void USite_StoryList::NativeConstruct()
 
 	if (IsValid(RadioButtonGroup_Index))
 	{
-		int32 max_radio_button_idx = _AllStroyItemRows.Num() / _StoryTitleNum + 1;
-
-		RadioButtonGroup_Index->InitWidget(max_radio_button_idx, _LastRadioButtonIndex.GetValue());
+		const int32 all_story_item_num = _AllStroyItemRows.Num();
+		if (all_story_item_num > 0 && _StoryTitleNum > 0)
+		{
+			const int32 max_radio_button_idx = (all_story_item_num / _StoryTitleNum) + 1;
+			RadioButtonGroup_Index->InitWidget(max_radio_button_idx, _LastRadioButtonIndex.GetValue());
+		}
 	}
 }
 

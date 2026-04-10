@@ -159,7 +159,8 @@ protected:
 
 	void DriveWidgetInteraction(float _delta_time);
 	void BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const;
-	
+	void ApplyMonitorTraceChannel();
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetInteractingComputer(AComputer* _computer);

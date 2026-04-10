@@ -36,8 +36,8 @@ ALobbyPawn::ALobbyPawn()
 	WidgetInteractionComponent = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("WidgetInteraction"));
 	WidgetInteractionComponent->SetupAttachment(GetRootComponent());
 
-	WidgetInteractionComponent->TraceChannel = UEngineTypes::ConvertToCollisionChannel(_MonitorScreenWidgetObjectType);
 	WidgetInteractionComponent->InteractionSource = EWidgetInteractionSource::Custom;
+	ApplyMonitorTraceChannel();
 }
 
 void ALobbyPawn::BeginPlay()
@@ -46,29 +46,30 @@ void ALobbyPawn::BeginPlay()
 
 	_BaseYaw = GetActorRotation().Yaw;
 	_BasePitch = GetActorRotation().Pitch;
+	ApplyMonitorTraceChannel();
 
 	auto pc = Cast<ALobbyPlayerController>(GetController());
-	if (IsInvalid(pc))
-		return;
-
-	pc->bShowMouseCursor = true;
-	pc->bEnableClickEvents = false;
-	pc->bEnableMouseOverEvents = false;
-
-	FInputModeGameAndUI input_mode;
-	input_mode.SetHideCursorDuringCapture(false);
-	input_mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	pc->SetInputMode(input_mode);
-
-	auto local_player = pc->GetLocalPlayer();
-	if (IsValid(local_player))
+	if (IsValid(pc))
 	{
-		auto enhanced_input_subsys = local_player->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-		if (IsValid(enhanced_input_subsys))
+		pc->bShowMouseCursor = true;
+		pc->bEnableClickEvents = false;
+		pc->bEnableMouseOverEvents = false;
+
+		FInputModeGameAndUI input_mode;
+		input_mode.SetHideCursorDuringCapture(false);
+		input_mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		pc->SetInputMode(input_mode);
+
+		auto local_player = pc->GetLocalPlayer();
+		if (IsValid(local_player))
 		{
-			if (IsValid(_InputMappingContext))
+			auto enhanced_input_subsys = local_player->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+			if (IsValid(enhanced_input_subsys))
 			{
-				enhanced_input_subsys->AddMappingContext(_InputMappingContext, 0);
+				if (IsValid(_InputMappingContext))
+				{
+					enhanced_input_subsys->AddMappingContext(_InputMappingContext, 0);
+				}
 			}
 		}
 	}
@@ -401,6 +402,14 @@ void ALobbyPawn::BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const
 	_out_hit.Location = corrected_world_hit_location;
 	_out_hit.ImpactPoint = corrected_world_hit_location;
 	_out_hit.Distance = FVector::Distance(_out_hit.TraceStart, corrected_world_hit_location);
+}
+
+void ALobbyPawn::ApplyMonitorTraceChannel()
+{
+	if (IsInvalid(WidgetInteractionComponent))
+		return;
+
+	WidgetInteractionComponent->TraceChannel = UEngineTypes::ConvertToCollisionChannel(_MonitorScreenWidgetObjectType);
 }
 
 void ALobbyPawn::SetInteractingComputer(AComputer* _computer)

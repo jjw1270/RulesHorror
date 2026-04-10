@@ -127,7 +127,7 @@ void UUI_InteractionIndicatorPanel::AddInteractionActor(AActor* _interaction_act
 
 	if (_ActivatedIndicatorMap.Contains(_interaction_actor))
 	{
-		TRACE_ERROR(TEXT("이미 Indicator가 존재합니다 : %s"), *_interaction_actor->GetName());
+		TRACE_WARNING(TEXT("이미 Indicator가 존재합니다 : %s"), *_interaction_actor->GetName());
 		return;
 	}
 

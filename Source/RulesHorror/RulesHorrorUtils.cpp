@@ -6,6 +6,9 @@
 
 URulesHorrorGameInstance* URulesHorrorUtils::GetGameInstance(const UObject* _obj)
 {
+	if (IsInvalid(_obj))
+		return nullptr;
+
 	auto world = _obj->GetWorld();
 	if (IsValid(world))
 	{

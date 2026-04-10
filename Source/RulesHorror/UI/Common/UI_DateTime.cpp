@@ -19,9 +19,19 @@ void UUI_DateTime::NativeConstruct()
 	auto world = GetWorld();
 	if (IsValid(world))
 	{
-		FTimerHandle handle;
-		world->GetTimerManager().SetTimer(handle, this, &UUI_DateTime::UpdateDateTime, 20.0f, true);
+		world->GetTimerManager().SetTimer(_UpdateDateTimeTimerHandle, this, &UUI_DateTime::UpdateDateTime, 20.0f, true);
 	}
+}
+
+void UUI_DateTime::NativeDestruct()
+{
+	auto world = GetWorld();
+	if (IsValid(world))
+	{
+		world->GetTimerManager().ClearTimer(_UpdateDateTimeTimerHandle);
+	}
+
+	Super::NativeDestruct();
 }
 
 void UUI_DateTime::OverwriteDateTime(const FDateTime& _overwrite_date_time, bool _overwrite_date, bool _overwrite_time)

@@ -24,8 +24,7 @@ UInteractorComponent::UInteractorComponent()
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECC_WorldDynamic);
 
-	SetCollisionResponseToAllChannels(ECR_Ignore);
-	SetCollisionResponseToChannel(_CollisionChannel, ECR_Overlap);
+	ApplyCollisionChannelSettings();
 
 	SetGenerateOverlapEvents(true);
 
@@ -40,6 +39,7 @@ void UInteractorComponent::BeginPlay()
 	SetDetectableRange(_DetectableRange);
 	SetTargetableRange(_TargetableRange);
 	_MinViewDotThreshold = FMath::Cos(FMath::DegreesToRadians(_MaxViewHalfAngleDegrees));
+	ApplyCollisionChannelSettings();
 
 	_OverlappedActorInfos.Empty();
 	_TargetedActor = nullptr;
@@ -57,7 +57,8 @@ void UInteractorComponent::BeginPlay()
 		if (actor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()) == false)
 			continue;
 
-		_OverlappedActorInfos.Add(actor);
+		auto& actor_info = _OverlappedActorInfos.FindOrAdd(actor);
+		actor_info.OverlapCount = 1;
 		
 		if(IsValid(_IndicatorPanel))
 		{
@@ -106,6 +107,7 @@ void UInteractorComponent::PostEditChangeProperty(FPropertyChangedEvent& _proper
 	SetDetectableRange(_DetectableRange);
 	SetTargetableRange(_TargetableRange);
 	_MinViewDotThreshold = FMath::Cos(FMath::DegreesToRadians(_MaxViewHalfAngleDegrees));
+	ApplyCollisionChannelSettings();
 
 	SetHiddenInGame(!_ShowDebug);
 }
@@ -119,9 +121,11 @@ void UInteractorComponent::OnBeginOverlap(UPrimitiveComponent* _overlapped_compo
 	if (_other_actor->GetClass()->ImplementsInterface(UInteractableInterface::StaticClass()) == false)
 		return;
 
-	_OverlappedActorInfos.Add(_other_actor);
+	FInteractionActorInfo& actor_info = _OverlappedActorInfos.FindOrAdd(_other_actor);
+	const bool was_present = actor_info.OverlapCount > 0;
+	actor_info.OverlapCount++;
 
-	if (IsValid(_IndicatorPanel))
+	if (IsValid(_IndicatorPanel) && was_present == false)
 	{
 		_IndicatorPanel->AddInteractionActor(_other_actor, EInteractionState::None);
 	}
@@ -138,6 +142,13 @@ void UInteractorComponent::OnEndOverlap(UPrimitiveComponent* _overlapped_compone
 	auto overlapped_actor_info_ptr = _OverlappedActorInfos.Find(_other_actor);
 	if (IsInvalid(overlapped_actor_info_ptr))
 		return;
+
+	overlapped_actor_info_ptr->OverlapCount = FMath::Max(0, overlapped_actor_info_ptr->OverlapCount - 1);
+	if (overlapped_actor_info_ptr->OverlapCount > 0)
+	{
+		UpdateInteraction();
+		return;
+	}
 
 	if (_TargetedActor == _other_actor)
 	{
@@ -577,6 +588,12 @@ void UInteractorComponent::GetViewVectorInfo(FVector& _out_location, FVector& _o
 
 	_out_location = FVector::ZeroVector;
 	_out_forward = FVector::ZeroVector;
+}
+
+void UInteractorComponent::ApplyCollisionChannelSettings()
+{
+	SetCollisionResponseToAllChannels(ECR_Ignore);
+	SetCollisionResponseToChannel(_CollisionChannel, ECR_Overlap);
 }
 
 void UInteractorComponent::InitIndicatorPanel()

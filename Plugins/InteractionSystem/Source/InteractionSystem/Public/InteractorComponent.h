@@ -14,6 +14,7 @@ struct FInteractionActorInfo
 
 	TOptional<EInteractionState> State;
 	bool IsDetectedAndVisible = false;
+	int32 OverlapCount = 0;
 };
 
 UCLASS(BlueprintType, Blueprintable, meta = (BlueprintSpawnableComponent))
@@ -118,6 +119,7 @@ protected:
 
 	APlayerController* GetOwnerPlayerController() const;
 	void GetViewVectorInfo(FVector& _out_location, FVector& _out_forward) const;
+	void ApplyCollisionChannelSettings();
 
 #pragma region Indicator
 protected:

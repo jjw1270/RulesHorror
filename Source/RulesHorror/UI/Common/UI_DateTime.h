@@ -24,9 +24,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FDateTime _OverwriteDateTime;
 
+	FTimerHandle _UpdateDateTimeTimerHandle;
+
 protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 public:
 	UFUNCTION(BlueprintCallable)
