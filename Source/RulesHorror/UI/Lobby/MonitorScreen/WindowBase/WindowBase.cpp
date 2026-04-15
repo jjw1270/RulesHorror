@@ -36,6 +36,14 @@ FReply UWindowBase::NativeOnPreviewMouseButtonDown(const FGeometry& _geo, const 
 	return FReply::Unhandled();
 }
 
+void UWindowBase::InitWidget(EWindowWidgetType _type, const FVector2D& _normal_pos)
+{
+	_WindowWidgetType = _type;
+
+	SetMaximize(false);
+	SetLastNormalPos(_normal_pos);
+}
+
 void UWindowBase::ExecuteCommand(EWindowCommand _command)
 {
 	switch (_command)

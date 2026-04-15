@@ -11,6 +11,14 @@ void UBTN_WindowTab::NativeOnInitialized()
 	_NonHighlightedStateStyles = _StateStyles;
 }
 
+void UBTN_WindowTab::InitWidget(EWindowWidgetType _type, UTexture2D* _tab_image, const FText& _tab_text)
+{
+	_WindowWidgetType = _type;
+
+	SetTabIcon(_tab_image);
+	SetTabText(_tab_text);
+}
+
 void UBTN_WindowTab::SetHighlight(bool _is_highlighted)
 {
 	if(_is_highlighted)

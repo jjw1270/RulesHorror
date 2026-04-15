@@ -37,7 +37,7 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void OnShow_Implementation() override;
-	virtual void OnClosing_Implementation() override;
+	virtual void OnStartHide_Implementation(EWidgetHideType _hide_type) override;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)

@@ -17,10 +17,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<class UUI_WindowLayout> WindowLayout = nullptr;
 
-public:
+protected:
 	EWindowWidgetType _WindowWidgetType = EWindowWidgetType::NA;
 
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool _IsMaximized = true;
 
@@ -51,20 +50,24 @@ protected:
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& _geo, const FPointerEvent& _mouse_event) override;
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void ExecuteCommand(EWindowCommand _command);
+	void InitWidget(EWindowWidgetType _type, const FVector2D& _normal_pos);
 
+protected:
 	void SetLastNormalPos(const FVector2D& _pos)
 	{
 		_LastNormalPos = _pos;
 	}
 
 public:
-	void UpdateDrag(const FVector2D& _current_cursor_pos);
+	UFUNCTION(BlueprintCallable)
+	void ExecuteCommand(EWindowCommand _command);
 
+	void UpdateDrag(const FVector2D& _current_cursor_pos);
 	void ResizeWindow(EWindowDragType _drag_type, const FVector2D& _initial_window_pos, 	const FVector2D& _initial_window_size, const FVector2D& _drag_delta);
 
 public:
+	EWindowWidgetType GetWindowWidgetType() const { return _WindowWidgetType; }
+
 	void SetMaximize(bool _is_maximized);
 	bool IsMaximized() const { return _IsMaximized; }
 

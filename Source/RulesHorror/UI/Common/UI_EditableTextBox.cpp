@@ -47,9 +47,9 @@ void UUI_EditableTextBox::OnShow_Implementation()
 	EditableTextBox->SetFocus();
 }
 
-void UUI_EditableTextBox::OnClosing_Implementation()
+void UUI_EditableTextBox::OnStartHide_Implementation(EWidgetHideType _hide_type)
 {
-	Super::OnClosing_Implementation();
+	Super::OnStartHide_Implementation(_hide_type);
 
 	EditableTextBox->SetIsEnabled(false);
 

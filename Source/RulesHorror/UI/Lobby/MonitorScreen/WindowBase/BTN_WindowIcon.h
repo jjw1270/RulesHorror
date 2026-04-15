@@ -5,40 +5,35 @@
 #include "CoreMinimal.h"
 #include "Widgets/Components/ClickButton.h"
 #include "UI/Lobby/MonitorScreen/WindowBase/WindowDefines.h"
-#include "BTN_WindowTab.generated.h"
+#include "BTN_WindowIcon.generated.h"
 
 
 UCLASS(abstract)
-class RULESHORROR_API UBTN_WindowTab : public UClickButton
+class RULESHORROR_API UBTN_WindowIcon : public UClickButton
 {
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY(EditAnywhere)
 	EWindowWidgetType _WindowWidgetType = EWindowWidgetType::NA;
+	
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<class UTexture2D> _IconImage = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	TMap<EButtonState, FButtonStyleConfig> _HighlightedStateStyles;
-
-	UPROPERTY()
-	TMap<EButtonState, FButtonStyleConfig> _NonHighlightedStateStyles;
+	FText _IconText;
 
 protected:
-	virtual void NativeOnInitialized() override;
-
-public:
-	void InitWidget(EWindowWidgetType _type, class UTexture2D* _tab_image, const FText& _tab_text);
-
-	void SetHighlight(bool _is_highlighted);
+	virtual void SynchronizeProperties() override;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void SetTabIcon(UTexture2D* _image);
-	
+	void SetIconImage(class UTexture2D* _image);
+
 	UFUNCTION(BlueprintImplementableEvent)
-	void SetTabText(const FText& _text);
+	void SetIconText(const FText& _text);
 
 public:
 	UFUNCTION(BlueprintPure)
 	EWindowWidgetType GetWindowWidgetType() const { return _WindowWidgetType; }
-
 };

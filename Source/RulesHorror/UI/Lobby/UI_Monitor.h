@@ -41,7 +41,7 @@ protected:
 	void OnShowScreenWidget(UWidgetBase* _widget);
 
 	UFUNCTION()
-	void OnCloseScreenWidget(UWidgetBase* _widget);
+	void OnHideScreenWidget(UWidgetBase* _widget, EWidgetHideType _hide_type);
 
 	void ShowNextScreenWidget();
 

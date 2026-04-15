@@ -7,7 +7,7 @@
 #include "UI/Lobby/MonitorScreen/UI_MonitorScreenWidget.h"
 #include "UI/Lobby/UI_Cursor.h"
 #include "Components/CanvasPanelSlot.h"
-#include "UI/Lobby/MonitorScreen/UI_WindowManager.h"
+#include "UI/Lobby/MonitorScreen/WindowBase/UI_WindowManager.h"
 #include "UI/Lobby/MonitorScreen/WindowBase/WindowBase.h"
 
 TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
@@ -31,7 +31,7 @@ void UUI_Monitor::NativeOnInitialized()
 
 			screen_widget->_RequestShowMonitorCursorEvent.BindUObject(this, &UUI_Monitor::ShowMonitorCursor);
 			screen_widget->_OnShowEvent.AddDynamic(this, &UUI_Monitor::OnShowScreenWidget);
-			screen_widget->_OnCloseEvent.AddDynamic(this, &UUI_Monitor::OnCloseScreenWidget);
+			screen_widget->_OnHideEvent.AddDynamic(this, &UUI_Monitor::OnHideScreenWidget);
 		}
 	}
 }
@@ -69,7 +69,7 @@ void UUI_Monitor::OnShowScreenWidget(UWidgetBase* _widget)
 	ShowMonitorCursor(screen_widget->GetShowMouseCursorOnShow(), false);
 }
 
-void UUI_Monitor::OnCloseScreenWidget(UWidgetBase* _widget)
+void UUI_Monitor::OnHideScreenWidget(UWidgetBase* _widget, EWidgetHideType _hide_type)
 {
 	if (IsInvalid(_widget))
 		return;

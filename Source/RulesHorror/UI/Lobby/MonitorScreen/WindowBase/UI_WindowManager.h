@@ -7,12 +7,10 @@
 #include "UI/Lobby/MonitorScreen/WindowBase/WindowDefines.h"
 #include "UI_WindowManager.generated.h"
 
-class UCanvasPanel;
-class UHorizontalBox;
 class UTexture2D;
 class UWindowBase;
 class UBTN_WindowTab;
-class UButtonBase;
+class UBTN_WindowIcon;
 
 USTRUCT(BlueprintType)
 struct FWindowData
@@ -20,7 +18,8 @@ struct FWindowData
 	GENERATED_BODY()
 
 public:
-	// Window widget
+
+#pragma region Window widget
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UWindowBase> WindowWidgetClass = nullptr;
 
@@ -30,20 +29,29 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UWindowBase> WindowWidget = nullptr;
 
-public:
-	// Window tab
+#pragma endregion Window widget
+/////////////////////////////////////////////////////////////////////////////////////
+#pragma region Window tab
 	UPROPERTY(EditAnywhere)
 	bool CreateTab = true;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UTexture2D> WindowTabIcon = nullptr;
+	TObjectPtr<UTexture2D> TabImage = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	FText WindowTabText;
+	FText TabText;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UBTN_WindowTab> WindowTab = nullptr;
+#pragma endregion Window tab
+/////////////////////////////////////////////////////////////////////////////////////
+#pragma region Window Icon
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UBTN_WindowIcon> WindowIcon = nullptr;
 
+#pragma endregion Window Icon
+/////////////////////////////////////////////////////////////////////////////////////
+public:
 	UPROPERTY(Transient)
 	bool HasBeenOpened = false;
 };
@@ -55,14 +63,20 @@ class RULESHORROR_API UUI_WindowManager : public UUI_MonitorScreenWidget
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UCanvasPanel> CP_Window = nullptr;
+	TObjectPtr<class UUniformGridPanel> UGP_Icons = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UHorizontalBox> HB_WindowTab = nullptr;
+	TObjectPtr<class UCanvasPanel> CP_Window = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<class UHorizontalBox> HB_WindowTab = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UBTN_WindowTab> _WindowTabClass = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UBTN_WindowIcon> _WindowIconClass = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	TMap<EWindowWidgetType, FWindowData> _WindowDataMap;
@@ -81,28 +95,37 @@ public:
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	void CreateWindow(EWindowWidgetType _type);
+	void OpenWindow(EWindowWidgetType _type);
+
+	bool CreateWindowWidget(EWindowWidgetType _type, FWindowData& _window_data);
+	bool CreateWindowTab(EWindowWidgetType _type, FWindowData& _window_data);
 
 	UFUNCTION(BlueprintCallable)
-	void OpenWindow(EWindowWidgetType _type, bool _is_open);
+	void CloseWindow(EWindowWidgetType _type, bool _is_minimized);
 
 	void SetTopWindow(UWindowBase* _target_window);
 	void UpdateTopWindow();
 
+protected:
 	UFUNCTION()
-	void OnClickWindowTab(UButtonBase* _tab_button);
+	void OnDoubleClickIconButton(class UClickButton* _icon_button);
 
 	UFUNCTION()
-	void OnWindowFocused(UWindowBase* _focused_window_widget, bool _is_focused);
+	void OnClickWindowTab(class UButtonBase* _tab_button);
+
+	UFUNCTION()
+	void OnFocusedWindowWidget(UWindowBase* _focused_window_widget, bool _is_focused);
+
+	UFUNCTION()
+	void OnStartHideWindowWidget(UWidgetBase* _widget, EWidgetHideType _hide_type);
+
+protected:
 
 public:
 	UWindowBase* GetTopWindow() const;
 
 private:
-	FVector2D GetNextWindowPosition() const;
-	void InitializeWindowWidget(UWindowBase* _window_widget, EWindowWidgetType _type, const FVector2D& _window_pos);
-	void AttachWindowToCanvas(UWindowBase* _window_widget);
-	void CreateWindowTab(EWindowWidgetType _type, FWindowData& _window_data);
+	FVector2D GetIdealWindowPosition() const;
 	int32 GetMaxWindowZOrder() const;
 
 };

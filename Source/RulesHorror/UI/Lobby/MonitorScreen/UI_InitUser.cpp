@@ -31,7 +31,7 @@ void UUI_InitUser::OpenEditableTextBoxWidget()
 
 	_EditableTextBoxWidget->_OnTextCommittedEvent.AddDynamic(this, &UUI_InitUser::OnEditableTextBoxWidgetCommitted);
 
-	_EditableTextBoxWidget->_OnCloseEvent.AddDynamic(this, &UUI_InitUser::OnCloseEditableTextBoxWidget);
+	_EditableTextBoxWidget->_OnHideEvent.AddDynamic(this, &UUI_InitUser::OnHideEditableTextBoxWidget);
 	RequestShowMonitorCursor(false);
 
 	_EditableTextBoxWidget->AddToViewport((int32)ERulesHorrorWidgetZOrder::Popup);
@@ -42,14 +42,14 @@ void UUI_InitUser::OnEditableTextBoxWidgetCommitted(const FText& _text)
 	ETB_Nickname->SetText(_text);
 }
 
-void UUI_InitUser::OnCloseEditableTextBoxWidget(UWidgetBase* _widget)
+void UUI_InitUser::OnHideEditableTextBoxWidget(UWidgetBase* _widget, EWidgetHideType _hide_type)
 {
 	if (IsInvalid(_EditableTextBoxWidget))
 		return;
 
 	RequestShowMonitorCursor(true);
 
-	_EditableTextBoxWidget->_OnCloseEvent.RemoveAll(this);
+	_EditableTextBoxWidget->_OnHideEvent.RemoveAll(this);
 	_EditableTextBoxWidget->_OnTextCommittedEvent.RemoveAll(this);
 
 	_EditableTextBoxWidget = nullptr;
