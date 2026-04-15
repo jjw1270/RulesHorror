@@ -19,7 +19,10 @@ void FItemCoreEditorStyle::Initialize()
 	_StyleSet = MakeShareable(new FSlateStyleSet("ItemCoreEditorStyle"));
 
 	TSharedPtr<IPlugin> plugin = IPluginManager::Get().FindPlugin("ItemCore");
-	_StyleSet->SetContentRoot(plugin->GetBaseDir() / TEXT("Resources"));
+	if (IsValid(plugin))
+	{
+		_StyleSet->SetContentRoot(plugin->GetBaseDir() / TEXT("Resources"));
+	}
 
 	const FVector2D icon40(40.f, 40.f);
 	_StyleSet->Set("ItemRegistry.Refresh", new IMAGE_BRUSH("ItemRegistryRefresh_40", icon40));

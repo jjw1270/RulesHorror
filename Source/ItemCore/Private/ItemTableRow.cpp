@@ -82,19 +82,23 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 
 	if (CachedItemID.IsSet())
 	{
-		if (CachedItemID.GetValue() == ItemID)
+		const FItemID old_item_id = CachedItemID.GetValue();
+		if (old_item_id == ItemID)
 			return;
 
+		const bool is_old_item_id_valid = old_item_id.IsValid();
+		const bool is_new_item_id_valid = ItemID.IsValid();
+
 		CachedItemID = ItemID;
+
+		if (is_old_item_id_valid == false && is_new_item_id_valid == false)
+			return;
 	}
 	else
 	{
 		CachedItemID = ItemID;
 		return;
 	}
-
-	if (ItemID.IsValid() == false && ItemID != FItemID::Zero)
-		return;
 
 	if (IsValid(GEngine))
 	{
