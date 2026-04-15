@@ -1,2 +1,0 @@
-@echo off
-omx team api send-message --input "{""team_name"":""tofix-source-plugins-config"",""from_worker"":""worker-3"",""to_worker"":""leader-fixed"",""body"":""Reviewed worker-1 latest output: task-1 is already completed/integrated (commit 15bd4cbb9d1e, task-1 status completed, worker-1 idle). Recommend marking worker-1 complete; only optional follow-up is later report consolidation if duplicate ToFix docs remain.""}" --json
