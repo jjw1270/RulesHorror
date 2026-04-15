@@ -159,3 +159,14 @@
 - **가장 먼저 고쳐야 할 문제는 “필수 서브모듈 플러그인 누락을 조기에 감지/복구하지 못하는 구조”** 다.
 - 이 문제 하나로 빌드, 에디터 실행, 설정 로딩, 협업 온보딩이 모두 동시에 흔들린다.
 - 그 다음 우선순위는 `.uproject` 의 플러그인 선언 명확화와 부트스트랩 문서/스크립트 일치화다.
+
+## 검증 메모
+
+- 문서 근거 재확인
+  - `git diff --check` → 문서/정리 변경에 whitespace 오류 없음
+  - `git submodule status` → 3개 필수 서브모듈이 미초기화 상태(`-` prefix)임을 재확인
+  - `ConvertFrom-Json` on `RulesHorror.uproject`, `InteractionSystem.uplugin`, `ItemCore.uplugin`, `RulesPlugin.uplugin` → descriptor 파싱 성공
+- 환경 한계
+  - `UE_EngineDir.txt` 부재
+  - `Plugins/CommonLibraryPlugin/*.uplugin`, `Plugins/CustomUIPlugin/*.uplugin`, `Plugins/SaveGamePlugin/*.uplugin` 모두 부재
+  - 따라서 UE 빌드/에디터 기반 end-to-end 검증은 현재 워크트리 전제조건 미충족으로 수행 불가
