@@ -319,7 +319,14 @@ void ALobbyPawn::DriveWidgetInteraction(float _delta_time)
 		auto widget_component = Cast<UWidgetComponent>(hit.GetComponent());
 		if (IsValid(widget_component))
 		{
-			_InteractingMonitorWidget = Cast<UUI_Monitor>(widget_component->GetWidget());
+			// 이전에 이미 다른 위젯이 존재할경우
+			auto new_interacting_monitor_widget = Cast<UUI_Monitor>(widget_component->GetWidget());
+			if (IsValid(_InteractingMonitorWidget) && _InteractingMonitorWidget != new_interacting_monitor_widget)
+			{
+				_InteractingMonitorWidget->SetRealMousePointerHovered(false);
+			}
+
+			_InteractingMonitorWidget = new_interacting_monitor_widget;
 			if (IsValid(_InteractingMonitorWidget))
 			{
 				_InteractingMonitorWidget->SetRealMousePointerHovered(true);

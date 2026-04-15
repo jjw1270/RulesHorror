@@ -51,7 +51,7 @@ void URadioButtonGroup_Index::SetCurrentIndex(int32 _current_index)
 		return;
 
 	const int32 page_start_index = _PageIndex * _MaxButtonCount;
-	const int32 button_count = FMath::Clamp(_MaxIndex - page_start_index, 0, _MaxButtonCount);
+	const int32 button_count = FMath::Clamp((_MaxIndex - page_start_index) + 1, 0, _MaxButtonCount);
 
 	while (StackBox->GetChildrenCount() != button_count)
 	{

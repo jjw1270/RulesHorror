@@ -61,8 +61,10 @@ void USite_StoryList::NativeConstruct()
 		const int32 all_story_item_num = _AllStroyItemRows.Num();
 		if (all_story_item_num > 0 && _StoryTitleNum > 0)
 		{
-			const int32 max_radio_button_idx = (all_story_item_num / _StoryTitleNum) + 1;
-			RadioButtonGroup_Index->InitWidget(max_radio_button_idx, _LastRadioButtonIndex.GetValue());
+			const int32 page_count = FMath::DivideAndRoundUp(all_story_item_num, _StoryTitleNum);
+			const int32 max_radio_button_idx = FMath::Max(0, page_count - 1);
+
+			RadioButtonGroup_Index->InitWidget(max_radio_button_idx, FMath::Clamp(_LastRadioButtonIndex.GetValue(), 0, max_radio_button_idx));
 		}
 	}
 }
