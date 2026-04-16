@@ -10,26 +10,32 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FInteractorComponentDetectableRangeClampTest::RunTest(const FString& Parameters)
 {
-	UInteractorComponent* interactor_component = NewObject<UInteractorComponent>();
-	TestNotNull(TEXT("InteractorComponent should be created"), interactor_component);
-	if (interactor_component == nullptr)
+	UInteractorComponent* clamped_interactor_component = NewObject<UInteractorComponent>();
+	TestNotNull(TEXT("Clamp test interactor component should be created"), clamped_interactor_component);
+	if (clamped_interactor_component == nullptr)
 	{
 		return false;
 	}
 
-	TestEqual(TEXT("Default sphere radius should match the default detectable range"), interactor_component->GetUnscaledSphereRadius(), 600.0f);
+	TestEqual(TEXT("Default sphere radius should match the default detectable range"), clamped_interactor_component->GetUnscaledSphereRadius(), 600.0f);
 
 	AddExpectedError(TEXT("상호작용 가능 거리가 감지거리보다 클 수 없습니다!"), EAutomationExpectedErrorFlags::Contains, 2);
+	clamped_interactor_component->SetTargetableRange(700.0f);
+
 	AddExpectedError(TEXT("감지거리가 상호작용 가능 거리보다 작을 수 없습니다!"), EAutomationExpectedErrorFlags::Contains, 2);
+	clamped_interactor_component->SetDetectableRange(500.0f);
 
-	interactor_component->SetTargetableRange(700.0f);
-	interactor_component->SetDetectableRange(500.0f);
+	TestEqual(TEXT("Detectable range should clamp up to the already-clamped targetable range"), clamped_interactor_component->GetUnscaledSphereRadius(), 600.0f);
 
-	TestEqual(TEXT("Detectable range should clamp up to the already-clamped targetable range"), interactor_component->GetUnscaledSphereRadius(), 600.0f);
+	UInteractorComponent* valid_interactor_component = NewObject<UInteractorComponent>();
+	TestNotNull(TEXT("Valid range test interactor component should be created"), valid_interactor_component);
+	if (valid_interactor_component == nullptr)
+	{
+		return false;
+	}
 
-	interactor_component->SetTargetableRange(400.0f);
-	interactor_component->SetDetectableRange(450.0f);
-	TestEqual(TEXT("Valid detectable range should update the sphere radius"), interactor_component->GetUnscaledSphereRadius(), 450.0f);
+	valid_interactor_component->SetDetectableRange(450.0f);
+	TestEqual(TEXT("Valid detectable range should update the sphere radius"), valid_interactor_component->GetUnscaledSphereRadius(), 450.0f);
 
 	return true;
 }
