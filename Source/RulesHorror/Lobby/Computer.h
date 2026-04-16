@@ -71,6 +71,7 @@ protected:
 protected:
 	virtual void SetInteractionState_Implementation(EInteractionState _state) override;
 	virtual void Interact_Implementation(AActor* _interactor) override;
+	virtual bool CanBeDetected_Implementation() const override;
 
 	UFUNCTION()
 	void OnLobbyPawnMoveToPointFinished(const FName& _point_name);

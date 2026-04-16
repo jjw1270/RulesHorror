@@ -95,6 +95,11 @@ void AComputer::Interact_Implementation(AActor* _interactor)
 	SetPower(true, true);
 }
 
+bool AComputer::CanBeDetected_Implementation() const
+{
+	return IsInvalid(_InteractorLobbyPawn);
+}
+
 void AComputer::FinishInteract()
 {
 	if (IsValid(_InteractorLobbyPawn))
@@ -103,6 +108,8 @@ void AComputer::FinishInteract()
 
 		_InteractorLobbyPawn->SetInteractingComputer(nullptr);
 		CloseInteractingWidget();
+
+		_InteractorLobbyPawn = nullptr;
 	}
 }
 

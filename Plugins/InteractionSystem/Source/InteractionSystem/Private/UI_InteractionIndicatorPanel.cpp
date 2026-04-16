@@ -15,19 +15,21 @@ void UUI_InteractionIndicatorPanel::NativeOnInitialized()
 	Super::NativeOnInitialized();
 
 	// init pool
-	if (IsInvalid(_IndicatorClass))
-		return;
-
-	for (int32 i = 0; i < _IndicatorPoolSize; ++i)
+	if (IsValid(_IndicatorClass))
 	{
-		auto widget = CreateWidget<UUI_InteractionIndicator>(this, _IndicatorClass);
-		if (IsValid(widget))
+		for (int32 i = 0; i < _IndicatorPoolSize; ++i)
 		{
-			widget->ClearWidget();
+			auto widget = CreateWidget<UUI_InteractionIndicator>(this, _IndicatorClass);
+			if (IsValid(widget))
+			{
+				widget->ClearWidget();
 
-			_IndicatorPool.Add(widget);
+				_IndicatorPool.Add(widget);
+			}
 		}
 	}
+
+	ShowTargetedPanel(false, FText::GetEmpty());
 }
 
 void UUI_InteractionIndicatorPanel::NativeTick(const FGeometry& _geo, float _delta)
@@ -139,7 +141,7 @@ void UUI_InteractionIndicatorPanel::AddInteractionActor(AActor* _interaction_act
 	indicator->SetInteractionActor(_interaction_actor, _state);
 	indicator->SetRenderOpacity(0.0f);
 
-	auto cp_slot = CanvasPanel->AddChildToCanvas(indicator);
+	auto cp_slot = CP_Indicators->AddChildToCanvas(indicator);
 	if (IsValid(cp_slot))
 	{
 		cp_slot->SetSize(_IndicatorSize);
@@ -182,6 +184,22 @@ void UUI_InteractionIndicatorPanel::SetInteractionActorState(AActor* _interactio
 		return;
 
 	indicator->SetActorState(_state);
+}
+
+void UUI_InteractionIndicatorPanel::SetTargetedActor(AActor* _targeted_actor)
+{
+	if (_targeted_actor == _TargetedActor)
+		return;
+	_TargetedActor = _targeted_actor;
+
+	if (IsValid(_TargetedActor))
+	{
+		ShowTargetedPanel(true, IInteractableInterface::Execute_GetDisplayName(_TargetedActor));
+	}
+	else
+	{
+		ShowTargetedPanel(false, FText::GetEmpty());
+	}
 }
 
 UUI_InteractionIndicator* UUI_InteractionIndicatorPanel::PickIndicatorFromPool()

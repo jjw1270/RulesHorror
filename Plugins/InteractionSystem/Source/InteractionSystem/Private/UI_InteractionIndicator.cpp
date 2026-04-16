@@ -14,22 +14,18 @@ void UUI_InteractionIndicator::SetInteractionActor(AActor* _interaction_actor, E
 
 	_InteractionActor = _interaction_actor;
 	SetActorState(_state);
-
-	SetDisplayName(IInteractableInterface::Execute_GetDisplayName(_InteractionActor));
 }
 
 void UUI_InteractionIndicator::ClearWidget()
 {
 	_InteractionActor = nullptr;
 	SetActorState(EInteractionState::None);
-	SetDisplayName(FText::GetEmpty());
 }
 
 void UUI_InteractionIndicator::SetActorState_Implementation(EInteractionState _state)
 {
 	if (_ActorState == _state)
 		return;
-
 	_ActorState = _state;
 
 	switch (_ActorState)
@@ -43,7 +39,7 @@ void UUI_InteractionIndicator::SetActorState_Implementation(EInteractionState _s
 		break;
 
 	case EInteractionState::Targeted:
-		Show(EWidgetShowType::SelfHitTestInvisible);
+		Hide(EWidgetHideType::Collapsed, false);
 		break;
 
 	default:

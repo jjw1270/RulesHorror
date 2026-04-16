@@ -264,6 +264,11 @@ void UInteractorComponent::ClearInteractionState()
 			IInteractableInterface::Execute_SetInteractionState(actor, EInteractionState::None);
 		}
 	}
+
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->SetTargetedActor(_TargetedActor);
+	}
 }
 
 void UInteractorComponent::UpdateInteraction()
@@ -315,6 +320,11 @@ void UInteractorComponent::UpdateInteraction()
 		_TargetedActor = nullptr;
 
 		SetComponentTickEnabled(false);
+	}
+
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->SetTargetedActor(_TargetedActor);
 	}
 }
 
@@ -592,8 +602,7 @@ void UInteractorComponent::GetViewVectorInfo(FVector& _out_location, FVector& _o
 
 void UInteractorComponent::ApplyCollisionChannelSettings()
 {
-	SetCollisionResponseToAllChannels(ECR_Ignore);
-	SetCollisionResponseToChannel(_CollisionChannel, ECR_Overlap);
+	SetCollisionResponseToAllChannels(ECR_Overlap);
 }
 
 void UInteractorComponent::InitIndicatorPanel()
@@ -637,7 +646,7 @@ void UInteractorComponent::DrawDebugInteraction(const FVector& _view_location, c
 	// 공통: targetable
 	if (FMath::IsNearlyEqual(_TargetableRange, _DetectableRange) == false)
 	{
-		DrawDebugSphere(world, _view_location, _TargetableRange, 12, FColor::Yellow, false, life_time, 1, 1.5f);
+		DrawDebugSphere(world, _view_location, _TargetableRange, 8, FColor::Yellow, false, life_time, 0, 1.0f);
 	}
 
 	FVector circle_y, circle_z;

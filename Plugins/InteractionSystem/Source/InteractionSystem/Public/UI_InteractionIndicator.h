@@ -36,8 +36,4 @@ public:
 	UFUNCTION(BlueprintPure)
 	EInteractionState GetActorState() const { return _ActorState; }
 
-protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SetDisplayName(const FText& _text);
-
 };

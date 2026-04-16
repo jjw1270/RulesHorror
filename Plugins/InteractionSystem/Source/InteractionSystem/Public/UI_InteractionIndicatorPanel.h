@@ -19,7 +19,7 @@ class INTERACTIONSYSTEM_API UUI_InteractionIndicatorPanel : public UWidgetBase
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UCanvasPanel> CanvasPanel = nullptr;
+	TObjectPtr<class UCanvasPanel> CP_Indicators = nullptr;
 	
 protected:
 	UPROPERTY(EditAnywhere)
@@ -56,6 +56,19 @@ public:
 
 	void SetInteractionActorState(AActor* _interaction_actor, EInteractionState _state);
 
+
 protected:
 	UUI_InteractionIndicator* PickIndicatorFromPool();
+
+// Targeted Actor
+protected:
+	UPROPERTY()
+	TObjectPtr<AActor> _TargetedActor = nullptr;
+
+public:
+	void SetTargetedActor(AActor* _targeted_actor);
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowTargetedPanel(bool _show, const FText& _display_name);
 };
