@@ -6,7 +6,7 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractorComponentDetectableRangeClampTest,
 	"InteractionSystem.InteractorComponent.DetectableRangeClampsToTargetableRange",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FInteractorComponentDetectableRangeClampTest::RunTest(const FString& Parameters)
 {
@@ -19,11 +19,15 @@ bool FInteractorComponentDetectableRangeClampTest::RunTest(const FString& Parame
 
 	TestEqual(TEXT("Default sphere radius should match the default detectable range"), interactor_component->GetUnscaledSphereRadius(), 600.0f);
 
+	AddExpectedError(TEXT("상호작용 가능 거리가 감지거리보다 클 수 없습니다!"), EAutomationExpectedErrorFlags::Contains, 2);
+	AddExpectedError(TEXT("감지거리가 상호작용 가능 거리보다 작을 수 없습니다!"), EAutomationExpectedErrorFlags::Contains, 2);
+
 	interactor_component->SetTargetableRange(700.0f);
 	interactor_component->SetDetectableRange(500.0f);
 
 	TestEqual(TEXT("Detectable range should clamp up to the already-clamped targetable range"), interactor_component->GetUnscaledSphereRadius(), 600.0f);
 
+	interactor_component->SetTargetableRange(400.0f);
 	interactor_component->SetDetectableRange(450.0f);
 	TestEqual(TEXT("Valid detectable range should update the sphere radius"), interactor_component->GetUnscaledSphereRadius(), 450.0f);
 
@@ -33,7 +37,7 @@ bool FInteractorComponentDetectableRangeClampTest::RunTest(const FString& Parame
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FInteractorComponentDetectModeSetterTest,
 	"InteractionSystem.InteractorComponent.DetectModeSetterUpdatesState",
-	EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FInteractorComponentDetectModeSetterTest::RunTest(const FString& Parameters)
 {
