@@ -25,28 +25,27 @@ public class ItemCoreEditor : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				// ... add other public dependencies that you statically link with here ...
-			}
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "Slate",
+                "SlateCore",
+                "PropertyEditor",
+                "BlueprintGraph",
+                "ItemCore",
+            }
 			);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-                "Core",
-                "CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
                 "InputCore",
-				"UnrealEd",
-				"PropertyEditor",
-				"CommonLibrary",
-				"ItemCore",
-				"ToolMenus",
-				"Projects",
+                "UnrealEd",
+                "CommonLibrary",
+                "ToolMenus",
+                "Projects",
                 "KismetCompiler",
-                "BlueprintGraph",
             }
             );
 		
