@@ -39,6 +39,12 @@ void UInteractorComponent::BeginPlay()
 	SetDetectableRange(_DetectableRange);
 	SetTargetableRange(_TargetableRange);
 	_MinViewDotThreshold = FMath::Cos(FMath::DegreesToRadians(_MaxViewHalfAngleDegrees));
+
+	if (_OverlapObjectTypes.IsEmpty())
+	{
+		TRACE_ERROR(TEXT("_OverlapObjectTypes가 비었습니다."));
+	}
+
 	ApplyCollisionChannelSettings();
 
 	_OverlappedActorInfos.Empty();
@@ -212,6 +218,11 @@ void UInteractorComponent::SetDetectableRange(float _range)
 	_DetectableRangeSquared = _DetectableRange * _DetectableRange;
 
 	SetSphereRadius(_DetectableRange);
+
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->SetPerspectiveDistance(_TargetableRange, _DetectableRange);
+	}
 }
 
 void UInteractorComponent::SetTargetableRange(float _range)
@@ -229,6 +240,11 @@ void UInteractorComponent::SetTargetableRange(float _range)
 	}
 
 	_TargetableRangeSquared = _TargetableRange * _TargetableRange;
+
+	if (IsValid(_IndicatorPanel))
+	{
+		_IndicatorPanel->SetPerspectiveDistance(_TargetableRange, _DetectableRange);
+	}
 }
 
 void UInteractorComponent::TryInteract()
@@ -474,7 +490,7 @@ AActor* UInteractorComponent::SelectTargetedActor_Cursor(const FVector& _locatio
 		return nullptr;
 
 	FHitResult hit;
-	if (pc->GetHitResultUnderCursor(_CollisionChannel, true, hit) == false)
+	if (pc->GetHitResultUnderCursorForObjects(_OverlapObjectTypes, true, hit) == false)
 		return nullptr;
 
 	AActor* hit_actor = hit.GetActor();
@@ -602,7 +618,13 @@ void UInteractorComponent::GetViewVectorInfo(FVector& _out_location, FVector& _o
 
 void UInteractorComponent::ApplyCollisionChannelSettings()
 {
-	SetCollisionResponseToAllChannels(ECR_Overlap);
+	SetCollisionResponseToAllChannels(ECR_Ignore);
+
+	for (const auto& object_type : _OverlapObjectTypes)
+	{
+		const ECollisionChannel channel = UEngineTypes::ConvertToCollisionChannel(object_type);
+		SetCollisionResponseToChannel(channel, ECR_Overlap);
+	}
 }
 
 void UInteractorComponent::InitIndicatorPanel()

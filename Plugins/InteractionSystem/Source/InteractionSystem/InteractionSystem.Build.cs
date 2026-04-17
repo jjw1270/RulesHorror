@@ -25,24 +25,23 @@ public class InteractionSystem : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
-				// ... add other public dependencies that you statically link with here ...
-			}
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "InputCore",
+                "CommonLibrary",
+                "CustomUI",
+                "UMG",
+            }
 			);
 			
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-                "InputCore",
-                "CommonLibrary",
-				"CustomUI",
-				"UMG"
-			}
+                "Slate",
+                "SlateCore",
+            }
 			);
 		
 		

@@ -9,19 +9,19 @@ public class InteractionSystemEditor : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] 
-			{ 
-				"Core",
-				"CoreUObject",
-				"Engine"
-			});
+			{
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "UnrealEd",
+                "ComponentVisualizers",
+            });
 		
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-                "UnrealEd",
-                "ComponentVisualizers",
                 "InteractionSystem",
-				"CommonLibrary"
+                "CommonLibrary"
             });
 		
 		DynamicallyLoadedModuleNames.AddRange(

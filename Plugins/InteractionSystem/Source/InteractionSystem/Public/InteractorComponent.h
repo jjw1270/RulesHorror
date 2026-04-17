@@ -28,7 +28,7 @@ class INTERACTIONSYSTEM_API UInteractorComponent : public USphereComponent
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
-	TEnumAsByte<ECollisionChannel> _CollisionChannel;
+	TArray<TEnumAsByte<EObjectTypeQuery>> _OverlapObjectTypes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	EInteractionDetectMode _DetectMode = EInteractionDetectMode::CameraCenter;

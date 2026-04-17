@@ -124,7 +124,7 @@ void UUI_InteractionIndicatorPanel::SetPerspectiveDistance(float _min_dist, floa
 
 void UUI_InteractionIndicatorPanel::AddInteractionActor(AActor* _interaction_actor, EInteractionState _state)
 {
-	if (IsInvalid(_interaction_actor))
+	if(IsAnyInvalid(CP_Indicators, _interaction_actor))
 		return;
 
 	if (_ActivatedIndicatorMap.Contains(_interaction_actor))
