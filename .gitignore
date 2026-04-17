@@ -111,8 +111,9 @@ __pycache__/
 # Custom local config
 /UE_EngineDir.txt
 
-레퍼런스/
+기획/레퍼런스/
 /Content/Assets
 /Content/Fab
 /.omx
 /ToFix
+/포트폴리오
