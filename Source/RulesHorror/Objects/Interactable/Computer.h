@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "InteractableInterface.h"
-#include "GameFramework/Pawn/InteractionPawn/InteractionPawn.h"
+#include "GameFramework/Pawn/OfficePawn.h"
 #include "Computer.generated.h"
 
 UCLASS()
@@ -49,7 +49,7 @@ public:
 #pragma region Interaction
 protected:
 	UPROPERTY()
-	TObjectPtr<AInteractionPawn> _InteractionPawn = nullptr;
+	TObjectPtr<AOfficePawn> _OfficePawn = nullptr;
 
 	UPROPERTY(BlueprintReadOnly)
 	EInteractionState _InteractionState = EInteractionState::None;
@@ -74,7 +74,7 @@ protected:
 	virtual bool CanBeDetected_Implementation() const override;
 
 	UFUNCTION()
-	void OnInteractionPawnMoveToPointFinished(const FName& _point_name);
+	void OnOfficePawnMoveToPointFinished(const FName& _point_name);
 
 	void OpenInteractingWidget();
 	void CloseInteractingWidget();

@@ -265,6 +265,7 @@ void UInteractorComponent::TryInteract()
 		return;
 
 	IInteractableInterface::Execute_Interact(_TargetedActor, GetOwner());
+	UpdateInteraction();
 }
 
 void UInteractorComponent::ClearInteractionState()

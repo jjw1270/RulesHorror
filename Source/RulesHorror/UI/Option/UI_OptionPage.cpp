@@ -5,9 +5,9 @@
 #include "RulesHorrorGameInstance.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
-void UUI_OptionPage::NativeConstruct()
+void UUI_OptionPage::OnShow_Implementation()
 {
-	Super::NativeConstruct();
+	Super::OnShow_Implementation();
 
 	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
 	if (IsValid(game_inst))
@@ -16,7 +16,7 @@ void UUI_OptionPage::NativeConstruct()
 	}
 }
 
-void UUI_OptionPage::NativeDestruct()
+void UUI_OptionPage::OnHide_Implementation(EWidgetHideType _hide_type)
 {
 	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
 	if (IsValid(game_inst))
@@ -26,5 +26,5 @@ void UUI_OptionPage::NativeDestruct()
 
 	UWidgetBlueprintLibrary::SetFocusToGameViewport();
 
-	Super::NativeDestruct();
+	Super::OnHide_Implementation(_hide_type);
 }

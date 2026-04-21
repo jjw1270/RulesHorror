@@ -6,8 +6,8 @@
 #include "Components/WidgetComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "UI/Lobby/UI_Monitor.h"
-#include "UI/Lobby/UI_OnInteractingComputer.h"
+#include "UI/Office/UI_Monitor.h"
+#include "UI/Office/UI_OnInteractingComputer.h"
 
 AComputer::AComputer()
 {
@@ -27,7 +27,7 @@ void AComputer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	_OnMoveToPointFinishedEvent.BindDynamic(this, &AComputer::OnInteractionPawnMoveToPointFinished);
+	_OnMoveToPointFinishedEvent.BindDynamic(this, &AComputer::OnOfficePawnMoveToPointFinished);
 	
 	GetWorldTimerManager().SetTimerForNextTick(this, &AComputer::UpdateScreenFromWidget);
 }
@@ -85,37 +85,37 @@ void AComputer::SetInteractionState_Implementation(EInteractionState _state)
 
 void AComputer::Interact_Implementation(AActor* _interactor)
 {
-	_InteractionPawn = Cast<AInteractionPawn>(_interactor);
-	if (IsInvalid(_InteractionPawn))
+	_OfficePawn = Cast<AOfficePawn>(_interactor);
+	if (IsInvalid(_OfficePawn))
 		return;
 
-	_InteractionPawn->SetTargetMovePoint(_InteractMovePoint, _OnMoveToPointFinishedEvent);
+	_OfficePawn->SetTargetMovePoint(_InteractMovePoint, _OnMoveToPointFinishedEvent);
 
-	_InteractionPawn->SetInteractingComputer(this);
+	_OfficePawn->SetInteractingComputer(this);
 	SetPower(true, true);
 }
 
 bool AComputer::CanBeDetected_Implementation() const
 {
-	return IsInvalid(_InteractionPawn);
+	return IsInvalid(_OfficePawn);
 }
 
 void AComputer::FinishInteract()
 {
-	if (IsValid(_InteractionPawn))
+	if (IsValid(_OfficePawn))
 	{
-		_InteractionPawn->SetTargetMovePoint(_FinishInteractMovePoint, _OnMoveToPointFinishedEvent);
+		_OfficePawn->SetTargetMovePoint(_FinishInteractMovePoint, _OnMoveToPointFinishedEvent);
 
-		_InteractionPawn->SetInteractingComputer(nullptr);
+		_OfficePawn->SetInteractingComputer(nullptr);
 		CloseInteractingWidget();
 
-		_InteractionPawn = nullptr;
+		_OfficePawn = nullptr;
 	}
 }
 
-void AComputer::OnInteractionPawnMoveToPointFinished(const FName& _point_name)
+void AComputer::OnOfficePawnMoveToPointFinished(const FName& _point_name)
 {
-	if (IsInvalid(_InteractionPawn))
+	if (IsInvalid(_OfficePawn))
 		return;
 
 	// material 설정은 변경 해야 할수도(연출 요소)

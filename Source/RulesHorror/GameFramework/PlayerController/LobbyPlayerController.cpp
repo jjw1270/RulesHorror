@@ -4,7 +4,7 @@
 #include "LobbyPlayerController.h"
 #include "RulesHorrorUtils.h"
 #if WITH_EDITOR
-#include "UI/Lobby/UI_Monitor.h"
+#include "UI/Office/UI_Monitor.h"
 #endif
 
 ALobbyPlayerController::ALobbyPlayerController()

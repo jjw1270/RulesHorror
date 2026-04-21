@@ -15,6 +15,7 @@ class RULESHORROR_API UUI_OptionPage : public UWidgetBase
 	GENERATED_BODY()
 	
 protected:
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
+	virtual void OnShow_Implementation() override;
+	virtual void OnHide_Implementation(EWidgetHideType _hide_type) override;
+
 };
