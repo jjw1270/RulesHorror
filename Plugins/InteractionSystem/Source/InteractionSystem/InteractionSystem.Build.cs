@@ -32,8 +32,9 @@ public class InteractionSystem : ModuleRules
                 "CommonLibrary",
                 "CustomUI",
                 "UMG",
+                "DeveloperSettings",
             }
-			);
+            );
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -42,7 +43,7 @@ public class InteractionSystem : ModuleRules
                 "Slate",
                 "SlateCore",
             }
-			);
+            );
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(

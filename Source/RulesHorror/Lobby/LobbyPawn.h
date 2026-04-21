@@ -141,7 +141,7 @@ protected:
 	TObjectPtr<class UUI_Monitor> _InteractingMonitorWidget = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Monitor")
-	TEnumAsByte<EObjectTypeQuery> _MonitorScreenWidgetObjectType;
+	TEnumAsByte<ETraceTypeQuery> _MonitorScreenWidgetTraceType;
 
 	// 보정 강도
 	UPROPERTY(EditAnywhere, Category = "Monitor", meta = (ClampMin = "0.0", ClampMax = "1.0"))

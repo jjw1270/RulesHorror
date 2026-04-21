@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "InteractionSystemDefines.h"
 #include "CommonUtils.h"
+#include "Components/MeshComponent.h"
 #include "InteractableInterface.generated.h"
 
 UINTERFACE(BlueprintType)
@@ -61,6 +62,29 @@ public:
 	{
 		const auto actor = Cast<AActor>(_getUObject());
 		return IsValid(actor) ? actor->GetActorLocation() : FVector::ZeroVector;
+	}
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Interaction", meta = (ForceAsFunction))
+	TSet<UMeshComponent*> GetEffectedMeshComponents() const;
+	virtual TSet<UMeshComponent*> GetEffectedMeshComponents_Implementation() const
+	{
+		// override 하지 않으면 모든 Mesh 컴포넌트를 가져옴.
+		TSet<UMeshComponent*> mesh_components;
+
+		const auto actor = Cast<AActor>(_getUObject());
+		if (IsInvalid(actor))
+			return mesh_components;
+
+		for (auto comp : actor->GetComponents())
+		{
+			auto mesh_comp = Cast<UMeshComponent>(comp);
+			if (IsValid(mesh_comp))
+			{
+				mesh_components.Add(mesh_comp);
+			}
+		}
+
+		return mesh_components;
 	}
 
 };

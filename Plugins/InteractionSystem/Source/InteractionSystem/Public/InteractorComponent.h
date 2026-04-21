@@ -149,6 +149,19 @@ protected:
 	void SetShowDebug(bool _show_debug);
 	void DrawDebugInteraction(const FVector& _view_location, const FVector& _view_forward);
 #endif
+
 #pragma endregion Debug
+//////////////////////////////////////////////////////////////////////////////////////////
+#pragma region OverlayMaterial
+protected:
+	UPROPERTY()
+	TObjectPtr<class UMaterialInterface> _OverlayMaterial = nullptr;
+
+protected:
+	void InitOverlayMaterial();
+	void ApplyOverlayMaterial(AActor* _actor, class UMaterialInterface* _material) const;
+	void ClearOverlayMaterial(AActor* _actor) const;
+
+#pragma endregion OverlayMaterial
 
 };

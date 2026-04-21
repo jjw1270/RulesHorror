@@ -9,7 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "UI_InteractionIndicatorPanel.h"
-
+#include "InteractionSystemDeveloperSettings.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InteractorComponent)
 
@@ -52,6 +52,8 @@ void UInteractorComponent::BeginPlay()
 
 	InitIndicatorPanel();
 
+	InitOverlayMaterial();
+
 	TSet<AActor*> overlapping_actors;
 	GetOverlappingActors(overlapping_actors);
 
@@ -89,6 +91,11 @@ void UInteractorComponent::TickComponent(float _delta_time, ELevelTick _tick_typ
 void UInteractorComponent::EndPlay(const EEndPlayReason::Type _end_play_reason)
 {
 	SetComponentTickEnabled(false);
+
+	for (const auto& pair : _OverlappedActorInfos)
+	{
+		ClearOverlayMaterial(pair.Key);
+	}
 
 	_TargetedActor = nullptr;
 	_OverlappedActorInfos.Empty();
@@ -167,6 +174,8 @@ void UInteractorComponent::OnEndOverlap(UPrimitiveComponent* _overlapped_compone
 	{
 		IInteractableInterface::Execute_SetInteractionState(_other_actor, EInteractionState::None);
 	}
+
+	ClearOverlayMaterial(_other_actor);
 
 	if (IsValid(_IndicatorPanel))
 	{
@@ -277,6 +286,7 @@ void UInteractorComponent::ClearInteractionState()
 				_IndicatorPanel->SetInteractionActorState(actor, EInteractionState::None);
 			}
 
+			ClearOverlayMaterial(actor);
 			IInteractableInterface::Execute_SetInteractionState(actor, EInteractionState::None);
 		}
 	}
@@ -330,6 +340,7 @@ void UInteractorComponent::UpdateInteraction()
 	{
 		if (IsValid(_TargetedActor))
 		{
+			ClearOverlayMaterial(_TargetedActor);
 			IInteractableInterface::Execute_SetInteractionState(_TargetedActor, EInteractionState::None);
 		}
 
@@ -370,6 +381,8 @@ void UInteractorComponent::UpdateInteractionStates()
 			{
 				_IndicatorPanel->SetInteractionActorState(actor, new_state);
 			}
+
+			ApplyOverlayMaterial(actor, info.State == EInteractionState::Targeted ? _OverlayMaterial : nullptr);
 
 			IInteractableInterface::Execute_SetInteractionState(actor, new_state);
 		}
@@ -642,6 +655,52 @@ void UInteractorComponent::InitIndicatorPanel()
 
 	_IndicatorPanel->SetPerspectiveDistance(_TargetableRange, _DetectableRange);
 	_IndicatorPanel->AddToViewport(_IndicatorPanelZOrder);
+}
+
+void UInteractorComponent::InitOverlayMaterial()
+{
+	auto dev_settings = GetDefault<UInteractionSystemDeveloperSettings>();
+	if (IsInvalid(dev_settings))
+		return;
+
+	if (dev_settings->_OverlayMaterialClass.IsNull())
+	{
+		TRACE_ERROR(TEXT("Interaction System Developer Setting에서 _OverlayMaterialClass를 설정해주세요."));
+		return;
+	}
+
+	_OverlayMaterial = dev_settings->_OverlayMaterialClass.LoadSynchronous();
+}
+
+void UInteractorComponent::ApplyOverlayMaterial(AActor* _actor, UMaterialInterface* _material) const
+{
+	if (IsInvalid(_actor))
+		return;
+
+	for (auto mesh_comp : IInteractableInterface::Execute_GetEffectedMeshComponents(_actor))
+	{
+		if (IsInvalid(mesh_comp))
+			continue;
+
+		// nanite는 overlay material를 지원하지 않음!!
+		// overlay material를 쓸때에만 비활성화
+		auto static_mesh_comp = Cast<UStaticMeshComponent>(mesh_comp);
+		if (IsValid(static_mesh_comp))
+		{
+			auto static_mesh = static_mesh_comp->GetStaticMesh();
+			if (IsValid(static_mesh))
+			{
+				static_mesh_comp->SetForceDisableNanite(IsValid(_material));
+			}
+		}
+
+		mesh_comp->SetOverlayMaterial(_material);
+	}
+}
+
+void UInteractorComponent::ClearOverlayMaterial(AActor* _actor) const
+{
+	ApplyOverlayMaterial(_actor, nullptr);
 }
 
 #if !UE_BUILD_SHIPPING

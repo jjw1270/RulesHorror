@@ -307,7 +307,7 @@ void ALobbyPawn::DriveWidgetInteraction(float _delta_time)
 		return;
 
 	FHitResult hit;
-	bool is_hit = pc->GetHitResultUnderCursorForObjects({ _MonitorScreenWidgetObjectType }, true, hit);
+	bool is_hit = pc->GetHitResultUnderCursorByChannel(_MonitorScreenWidgetTraceType, true, hit);
 
 	pc->SetShowMouseCursor(!is_hit);
 
@@ -416,7 +416,7 @@ void ALobbyPawn::ApplyMonitorTraceChannel()
 	if (IsInvalid(WidgetInteractionComponent))
 		return;
 
-	WidgetInteractionComponent->TraceChannel = UEngineTypes::ConvertToCollisionChannel(_MonitorScreenWidgetObjectType);
+	WidgetInteractionComponent->TraceChannel = UEngineTypes::ConvertToCollisionChannel(_MonitorScreenWidgetTraceType);
 }
 
 void ALobbyPawn::SetInteractingComputer(AComputer* _computer)
