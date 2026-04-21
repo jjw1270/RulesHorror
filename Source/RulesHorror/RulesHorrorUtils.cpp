@@ -2,7 +2,7 @@
 
 #include "RulesHorrorUtils.h"
 #include "RulesHorrorGameInstance.h"
-#include "Lobby/LobbyPlayerController.h"
+#include "GameFramework/PlayerController/LobbyPlayerController.h"
 
 URulesHorrorGameInstance* URulesHorrorUtils::GetGameInstance(const UObject* _obj)
 {
