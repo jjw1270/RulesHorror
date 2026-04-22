@@ -1,1 +1,2 @@
+로비 UI구현
 GameChapterManager 구현 : 게임의 전체 스토리를 챕터형태로 관리
