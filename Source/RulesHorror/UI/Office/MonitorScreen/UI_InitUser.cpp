@@ -72,7 +72,7 @@ bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_erro
 
 			if (prev_nickname != _CurrentNickname)
 			{
-				USaveGameHelper::SaveGameToSlot(this);
+				USaveGameHelper::SaveGame(this);
 			}
 
 			return true;

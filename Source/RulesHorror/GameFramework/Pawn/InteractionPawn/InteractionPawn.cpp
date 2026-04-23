@@ -86,7 +86,7 @@ void AInteractionPawn::Tick(float _delta_time)
 {
 	Super::Tick(_delta_time);
 
-	if (_UseLookAtCursor)
+	if (_EnableLookAtCursor && _UseLookAtCursor)
 	{
 		UpdateLookAtCursor();
 

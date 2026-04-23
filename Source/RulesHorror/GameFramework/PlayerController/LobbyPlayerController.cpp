@@ -3,9 +3,7 @@
 
 #include "LobbyPlayerController.h"
 #include "RulesHorrorUtils.h"
-#if WITH_EDITOR
-#include "UI/Office/UI_Monitor.h"
-#endif
+#include "SaveGameSubsystem.h"
 
 ALobbyPlayerController::ALobbyPlayerController()
 {
@@ -15,10 +13,11 @@ void ALobbyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-#if WITH_EDITOR
-	// 에디터에서 static 변수 리셋용
-	UUI_Monitor::ResetLastActiveWidgetindex();
-#endif
+	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
+	if (IsInvalid(save_game_subsystem))
+		return;
+
+	save_game_subsystem->LoadGame();
 }
 
 void ALobbyPlayerController::Tick(float _delta_time)

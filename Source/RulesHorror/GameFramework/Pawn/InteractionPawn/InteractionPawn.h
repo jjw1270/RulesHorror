@@ -37,6 +37,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<class UCameraComponent> Camera = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	bool _EnableLookAtCursor = true;
+
 	bool _UseLookAtCursor = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
