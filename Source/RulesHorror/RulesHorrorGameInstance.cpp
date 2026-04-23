@@ -5,6 +5,18 @@
 #include "RulesHorrorUtils.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#if WITH_EDITOR
+#include "UI/Office/UI_Monitor.h"
+#endif
+
+void URulesHorrorGameInstance::Shutdown()
+{
+#if WITH_EDITOR
+	UUI_Monitor::ResetLastActiveWidgetindex();
+#endif
+
+	Super::Shutdown();
+}
 
 void URulesHorrorGameInstance::QuitGame()
 {

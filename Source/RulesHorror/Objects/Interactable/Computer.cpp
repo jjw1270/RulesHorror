@@ -89,7 +89,7 @@ void AComputer::Interact_Implementation(AActor* _interactor)
 	if (IsInvalid(_OfficePawn))
 		return;
 
-	_OfficePawn->SetTargetMovePoint(_InteractMovePoint, _OnMoveToPointFinishedEvent);
+	_OfficePawn->SetTargetMovePoint(_InteractMovePoint, false, _OnMoveToPointFinishedEvent);
 
 	_OfficePawn->SetInteractingComputer(this);
 	SetPower(true, true);
@@ -104,7 +104,7 @@ void AComputer::FinishInteract()
 {
 	if (IsValid(_OfficePawn))
 	{
-		_OfficePawn->SetTargetMovePoint(_FinishInteractMovePoint, _OnMoveToPointFinishedEvent);
+		_OfficePawn->SetTargetMovePoint(_FinishInteractMovePoint, false, _OnMoveToPointFinishedEvent);
 
 		_OfficePawn->SetInteractingComputer(nullptr);
 		CloseInteractingWidget();

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "InputActionValue.h"
+#include "InteractionSystemDefines.h"
 #include "InteractionPawn.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FD_OnMoveToPointFinished, const FName&, _point_name);
@@ -90,6 +91,8 @@ protected:
 
 	bool _CanInteract = true;
 
+	EInteractionDetectMode _DefaultDetectMode = EInteractionDetectMode::NA;
+
 protected:
 	UFUNCTION()
 	void Input_Interact(const FInputActionValue& _value);
@@ -105,8 +108,20 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma region MovePoints
 protected:
-	UPROPERTY(EditAnywhere, Category = "MovePoints")
-	float _MoveSpeed = 5.0f;
+	UPROPERTY(EditAnywhere, Category = "MovePoint", meta = (Tooltip = "cm/s"))
+	float _MoveSpeed = 200.0f;
+
+	UPROPERTY(EditAnywhere, Category = "MovePoint", meta = (Tooltip = "deg/s"))
+	float _RotateSpeed = 100.0f;
+
+	UPROPERTY(EditAnywhere, Category = "MovePoint")
+	FName _StartMovePoint;
+
+	FVector _MoveStartLocation;
+	FRotator _MoveStartRotation;
+
+	float _MoveElapsedTime = 0.0f;
+	float _MoveDuration = 0.0f;
 
 	UPROPERTY()
 	TMap<FName, TObjectPtr<class AInteractionPawnMovePoint>> _MovePoints;
@@ -122,7 +137,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "_on_move_finished"))
-	void SetTargetMovePoint(const FName _point_name, const FD_OnMoveToPointFinished& _on_move_finished);
+	void SetTargetMovePoint(const FName _point_name, bool _is_teleport, const FD_OnMoveToPointFinished& _on_move_finished);
 
 #pragma endregion MovePoints
 };

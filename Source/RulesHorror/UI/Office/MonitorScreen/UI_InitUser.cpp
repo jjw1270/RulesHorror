@@ -77,6 +77,10 @@ bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_erro
 
 			return true;
 		}
+		else
+		{
+			TRACE_WARNING(TEXT("save_game is invalid."));
+		}
 	}
 
 	return false;
@@ -88,7 +92,7 @@ bool UUI_InitUser::CheckNickname(const FString& _nickname, FText& _out_error_tex
 
 	if (_nickname.IsEmpty())
 	{
-		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_IsEmpty");
+		_out_error_text = GETTEXT("ST_Office", "Set_Nickname_IsEmpty");
 		return false;
 	}
 
@@ -114,13 +118,13 @@ bool UUI_InitUser::CheckNickname(const FString& _nickname, FText& _out_error_tex
 
 	if (grapheme_count < 2)
 	{
-		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_Too_Short");
+		_out_error_text = GETTEXT("ST_Office", "Set_Nickname_Too_Short");
 		return false;
 	}
 
 	if (grapheme_count > 16)
 	{
-		_out_error_text = GETTEXT("ST_Lobby", "Set_Nickname_Too_Long");
+		_out_error_text = GETTEXT("ST_Office", "Set_Nickname_Too_Long");
 		return false;
 	}
 

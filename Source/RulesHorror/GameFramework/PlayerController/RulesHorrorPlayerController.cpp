@@ -7,12 +7,11 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "GameFramework/RulesHorrorCameraManager.h"
-#include "Blueprint/UserWidget.h"
 #include "GameFramework/Pawn/RulesHorrorCharacter.h"
+#include "SaveGameSubsystem.h"
 
 ARulesHorrorPlayerController::ARulesHorrorPlayerController()
 {
-	// set the player camera manager class
 	PlayerCameraManagerClass = ARulesHorrorCameraManager::StaticClass();
 }
 
@@ -20,50 +19,34 @@ void ARulesHorrorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FInputModeGameOnly input_mode;
-	SetInputMode(input_mode);
-
-	//SetShowMouseCursor(false);
-	//SetIgnoreInput_Look(false);
-	//SetIgnoreInput_Move(false);
-}
-
-void ARulesHorrorPlayerController::OnPossess(APawn* aPawn)
-{
-	Super::OnPossess(aPawn);
-
-	// only spawn UI on local player controllers
-	if (IsLocalPlayerController())
+	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
+	if (IsValid(save_game_subsystem))
 	{
-		// set up the UI for the character
-		if (ARulesHorrorCharacter* RulesHorrorCharacter = Cast<ARulesHorrorCharacter>(aPawn))
-		{
-			// create the UI
-			/*if (!HorrorUI)
-			{
-				HorrorUI = CreateWidget<UHorrorUI>(this, HorrorUIClass);
-				HorrorUI->AddToViewport(0);
-			}
+		bool load_game_success = save_game_subsystem->LoadGame();
 
-			HorrorUI->SetupCharacter(HorrorCharacter);*/
+#if WITH_EDITOR
+		if (load_game_success == false && _IsLobby == false)
+		{
+			// 원활한 테스트를 위해 로비를 통하지 않고 NewGame
+			save_game_subsystem->NewGame();
 		}
 	}
+#endif
 }
 
 void ARulesHorrorPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	// only add IMCs for local player controllers
-	if (IsLocalPlayerController())
+	if (IsLocalPlayerController() == false)
+		return;
+
+	auto enhanced_input_local_player_subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (IsValid(enhanced_input_local_player_subsystem))
 	{
-		// Add Input Mapping Context
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		for (UInputMappingContext* current_context : DefaultMappingContexts)
 		{
-			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
-			{
-				Subsystem->AddMappingContext(CurrentContext, 0);
-			}
+			enhanced_input_local_player_subsystem->AddMappingContext(current_context, 0);
 		}
 	}
 }

@@ -30,6 +30,8 @@ void AInteractionPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	_DefaultDetectMode = InteractorComponent->GetDetectMode();
+
 	_BaseYaw = GetActorRotation().Yaw;
 	_BasePitch = GetActorRotation().Pitch;
 
@@ -60,6 +62,11 @@ void AInteractionPawn::BeginPlay()
 	}
 
 	InitMovePoints();
+
+	if(_StartMovePoint.IsNone() == false)
+	{
+		SetTargetMovePoint(_StartMovePoint, true, FD_OnMoveToPointFinished());
+	}
 }
 
 void AInteractionPawn::SetupPlayerInputComponent(UInputComponent* _input_component)
@@ -194,56 +201,80 @@ void AInteractionPawn::DriveMoveToPoint(float _delta_time)
 	if (IsInvalid(_TargetMovePoint))
 		return;
 
-	// location
-	const FVector current_location = GetActorLocation();
+	_MoveElapsedTime += _delta_time;
+
 	const FVector target_location = _TargetMovePoint->GetActorLocation();
-
-	constexpr float location_tolerance = 1.0f;     // cm
-	const bool is_location_arrived = FVector::DistSquared(current_location, target_location) <= location_tolerance * location_tolerance;
-
-	// rotation
-	const FRotator current_rotation = GetActorRotation();
 	const FRotator target_rotation = _TargetMovePoint->GetActorRotation();
 
-	constexpr float rotation_tolerance = 0.5f;     // degree
-	const bool is_rotation_arrived = current_rotation.Equals(target_rotation, rotation_tolerance);
+	const float raw_alpha = FMath::Clamp(_MoveElapsedTime / _MoveDuration, 0.0f, 1.0f);
+	const float alpha = FMath::InterpEaseInOut(0.0f, 1.0f, raw_alpha, 2.0f);
 
-	if (is_location_arrived && is_rotation_arrived)
+	const FVector new_location = FMath::Lerp(_MoveStartLocation, target_location, alpha);
+
+	const FQuat start_quat = _MoveStartRotation.Quaternion();
+	const FQuat target_quat = target_rotation.Quaternion();
+	const FQuat new_quat = FQuat::Slerp(start_quat, target_quat, alpha);
+	const FRotator new_rotation = new_quat.Rotator();
+
+	SetActorLocationAndRotation(new_location, new_rotation);
+
+	if (raw_alpha >= 1.0f)
 	{
+		SetActorLocationAndRotation(target_location, target_rotation);
+
 		_OnMoveToPointFinishedEvent.ExecuteIfBound(_TargetMovePoint->GetPointName());
 		_OnMoveToPointFinishedEvent.Unbind();
 
 		SetUseLookAtCursor(!_TargetMovePoint->GetUseFixedCamera());
 		_TargetMovePoint = nullptr;
 	}
-	else
-	{
-		FVector new_location = is_location_arrived ? current_location : FMath::VInterpTo(current_location, target_location, _delta_time, _MoveSpeed);
-		FRotator new_rotation = is_rotation_arrived ? current_rotation : FMath::RInterpTo(current_rotation, target_rotation, _delta_time, _MoveSpeed);
-
-		SetActorLocationAndRotation(new_location, new_rotation);
-	}
 }
 
-void AInteractionPawn::SetTargetMovePoint(const FName _point_name, const FD_OnMoveToPointFinished& _on_move_finished)
+void AInteractionPawn::SetTargetMovePoint(const FName _point_name, bool _is_teleport, const FD_OnMoveToPointFinished& _on_move_finished)
 {
-	auto point_ptr = _MovePoints.Find(_point_name);
+	const auto point_ptr = _MovePoints.Find(_point_name);
 	if (IsInvalid(point_ptr))
 	{
 		TRACE_WARNING(TEXT("Has no point! : %s"), *_point_name.ToString());
 		return;
 	}
 
-	if (IsInvalid(*point_ptr))
+	const auto point = *point_ptr;
+	if (IsInvalid(point))
 	{
 		TRACE_WARNING(TEXT("MovePoint invalid! : %s"), *_point_name.ToString());
 		return;
 	}
 
-	_TargetMovePoint = *point_ptr;
+	if (_is_teleport)
+	{
+		SetActorLocationAndRotation(point->GetActorLocation(), point->GetActorRotation());
+
+		_on_move_finished.ExecuteIfBound(_point_name);
+		SetUseLookAtCursor(!point->GetUseFixedCamera());
+		InteractorComponent->SetDetectMode(point->GetInteractionEnabled() ? _DefaultDetectMode : EInteractionDetectMode::NA);
+		return;
+	}
+
+	_TargetMovePoint = point;
+
+	_MoveStartLocation = GetActorLocation();
+	_MoveStartRotation = GetActorRotation();
+	_MoveElapsedTime = 0.0f;
+
+	const float distance = FVector::Distance(_MoveStartLocation, point->GetActorLocation());
+	const float location_duration = distance / _MoveSpeed;
+
+	const float angle = _MoveStartRotation.Quaternion().AngularDistance(point->GetActorRotation().Quaternion());
+	const float angle_degree = FMath::RadiansToDegrees(angle);
+	const float rotation_duration = angle_degree / _RotateSpeed;
+
+	_MoveDuration = FMath::Max(location_duration, rotation_duration);
+	_MoveDuration = FMath::Max(_MoveDuration, KINDA_SMALL_NUMBER);
+
 	_OnMoveToPointFinishedEvent = _on_move_finished;
 
-	InteractorComponent->SetDetectMode(_TargetMovePoint->GetInteractionEnabled() ? EInteractionDetectMode::Cursor : EInteractionDetectMode::NA);
+	InteractorComponent->SetDetectMode(_TargetMovePoint->GetInteractionEnabled() ? _DefaultDetectMode : EInteractionDetectMode::NA);
 		
 	SetUseLookAtCursor(false);
 }

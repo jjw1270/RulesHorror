@@ -13,6 +13,9 @@ UCLASS()
 class RULESHORROR_API URulesHorrorGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void Shutdown() override;
 	
 public:
 	UFUNCTION(BlueprintCallable)
