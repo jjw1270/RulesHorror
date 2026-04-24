@@ -1,0 +1,83 @@
+// Copyright (c) 2026 장윤제. All rights reserved.
+
+#include "StorySceneAsset.h"
+#include "StorySceneNodeData.h"
+#include "CommonUtils.h"
+
+UStorySceneNodeData* UStorySceneAsset::FindShotNode(const FStoryShotID& _shot_id) const
+{
+	if (_shot_id.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	for (const TObjectPtr<UStorySceneNodeData>& shot_node : _ShotNodes)
+	{
+		if (IsValid(shot_node) && shot_node->GetShotID() == _shot_id)
+		{
+			return shot_node;
+		}
+	}
+
+	return nullptr;
+}
+
+#if WITH_EDITOR
+void UStorySceneAsset::SetEditorGraph(UEdGraph* _editor_graph)
+{
+	if (_EditorGraph == _editor_graph)
+	{
+		return;
+	}
+
+	Modify();
+	_EditorGraph = _editor_graph;
+	MarkPackageDirty();
+}
+
+void UStorySceneAsset::SetSceneID(const FStorySceneID& _scene_id)
+{
+	if (_SceneID == _scene_id)
+	{
+		return;
+	}
+
+	Modify();
+	_SceneID = _scene_id;
+	MarkPackageDirty();
+}
+
+void UStorySceneAsset::SetEntryShotID(const FStoryShotID& _entry_shot_id)
+{
+	if (_EntryShotID == _entry_shot_id)
+	{
+		return;
+	}
+
+	Modify();
+	_EntryShotID = _entry_shot_id;
+	MarkPackageDirty();
+}
+
+UStorySceneNodeData* UStorySceneAsset::CreateShotNode()
+{
+	Modify();
+
+	UStorySceneNodeData* shot_node = NewObject<UStorySceneNodeData>(this, UStorySceneNodeData::StaticClass(), NAME_None, RF_Transactional);
+	_ShotNodes.Add(shot_node);
+	MarkPackageDirty();
+	return shot_node;
+}
+
+void UStorySceneAsset::RemoveShotNode(UStorySceneNodeData* _shot_node)
+{
+	if (IsInvalid(_shot_node))
+	{
+		return;
+	}
+
+	Modify();
+	_ShotNodes.Remove(_shot_node);
+	MarkPackageDirty();
+}
+#endif
