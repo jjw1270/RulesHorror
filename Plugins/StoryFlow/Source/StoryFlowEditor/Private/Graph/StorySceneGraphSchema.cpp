@@ -8,7 +8,10 @@
 #include "StorySceneNodeData.h"
 #include "CommonUtils.h"
 
-static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+namespace
+{
+	static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+}
 
 void UStorySceneGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& _context_menu_builder) const
 {

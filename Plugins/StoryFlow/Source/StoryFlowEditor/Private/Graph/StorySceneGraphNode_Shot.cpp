@@ -8,7 +8,10 @@
 #include "EdGraph/EdGraphSchema.h"
 #include "CommonUtils.h"
 
-static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+namespace
+{
+	static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+}
 
 namespace
 {

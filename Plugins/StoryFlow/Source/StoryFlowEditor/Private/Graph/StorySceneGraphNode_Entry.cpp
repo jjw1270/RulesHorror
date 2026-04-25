@@ -2,7 +2,10 @@
 
 #include "Graph/StorySceneGraphNode_Entry.h"
 
-static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+namespace
+{
+	static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+}
 
 void UStorySceneGraphNode_Entry::AllocateDefaultPins()
 {

@@ -568,6 +568,16 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 		_out_errors.Add(TEXT("SceneID is empty."));
 	}
 
+	if (_StorySceneAsset->GetTargetLevel().IsNull())
+	{
+		_out_errors.Add(TEXT("TargetLevel is missing."));
+	}
+
+	if (IsInvalid(_StorySceneAsset->GetSceneTemplate()))
+	{
+		_out_errors.Add(TEXT("SceneTemplate is missing."));
+	}
+
 	if (_StorySceneAsset->GetEntryShotID().IsValid() == false)
 	{
 		_out_errors.Add(TEXT("Entry node is not connected to a Shot node."));
@@ -575,6 +585,15 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 		if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
 		{
 			entry_node->SetCompileError(TEXT("Entry node is not connected to a Shot node."));
+		}
+	}
+	else if (IsInvalid(_StorySceneAsset->FindShotNode(_StorySceneAsset->GetEntryShotID())))
+	{
+		_out_errors.Add(FString::Printf(TEXT("EntryShotID '%s' does not exist in ShotNodes."), *_StorySceneAsset->GetEntryShotID().Get().ToString()));
+
+		if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+		{
+			entry_node->SetCompileError(TEXT("EntryShotID does not exist in ShotNodes."));
 		}
 	}
 
@@ -615,6 +634,20 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 		if (IsInvalid(shot_node_data->GetShotTemplate()))
 		{
 			node_errors.Add(TEXT("ShotTemplate is missing."));
+		}
+
+		for (const FStoryShotID& next_shot_id : shot_node_data->GetNextShotIDs())
+		{
+			if (next_shot_id.IsValid() == false)
+			{
+				node_errors.Add(TEXT("NextShotIDs contains an empty ShotID."));
+				continue;
+			}
+
+			if (IsInvalid(_StorySceneAsset->FindShotNode(next_shot_id)))
+			{
+				node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_shot_id.Get().ToString()));
+			}
 		}
 
 		if (node_errors.Num() > 0)

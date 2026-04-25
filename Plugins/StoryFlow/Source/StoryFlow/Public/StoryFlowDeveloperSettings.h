@@ -7,6 +7,7 @@
 #include "StoryFlowDeveloperSettings.generated.h"
 
 class UStorySceneRegistryAsset;
+class UCurveFloat;
 class UWorld;
 
 UCLASS(Config = Game, DefaultConfig)
@@ -20,4 +21,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Config)
 	TSoftObjectPtr<UWorld> _LoadingLevel = nullptr;
+
+	UPROPERTY(EditAnywhere, Config, meta = (ClampMin = "0.0"))
+	float _MinimumLoadingLevelDuration = 0.0f;
+
+	UPROPERTY(EditAnywhere, Config)
+	TSoftObjectPtr<UCurveFloat> _MinimumLoadingLevelProgressCurve = nullptr;
 };

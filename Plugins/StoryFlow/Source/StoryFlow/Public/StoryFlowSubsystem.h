@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/StreamableManager.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Tickable.h"
 #include "StoryFlowDefines.h"
@@ -19,7 +20,8 @@ enum class EStoryFlowPendingTravelPhase : uint8
 {
 	None,
 	LoadingLevel,
-	TargetLevel,
+	AsyncLoadingTargetLevel,
+	OpeningTargetLevel,
 };
 
 UCLASS()
@@ -49,13 +51,17 @@ protected:
 	UPROPERTY(Transient)
 	EStoryFlowPendingTravelPhase _PendingTravelPhase = EStoryFlowPendingTravelPhase::None;
 
+	TSharedPtr<FStreamableHandle> _PendingTargetLevelLoadHandle;
+	bool _PendingTargetLevelLoadCompleted = false;
+	double _PendingLoadingLevelEnterTime = 0.0;
+
 public:
 	virtual void Initialize(FSubsystemCollectionBase& _collection) override;
 	virtual void Deinitialize() override;
 
-	virtual void Tick(float _delta_time) override;
 	virtual TStatId GetStatId() const override;
 	virtual bool IsTickable() const override;
+	virtual void Tick(float _delta_time) override;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -72,7 +78,9 @@ protected:
 
 	bool StartResolvedScene(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref);
 	bool ShouldOpenTargetLevel(UStorySceneAsset* _scene_asset) const;
-	void RequestOpenPendingLevel();
+	void RequestOpenLoadingLevel();
+	bool BeginAsyncLoadTargetLevel();
+	void HandleTargetLevelAsyncLoaded();
 	void ClearPendingSceneStart();
 	void HandlePostLoadMap(UWorld* _loaded_world);
 
@@ -99,5 +107,8 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "StoryFlow")
 	FStoryFlowRef GetCurrentRef() const;
+
+	UFUNCTION(BlueprintPure, Category = "StoryFlow")
+	float GetTargetLevelLoadingProgressRate() const;
 
 };
