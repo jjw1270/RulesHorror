@@ -102,6 +102,54 @@ FORCEINLINE uint32 GetTypeHash(const FStoryShotID& _id)
 }
 
 USTRUCT(BlueprintType)
+struct STORYFLOW_API FStoryBranchID
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName ID = NAME_None;
+
+public:
+	FStoryBranchID() = default;
+
+	explicit FStoryBranchID(FName _id)
+		: ID(_id)
+	{
+	}
+
+	bool IsValid() const
+	{
+		return ID.IsNone() == false;
+	}
+
+	void Reset()
+	{
+		ID = NAME_None;
+	}
+
+	const FName& Get() const
+	{
+		return ID;
+	}
+
+	bool operator==(const FStoryBranchID& _other) const
+	{
+		return ID == _other.ID;
+	}
+
+	bool operator!=(const FStoryBranchID& _other) const
+	{
+		return ID != _other.ID;
+	}
+};
+
+FORCEINLINE uint32 GetTypeHash(const FStoryBranchID& _id)
+{
+	return GetTypeHash(_id.ID);
+}
+
+USTRUCT(BlueprintType)
 struct STORYFLOW_API FStoryFlowRef
 {
 	GENERATED_BODY()

@@ -4,12 +4,12 @@
 
 namespace
 {
-	static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
+	static const FName StorySceneEntryPinCategory(TEXT("StoryFlow"));
 }
 
 void UStorySceneGraphNode_Entry::AllocateDefaultPins()
 {
-	CreatePin(EGPD_Output, StoryFlowPinCategory, NAME_None, TEXT("Next"));
+	CreatePin(EGPD_Output, StorySceneEntryPinCategory, NAME_None, TEXT("Next"));
 }
 
 void UStorySceneGraphNode_Entry::ClearCompileMessage()

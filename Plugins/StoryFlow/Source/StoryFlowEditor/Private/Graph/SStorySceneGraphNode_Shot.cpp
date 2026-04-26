@@ -2,7 +2,6 @@
 
 #include "Graph/SStorySceneGraphNode_Shot.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
-#include "StorySceneNodeData.h"
 #include "StoryFlowEditorModule.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"

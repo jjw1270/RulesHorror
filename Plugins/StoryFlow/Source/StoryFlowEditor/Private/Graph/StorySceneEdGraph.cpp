@@ -2,8 +2,11 @@
 
 #include "Graph/StorySceneEdGraph.h"
 #include "Graph/StorySceneGraphNode_Entry.h"
+#include "Graph/StorySceneGraphNode_Branch.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
+#include "Graph/StorySceneGraphNode_Transition.h"
 #include "StorySceneAsset.h"
+#include "StoryBranchNodeData.h"
 #include "StorySceneNodeData.h"
 #include "CommonUtils.h"
 
@@ -56,7 +59,8 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 	}
 
 	FStoryShotID rebuilt_entry_shot_id;
-	TMap<UStorySceneNodeData*, TArray<FStoryShotID>> rebuilt_next_shot_ids;
+	TMap<UStorySceneNodeData*, TArray<FStorySceneBranchLink>> rebuilt_next_links;
+	TMap<UStoryBranchNodeData*, TMap<int32, FStorySceneBranchLink>> rebuilt_branch_next_links_by_pin_index;
 
 	for (UEdGraphNode* node : Nodes)
 	{
@@ -66,7 +70,13 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 			continue;
 		}
 
-		rebuilt_next_shot_ids.FindOrAdd(shot_node->GetShotNodeData());
+		rebuilt_next_links.FindOrAdd(shot_node->GetShotNodeData());
+
+		UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node);
+		if (IsValid(branch_node) && IsValid(branch_node->GetBranchNodeData()))
+		{
+			rebuilt_branch_next_links_by_pin_index.FindOrAdd(branch_node->GetBranchNodeData());
+		}
 	}
 
 	if (UStorySceneGraphNode_Entry* entry_node = FindEntryNode())
@@ -92,30 +102,100 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 			continue;
 		}
 
+		TArray<FStorySceneBranchLink>& next_links = rebuilt_next_links.FindOrAdd(shot_node->GetShotNodeData());
+		next_links.Reset();
+
 		UEdGraphPin* next_pin = shot_node->FindPin(TEXT("Next"));
 		if (next_pin == nullptr || next_pin->LinkedTo.Num() == 0)
 		{
 			continue;
 		}
 
-		UStorySceneGraphNode_Shot* target_node = Cast<UStorySceneGraphNode_Shot>(next_pin->LinkedTo[0]->GetOwningNode());
-		if (IsInvalid(target_node) || IsInvalid(target_node->GetShotNodeData()))
+		UEdGraphNode* target_node = next_pin->LinkedTo[0]->GetOwningNode();
+		FStorySceneBranchLink branch_link;
+
+		if (UStorySceneGraphNode_Shot* target_shot_node = Cast<UStorySceneGraphNode_Shot>(target_node))
+		{
+			if (IsValid(target_shot_node->GetShotNodeData()))
+			{
+				branch_link.NextShotID = target_shot_node->GetShotNodeData()->GetShotID();
+			}
+		}
+		else if (UStorySceneGraphNode_Branch* target_branch_node = Cast<UStorySceneGraphNode_Branch>(target_node))
+		{
+			if (IsValid(target_branch_node->GetBranchNodeData()))
+			{
+				branch_link.NextBranchID = target_branch_node->GetBranchNodeData()->GetBranchID();
+			}
+		}
+		else if (UStorySceneGraphNode_Transition* target_transition_node = Cast<UStorySceneGraphNode_Transition>(target_node))
+		{
+			branch_link.NextSceneID = target_transition_node->GetNextSceneID();
+		}
+
+		if (branch_link.IsValid())
+		{
+			next_links.Add(branch_link);
+		}
+	}
+
+	for (UEdGraphNode* node : Nodes)
+	{
+		UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node);
+		if (IsInvalid(branch_node) || IsInvalid(branch_node->GetBranchNodeData()))
 		{
 			continue;
 		}
 
-		TArray<FStoryShotID>& next_shot_ids = rebuilt_next_shot_ids.FindOrAdd(shot_node->GetShotNodeData());
-		next_shot_ids.Reset();
-		next_shot_ids.Add(target_node->GetShotNodeData()->GetShotID());
+		TMap<int32, FStorySceneBranchLink>& next_links_by_pin_index = rebuilt_branch_next_links_by_pin_index.FindOrAdd(branch_node->GetBranchNodeData());
+		next_links_by_pin_index.Reset();
+
+		const TArray<UEdGraphPin*> next_pins = branch_node->GetNextPins();
+		for (int32 next_pin_index = 0; next_pin_index < next_pins.Num(); ++next_pin_index)
+		{
+			UEdGraphPin* next_pin = next_pins[next_pin_index];
+			if (next_pin == nullptr || next_pin->LinkedTo.Num() == 0)
+			{
+				continue;
+			}
+
+			UEdGraphNode* target_node = next_pin->LinkedTo[0]->GetOwningNode();
+			FStorySceneBranchLink branch_link;
+
+			if (UStorySceneGraphNode_Shot* target_shot_node = Cast<UStorySceneGraphNode_Shot>(target_node))
+			{
+				if (IsValid(target_shot_node->GetShotNodeData()))
+				{
+					branch_link.NextShotID = target_shot_node->GetShotNodeData()->GetShotID();
+				}
+			}
+			else if (UStorySceneGraphNode_Transition* target_transition_node = Cast<UStorySceneGraphNode_Transition>(target_node))
+			{
+				branch_link.NextSceneID = target_transition_node->GetNextSceneID();
+			}
+
+			if (branch_link.IsValid())
+			{
+				next_links_by_pin_index.Add(next_pin_index, branch_link);
+			}
+		}
 	}
 
 	scene_asset->SetEntryShotID(rebuilt_entry_shot_id);
 
-	for (const TPair<UStorySceneNodeData*, TArray<FStoryShotID>>& rebuilt_pair : rebuilt_next_shot_ids)
+	for (const TPair<UStorySceneNodeData*, TArray<FStorySceneBranchLink>>& rebuilt_pair : rebuilt_next_links)
 	{
 		if (IsValid(rebuilt_pair.Key))
 		{
-			rebuilt_pair.Key->SetNextShotIDs(rebuilt_pair.Value);
+			rebuilt_pair.Key->SetNextLinks(rebuilt_pair.Value);
+		}
+	}
+
+	for (const TPair<UStoryBranchNodeData*, TMap<int32, FStorySceneBranchLink>>& rebuilt_pair : rebuilt_branch_next_links_by_pin_index)
+	{
+		if (IsValid(rebuilt_pair.Key))
+		{
+			rebuilt_pair.Key->SetNextLinksByPinIndex(rebuilt_pair.Value);
 		}
 	}
 }

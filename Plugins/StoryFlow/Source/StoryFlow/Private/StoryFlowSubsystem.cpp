@@ -3,6 +3,8 @@
 
 #include "StoryFlowSubsystem.h"
 #include "StorySceneAsset.h"
+#include "StoryBranchBase.h"
+#include "StoryBranchNodeData.h"
 #include "StorySceneBase.h"
 #include "StorySceneNodeData.h"
 #include "StoryFlowDeveloperSettings.h"
@@ -35,6 +37,11 @@ void UStoryFlowSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+const UStoryFlowDeveloperSettings* UStoryFlowSubsystem::GetStoryFlowDeveloperSettings() const
+{
+	return GetDefault<UStoryFlowDeveloperSettings>();
+}
+
 TStatId UStoryFlowSubsystem::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UStoryFlowSubsystem, STATGROUP_Tickables);
@@ -49,12 +56,7 @@ void UStoryFlowSubsystem::Tick(float _delta_time)
 {
 	if (_PendingTravelPhase == EStoryFlowPendingTravelPhase::AsyncLoadingTargetLevel)
 	{
-		const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
-
-		const float minimum_loading_duration = IsValid(dev_settings) ? dev_settings->_MinimumLoadingLevelDuration : 0.0f;
-		const bool minimum_loading_time_satisfied = (_PendingLoadingLevelEnterTime <= 0.0) || (FPlatformTime::Seconds() - _PendingLoadingLevelEnterTime) >= minimum_loading_duration;
-
-		if (_PendingTargetLevelLoadCompleted && minimum_loading_time_satisfied)
+		if (_PendingTargetLevelLoadCompleted && GetMinimumLoadingTimeProgress() >= 1.0f)
 		{
 			_PendingTravelPhase = EStoryFlowPendingTravelPhase::OpeningTargetLevel;
 			CUSTOM_LOG(Display, TEXT("Async load + minimum duration satisfied. Open TargetLevel=%s"), *GetLevelPackageName(_PendingTargetLevel));
@@ -95,31 +97,7 @@ bool UStoryFlowSubsystem::StartFromRef(const FStoryFlowRef& _story_flow_ref)
 
 	if (ShouldOpenTargetLevel(scene_asset))
 	{
-		StopScene();
-
-		_PendingStartRef = _story_flow_ref;
-		_PendingStartRef.SceneID = scene_asset->GetSceneID();
-		_PendingTargetLevel = scene_asset->GetTargetLevel();
-
-		const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
-		const bool should_use_loading_level = IsValid(dev_settings) &&
-																			dev_settings->_LoadingLevel.IsNull() == false &&
-																			GetLevelPackageName(dev_settings->_LoadingLevel) != GetLevelPackageName(_PendingTargetLevel);
-
-		if (should_use_loading_level)
-		{
-			_PendingTravelPhase = EStoryFlowPendingTravelPhase::LoadingLevel;
-			RequestOpenLoadingLevel();
-			return true;
-		}
-
-		if (BeginAsyncLoadTargetLevel())
-		{
-			return true;
-		}
-
-		ClearPendingSceneStart();
-		return false;
+		return BeginPendingSceneTravel(scene_asset, _story_flow_ref);
 	}
 
 	return StartResolvedScene(scene_asset, _story_flow_ref);
@@ -128,6 +106,7 @@ bool UStoryFlowSubsystem::StartFromRef(const FStoryFlowRef& _story_flow_ref)
 void UStoryFlowSubsystem::StopScene()
 {
 	ClearCurrentShot();
+	ClearCurrentBranch();
 	ClearCurrentScene();
 	_CurrentSceneAsset = nullptr;
 }
@@ -137,7 +116,7 @@ UStorySceneAsset* UStoryFlowSubsystem::FindSceneAssetBySceneID(const FStoryScene
 	if (_scene_id.IsValid() == false)
 		return nullptr;
 
-	const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
+	const UStoryFlowDeveloperSettings* dev_settings = GetStoryFlowDeveloperSettings();
 	if (IsInvalid(dev_settings) || dev_settings->_StorySceneRegistry.IsNull())
 		return nullptr;
 
@@ -148,6 +127,50 @@ UStorySceneAsset* UStoryFlowSubsystem::FindSceneAssetBySceneID(const FStoryScene
 	return scene_registry->FindSceneAsset(_scene_id);
 }
 
+FStoryFlowRef UStoryFlowSubsystem::MakeResolvedStartRef(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref) const
+{
+	FStoryFlowRef start_ref = _story_flow_ref;
+	if (IsValid(_scene_asset))
+	{
+		start_ref.SceneID = _scene_asset->GetSceneID();
+		start_ref.ShotID = start_ref.ShotID.IsValid() ? start_ref.ShotID : _scene_asset->GetEntryShotID();
+	}
+
+	return start_ref;
+}
+
+bool UStoryFlowSubsystem::BeginPendingSceneTravel(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref)
+{
+	if (IsInvalid(_scene_asset))
+	{
+		return false;
+	}
+
+	StopScene();
+
+	_PendingStartRef = MakeResolvedStartRef(_scene_asset, _story_flow_ref);
+	_PendingTargetLevel = _scene_asset->GetTargetLevel();
+
+	const UStoryFlowDeveloperSettings* dev_settings = GetStoryFlowDeveloperSettings();
+	if (IsInvalid(dev_settings) || dev_settings->_LoadingLevel.IsNull())
+	{
+		TRACE_ERROR(TEXT("BeginPendingSceneTravel failed: LoadingLevel is required but missing."));
+		ClearPendingSceneStart();
+		return false;
+	}
+
+	if (GetLevelPackageName(dev_settings->_LoadingLevel) == GetLevelPackageName(_PendingTargetLevel))
+	{
+		TRACE_ERROR(TEXT("BeginPendingSceneTravel failed: LoadingLevel must be different from TargetLevel."));
+		ClearPendingSceneStart();
+		return false;
+	}
+
+	_PendingTravelPhase = EStoryFlowPendingTravelPhase::LoadingLevel;
+	RequestOpenLoadingLevel();
+	return true;
+}
+
 bool UStoryFlowSubsystem::StartResolvedScene(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref)
 {
 	if (IsInvalid(_scene_asset))
@@ -156,9 +179,7 @@ bool UStoryFlowSubsystem::StartResolvedScene(UStorySceneAsset* _scene_asset, con
 	StopScene();
 	_CurrentSceneAsset = _scene_asset;
 
-	FStoryFlowRef start_ref = _story_flow_ref;
-	start_ref.SceneID = _CurrentSceneAsset->GetSceneID();
-	start_ref.ShotID = start_ref.ShotID.IsValid() ? start_ref.ShotID : _CurrentSceneAsset->GetEntryShotID();
+	const FStoryFlowRef start_ref = MakeResolvedStartRef(_CurrentSceneAsset, _story_flow_ref);
 
 	if (EnterScene(start_ref) == false)
 	{
@@ -215,15 +236,11 @@ bool UStoryFlowSubsystem::BeginAsyncLoadTargetLevel()
 
 void UStoryFlowSubsystem::RequestOpenLoadingLevel()
 {
-	const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
-	if (IsValid(dev_settings) && dev_settings->_LoadingLevel.IsNull() == false)
-	{
-		UGameplayStatics::OpenLevelBySoftObjectPtr(this, dev_settings->_LoadingLevel);
-		return;
-	}
+	const UStoryFlowDeveloperSettings* dev_settings = GetStoryFlowDeveloperSettings();
+	check(IsValid(dev_settings));
+	check(dev_settings->_LoadingLevel.IsNull() == false);
 
-	TRACE_WARNING(TEXT("LoadingLevel missing. Pending start cleared."));
-	ClearPendingSceneStart();
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, dev_settings->_LoadingLevel);
 }
 
 void UStoryFlowSubsystem::HandleTargetLevelAsyncLoaded()
@@ -263,7 +280,7 @@ void UStoryFlowSubsystem::HandlePostLoadMap(UWorld* _loaded_world)
 		return;
 	}
 
-	const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
+	const UStoryFlowDeveloperSettings* dev_settings = GetStoryFlowDeveloperSettings();
 	const FString loaded_world_package_name = GetWorldPackageName(_loaded_world);
 
 	if (_PendingTravelPhase == EStoryFlowPendingTravelPhase::LoadingLevel)
@@ -337,6 +354,34 @@ FString UStoryFlowSubsystem::GetWorldPackageName(const UWorld* _world)
 	return UWorld::RemovePIEPrefix(_world->GetOutermost()->GetName());
 }
 
+float UStoryFlowSubsystem::GetMinimumLoadingTimeProgress() const
+{
+	if (_PendingLoadingLevelEnterTime <= 0.0)
+	{
+		return 1.0f;
+	}
+
+	const UStoryFlowDeveloperSettings* dev_settings = GetStoryFlowDeveloperSettings();
+	const float minimum_loading_duration = IsValid(dev_settings) ? dev_settings->_MinimumLoadingLevelDuration : 0.0f;
+	if (minimum_loading_duration <= KINDA_SMALL_NUMBER)
+	{
+		return 1.0f;
+	}
+
+	const double elapsed_time = FPlatformTime::Seconds() - _PendingLoadingLevelEnterTime;
+	const float normalized_time_progress = FMath::Clamp(static_cast<float>(elapsed_time / minimum_loading_duration), 0.0f, 1.0f);
+
+	if (IsValid(dev_settings) && dev_settings->_MinimumLoadingLevelProgressCurve.IsNull() == false)
+	{
+		if (UCurveFloat* progress_curve = dev_settings->_MinimumLoadingLevelProgressCurve.LoadSynchronous())
+		{
+			return FMath::Clamp(progress_curve->GetFloatValue(normalized_time_progress), 0.0f, 1.0f);
+		}
+	}
+
+	return normalized_time_progress;
+}
+
 bool UStoryFlowSubsystem::EnterScene(const FStoryFlowRef& _story_flow_ref)
 {
 	if (IsInvalid(_CurrentSceneAsset))
@@ -395,6 +440,70 @@ bool UStoryFlowSubsystem::MoveToShot(const FStoryShotID& _shot_id)
 	return true;
 }
 
+bool UStoryFlowSubsystem::EvaluateBranch(const FStoryBranchID& _branch_id, const FStoryFlowRef& _story_flow_ref)
+{
+	if (IsInvalid(_CurrentSceneAsset) || _branch_id.IsValid() == false)
+	{
+		return false;
+	}
+
+	UStoryBranchNodeData* branch_node = _CurrentSceneAsset->FindBranchNode(_branch_id);
+	if (IsInvalid(branch_node))
+	{
+		return false;
+	}
+
+	UStoryBranchBase* branch_template = branch_node->GetBranchTemplate();
+	if (IsInvalid(branch_template))
+	{
+		return false;
+	}
+
+	_CurrentBranchNode = branch_node;
+	UStoryBranchBase* branch_instance = DuplicateObject<UStoryBranchBase>(branch_template, this);
+	if (IsInvalid(branch_instance))
+	{
+		_CurrentBranchNode = nullptr;
+		return false;
+	}
+
+	branch_instance->InitializeBranch(_story_flow_ref);
+
+	const TMap<int32, FStorySceneBranchLink>& next_links_by_pin_index = branch_node->GetNextLinksByPinIndex();
+	if (next_links_by_pin_index.Num() == 0)
+	{
+		_CurrentBranchNode = nullptr;
+		return false;
+	}
+
+	int32 next_index = 0;
+	if (branch_node->GetBranchCount() > 1)
+	{
+		next_index = branch_instance->SelectNextIndex(branch_node->GetBranchCount());
+	}
+
+	next_index = FMath::Clamp(next_index, 0, FMath::Max(branch_node->GetBranchCount() - 1, 0));
+	const FStorySceneBranchLink* next_link = next_links_by_pin_index.Find(next_index);
+	_CurrentBranchNode = nullptr;
+
+	if (next_link == nullptr || next_link->IsValid() == false)
+	{
+		return false;
+	}
+
+	if (next_link->IsShotLink())
+	{
+		return MoveToShot(next_link->NextShotID);
+	}
+
+	if (next_link->IsSceneLink())
+	{
+		return StartFromScene(next_link->NextSceneID);
+	}
+
+	return false;
+}
+
 bool UStoryFlowSubsystem::MoveToNextShot()
 {
 	if (IsInvalid(_CurrentShotNode))
@@ -402,13 +511,48 @@ bool UStoryFlowSubsystem::MoveToNextShot()
 		return false;
 	}
 
-	const TArray<FStoryShotID>& next_shot_ids = _CurrentShotNode->GetNextShotIDs();
-	if (next_shot_ids.Num() == 0)
+	UStoryShotBase* current_shot = _CurrentShotInstance;
+	if (IsValid(current_shot))
 	{
+		current_shot->ExitShot();
+	}
+
+	const TArray<FStorySceneBranchLink>& next_links = _CurrentShotNode->GetNextLinks();
+	if (next_links.Num() == 0)
+	{
+		_CurrentShotInstance = nullptr;
+		_CurrentShotNode = nullptr;
 		return false;
 	}
 
-	return MoveToShot(next_shot_ids[0]);
+	int32 next_index = 0;
+	if (next_links.Num() > 1 && IsValid(current_shot))
+	{
+		next_index = current_shot->SelectNextShotIndex(next_links.Num());
+	}
+
+	next_index = FMath::Clamp(next_index, 0, next_links.Num() - 1);
+	const FStorySceneBranchLink& next_link = next_links[next_index];
+
+	_CurrentShotInstance = nullptr;
+	_CurrentShotNode = nullptr;
+
+	if (next_link.IsShotLink())
+	{
+		return MoveToShot(next_link.NextShotID);
+	}
+
+	if (next_link.IsBranchLink())
+	{
+		return EvaluateBranch(next_link.NextBranchID, GetCurrentRef());
+	}
+
+	if (next_link.IsSceneLink())
+	{
+		return StartFromScene(next_link.NextSceneID);
+	}
+
+	return false;
 }
 
 void UStoryFlowSubsystem::ClearCurrentScene()
@@ -419,6 +563,11 @@ void UStoryFlowSubsystem::ClearCurrentScene()
 	}
 
 	_CurrentSceneInstance = nullptr;
+}
+
+void UStoryFlowSubsystem::ClearCurrentBranch()
+{
+	_CurrentBranchNode = nullptr;
 }
 
 void UStoryFlowSubsystem::ClearCurrentShot()
@@ -470,26 +619,5 @@ float UStoryFlowSubsystem::GetTargetLevelLoadingProgressRate() const
 		target_level_load_progress = _PendingTargetLevelLoadHandle->GetLoadProgress();
 	}
 
-	float minimum_loading_time_progress = 1.0f;
-	if (_PendingLoadingLevelEnterTime > 0.0)
-	{
-		const auto dev_settings = GetDefault<UStoryFlowDeveloperSettings>();
-		const float minimum_loading_duration = IsValid(dev_settings) ? dev_settings->_MinimumLoadingLevelDuration : 0.0f;
-		if (minimum_loading_duration > KINDA_SMALL_NUMBER)
-		{
-			const double elapsed_time = FPlatformTime::Seconds() - _PendingLoadingLevelEnterTime;
-			const float normalized_time_progress = FMath::Clamp(static_cast<float>(elapsed_time / minimum_loading_duration), 0.0f, 1.0f);
-			minimum_loading_time_progress = normalized_time_progress;
-
-			if (IsValid(dev_settings) && dev_settings->_MinimumLoadingLevelProgressCurve.IsNull() == false)
-			{
-				if (UCurveFloat* progress_curve = dev_settings->_MinimumLoadingLevelProgressCurve.LoadSynchronous())
-				{
-					minimum_loading_time_progress = FMath::Clamp(progress_curve->GetFloatValue(normalized_time_progress), 0.0f, 1.0f);
-				}
-			}
-		}
-	}
-
-	return FMath::Min(target_level_load_progress, minimum_loading_time_progress);
+	return FMath::Min(target_level_load_progress, GetMinimumLoadingTimeProgress());
 }

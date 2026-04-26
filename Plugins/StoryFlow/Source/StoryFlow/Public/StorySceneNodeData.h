@@ -9,6 +9,49 @@
 
 class UStoryShotBase;
 
+USTRUCT(BlueprintType)
+struct STORYFLOW_API FStorySceneBranchLink
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	FStoryShotID NextShotID;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	FStoryBranchID NextBranchID;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	FStorySceneID NextSceneID;
+
+	bool IsValid() const
+	{
+		return NextShotID.IsValid() || NextBranchID.IsValid() || NextSceneID.IsValid();
+	}
+
+	bool IsShotLink() const
+	{
+		return NextShotID.IsValid();
+	}
+
+	bool IsBranchLink() const
+	{
+		return NextBranchID.IsValid();
+	}
+
+	bool IsSceneLink() const
+	{
+		return NextSceneID.IsValid();
+	}
+
+	bool operator==(const FStorySceneBranchLink& _other) const
+	{
+		return NextShotID == _other.NextShotID
+			&& NextBranchID == _other.NextBranchID
+			&& NextSceneID == _other.NextSceneID;
+	}
+};
+
 UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced)
 class STORYFLOW_API UStorySceneNodeData : public UObject
 {
@@ -28,12 +71,12 @@ protected:
 	TObjectPtr<UStoryShotBase> _ShotTemplate = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
-	TArray<FStoryShotID> _NextShotIDs;
+	TArray<FStorySceneBranchLink> _NextLinks;
 
 #if WITH_EDITOR
 public:
 	void SetShotID(const FStoryShotID& _shot_id);
-	void SetNextShotIDs(const TArray<FStoryShotID>& _next_shot_ids);
+	void SetNextLinks(const TArray<FStorySceneBranchLink>& _next_links);
 #endif
 
 public:
@@ -50,5 +93,5 @@ public:
 	UStoryShotBase* GetShotTemplate() const { return _ShotTemplate; }
 
 	UFUNCTION(BlueprintPure)
-	const TArray<FStoryShotID>& GetNextShotIDs() const { return _NextShotIDs; }
+	const TArray<FStorySceneBranchLink>& GetNextLinks() const { return _NextLinks; }
 };

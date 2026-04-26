@@ -1,6 +1,7 @@
 // Copyright (c) 2026 장윤제. All rights reserved.
 
 #include "StorySceneAsset.h"
+#include "StoryBranchNodeData.h"
 #include "StorySceneNodeData.h"
 #include "CommonUtils.h"
 
@@ -16,6 +17,24 @@ UStorySceneNodeData* UStorySceneAsset::FindShotNode(const FStoryShotID& _shot_id
 		if (IsValid(shot_node) && shot_node->GetShotID() == _shot_id)
 		{
 			return shot_node;
+		}
+	}
+
+	return nullptr;
+}
+
+UStoryBranchNodeData* UStorySceneAsset::FindBranchNode(const FStoryBranchID& _branch_id) const
+{
+	if (_branch_id.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	for (const TObjectPtr<UStoryBranchNodeData>& branch_node : _BranchNodes)
+	{
+		if (IsValid(branch_node) && branch_node->GetBranchID() == _branch_id)
+		{
+			return branch_node;
 		}
 	}
 
@@ -69,6 +88,16 @@ UStorySceneNodeData* UStorySceneAsset::CreateShotNode()
 	return shot_node;
 }
 
+UStoryBranchNodeData* UStorySceneAsset::CreateBranchNode()
+{
+	Modify();
+
+	UStoryBranchNodeData* branch_node = NewObject<UStoryBranchNodeData>(this, UStoryBranchNodeData::StaticClass(), NAME_None, RF_Transactional);
+	_BranchNodes.Add(branch_node);
+	MarkPackageDirty();
+	return branch_node;
+}
+
 void UStorySceneAsset::RemoveShotNode(UStorySceneNodeData* _shot_node)
 {
 	if (IsInvalid(_shot_node))
@@ -78,6 +107,18 @@ void UStorySceneAsset::RemoveShotNode(UStorySceneNodeData* _shot_node)
 
 	Modify();
 	_ShotNodes.Remove(_shot_node);
+	MarkPackageDirty();
+}
+
+void UStorySceneAsset::RemoveBranchNode(UStoryBranchNodeData* _branch_node)
+{
+	if (IsInvalid(_branch_node))
+	{
+		return;
+	}
+
+	Modify();
+	_BranchNodes.Remove(_branch_node);
 	MarkPackageDirty();
 }
 #endif

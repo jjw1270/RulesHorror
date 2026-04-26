@@ -6,7 +6,11 @@
 #include "EditorUndoClient.h"
 
 class UStorySceneAsset;
+class UStoryBranchNodeData;
 class UStorySceneEdGraph;
+class UStorySceneGraphNode_Branch;
+class UStorySceneGraphNode_Shot;
+class UStorySceneGraphNode_Transition;
 class SWidget;
 class FReply;
 struct FSlateBrush;
@@ -83,7 +87,12 @@ private:
 	void RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) const;
 	void RefreshShotNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const;
 	bool ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors);
+	void ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const;
+	void ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TArray<FString>& _out_errors) const;
+	void ValidateShotNode(UStorySceneGraphNode_Shot* _shot_node, TSet<FName>& _used_shot_ids, TArray<FString>& _out_errors) const;
+	void ValidateTransitionNode(UStorySceneGraphNode_Transition* _transition_node, TArray<FString>& _out_errors) const;
 	void ClearNodeCompileMessages(UStorySceneEdGraph* _graph) const;
+	void SyncGraphNodePins(UStorySceneEdGraph* _graph) const;
 	void MarkCompileDirty();
 	void DeleteSelectedNodes();
 	bool CanDeleteSelectedNodes() const;

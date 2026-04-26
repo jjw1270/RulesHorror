@@ -10,11 +10,8 @@
 
 namespace
 {
-	static const FName StoryFlowPinCategory(TEXT("StoryFlow"));
-}
+	static const FName StorySceneShotPinCategory(TEXT("StoryFlow"));
 
-namespace
-{
 	static FStoryShotID MakeNextShotID(const UStorySceneAsset* _scene_asset)
 	{
 		if (IsInvalid(_scene_asset))
@@ -51,8 +48,8 @@ namespace
 
 void UStorySceneGraphNode_Shot::AllocateDefaultPins()
 {
-	CreatePin(EGPD_Input, StoryFlowPinCategory, NAME_None, TEXT("In"));
-	CreatePin(EGPD_Output, StoryFlowPinCategory, NAME_None, TEXT("Next"));
+	CreatePin(EGPD_Input, StorySceneShotPinCategory, NAME_None, TEXT("In"));
+	CreatePin(EGPD_Output, StorySceneShotPinCategory, NAME_None, TEXT("Next"));
 }
 
 void UStorySceneGraphNode_Shot::PostPlacedNewNode()

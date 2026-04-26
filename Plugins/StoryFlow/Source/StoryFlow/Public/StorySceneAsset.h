@@ -8,6 +8,7 @@
 #include "StorySceneAsset.generated.h"
 
 class UStorySceneBase;
+class UStoryBranchNodeData;
 class UStorySceneNodeData;
 class UEdGraph;
 
@@ -35,9 +36,15 @@ protected:
 	UPROPERTY(Instanced, BlueprintReadOnly)
 	TArray<TObjectPtr<UStorySceneNodeData>> _ShotNodes;
 
+	UPROPERTY(Instanced, BlueprintReadOnly)
+	TArray<TObjectPtr<UStoryBranchNodeData>> _BranchNodes;
+
 public:
 	UFUNCTION(BlueprintPure)
 	UStorySceneNodeData* FindShotNode(const FStoryShotID& _shot_id) const;
+
+	UFUNCTION(BlueprintPure)
+	UStoryBranchNodeData* FindBranchNode(const FStoryBranchID& _branch_id) const;
 
 public:
 	UFUNCTION(BlueprintPure)
@@ -56,6 +63,7 @@ public:
 	UStorySceneBase* GetSceneTemplate() const { return _SceneTemplate; }
 
 	const TArray<TObjectPtr<UStorySceneNodeData>>& GetShotNodes() const { return _ShotNodes; }
+	const TArray<TObjectPtr<UStoryBranchNodeData>>& GetBranchNodes() const { return _BranchNodes; }
 
 #if WITH_EDITORONLY_DATA
 protected:
@@ -72,6 +80,8 @@ public:
 	void SetEntryShotID(const FStoryShotID& _entry_shot_id);
 
 	UStorySceneNodeData* CreateShotNode();
+	UStoryBranchNodeData* CreateBranchNode();
 	void RemoveShotNode(UStorySceneNodeData* _shot_node);
+	void RemoveBranchNode(UStoryBranchNodeData* _branch_node);
 #endif
 };

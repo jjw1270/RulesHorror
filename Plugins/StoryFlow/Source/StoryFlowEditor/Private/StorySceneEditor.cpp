@@ -2,11 +2,16 @@
 
 #include "StorySceneEditor.h"
 #include "StorySceneAsset.h"
+#include "StoryBranchNodeData.h"
 #include "StorySceneNodeData.h"
+#include "StoryFlowDeveloperSettings.h"
+#include "StorySceneRegistryAsset.h"
 #include "Graph/StorySceneEdGraph.h"
 #include "Graph/StorySceneGraphNode_Entry.h"
+#include "Graph/StorySceneGraphNode_Branch.h"
 #include "Graph/StorySceneGraphSchema.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
+#include "Graph/StorySceneGraphNode_Transition.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Images/SImage.h"
@@ -214,6 +219,7 @@ void FStorySceneEditor::PostUndo(bool _is_success)
 TSharedRef<SDockTab> FStorySceneEditor::SpawnGraphTab(const FSpawnTabArgs& _args)
 {
 	UStorySceneEdGraph* graph = GetOrCreateGraph();
+	SyncGraphNodePins(graph);
 
 	if (_GraphEditorCommands.IsValid() == false)
 	{
@@ -371,6 +377,20 @@ void FStorySceneEditor::OnGraphSelectionChanged(const TSet<UObject*>& _selection
 			_DetailsView->SetObject(shot_node->GetShotNodeData());
 			return;
 		}
+
+		UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(selected_object);
+		if (IsValid(branch_node) && IsValid(branch_node->GetBranchNodeData()))
+		{
+			_DetailsView->SetObject(branch_node->GetBranchNodeData());
+			return;
+		}
+
+		UStorySceneGraphNode_Transition* transition_node = Cast<UStorySceneGraphNode_Transition>(selected_object);
+		if (IsValid(transition_node))
+		{
+			_DetailsView->SetObject(transition_node);
+			return;
+		}
 	}
 
 	_DetailsView->SetObject(_StorySceneAsset.Get());
@@ -381,6 +401,14 @@ void FStorySceneEditor::OnDetailsFinishedChangingProperties(const FPropertyChang
 	if (_IsCompiling)
 	{
 		return;
+	}
+
+	if (_GraphEditorWidget.IsValid())
+	{
+		if (UStorySceneEdGraph* graph = Cast<UStorySceneEdGraph>(_GraphEditorWidget->GetCurrentGraph()))
+		{
+			SyncGraphNodePins(graph);
+		}
 	}
 
 	MarkCompileDirty();
@@ -562,10 +590,45 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 	}
 
 	ClearNodeCompileMessages(_graph);
+	ValidateSceneMetadata(_graph, _out_errors);
+
+	TSet<FName> used_shot_ids;
+
+	for (UEdGraphNode* node : _graph->Nodes)
+	{
+		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node))
+		{
+			ValidateBranchNode(branch_node, _out_errors);
+			continue;
+		}
+
+		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
+		if (IsInvalid(shot_node))
+		{
+			if (UStorySceneGraphNode_Transition* transition_node = Cast<UStorySceneGraphNode_Transition>(node))
+			{
+				ValidateTransitionNode(transition_node, _out_errors);
+			}
+			continue;
+		}
+		ValidateShotNode(shot_node, used_shot_ids, _out_errors);
+	}
+
+	return _out_errors.Num() == 0;
+}
+
+void FStorySceneEditor::ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const
+{
+	const UStoryFlowDeveloperSettings* settings = GetDefault<UStoryFlowDeveloperSettings>();
 
 	if (_StorySceneAsset->GetSceneID().IsValid() == false)
 	{
 		_out_errors.Add(TEXT("SceneID is empty."));
+	}
+
+	if (IsInvalid(settings) || settings->_LoadingLevel.IsNull())
+	{
+		_out_errors.Add(TEXT("LoadingLevel is missing in StoryFlowDeveloperSettings."));
 	}
 
 	if (_StorySceneAsset->GetTargetLevel().IsNull())
@@ -586,8 +649,10 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 		{
 			entry_node->SetCompileError(TEXT("Entry node is not connected to a Shot node."));
 		}
+		return;
 	}
-	else if (IsInvalid(_StorySceneAsset->FindShotNode(_StorySceneAsset->GetEntryShotID())))
+
+	if (IsInvalid(_StorySceneAsset->FindShotNode(_StorySceneAsset->GetEntryShotID())))
 	{
 		_out_errors.Add(FString::Printf(TEXT("EntryShotID '%s' does not exist in ShotNodes."), *_StorySceneAsset->GetEntryShotID().Get().ToString()));
 
@@ -596,69 +661,210 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 			entry_node->SetCompileError(TEXT("EntryShotID does not exist in ShotNodes."));
 		}
 	}
+}
 
-	TSet<FName> used_shot_ids;
-
-	for (UEdGraphNode* node : _graph->Nodes)
+void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TArray<FString>& _out_errors) const
+{
+	if (IsInvalid(_branch_node))
 	{
-		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
-		if (IsInvalid(shot_node))
+		return;
+	}
+
+	UStoryBranchNodeData* branch_node_data = _branch_node->GetBranchNodeData();
+	if (IsInvalid(branch_node_data))
+	{
+		const FString error_message = TEXT("A Branch node does not have valid node data.");
+		_out_errors.Add(error_message);
+		_branch_node->SetCompileError(error_message);
+		return;
+	}
+
+	TArray<FString> node_errors;
+	const UStoryFlowDeveloperSettings* settings = GetDefault<UStoryFlowDeveloperSettings>();
+	UStorySceneRegistryAsset* scene_registry = (IsValid(settings) && settings->_StorySceneRegistry.IsNull() == false)
+		? settings->_StorySceneRegistry.LoadSynchronous()
+		: nullptr;
+
+	if (branch_node_data->GetBranchID().IsValid() == false)
+	{
+		node_errors.Add(TEXT("BranchID is empty."));
+	}
+
+	if (IsInvalid(branch_node_data->GetBranchTemplate()))
+	{
+		node_errors.Add(TEXT("BranchTemplate is missing."));
+	}
+
+	for (const TPair<int32, FStorySceneBranchLink>& next_link_pair : branch_node_data->GetNextLinksByPinIndex())
+	{
+		const int32 next_pin_index = next_link_pair.Key;
+		const FStorySceneBranchLink& next_link = next_link_pair.Value;
+
+		if (next_pin_index < 0 || next_pin_index >= branch_node_data->GetBranchCount())
 		{
+			node_errors.Add(FString::Printf(TEXT("Next pin index '%d' is out of range."), next_pin_index));
 			continue;
 		}
 
-		UStorySceneNodeData* shot_node_data = shot_node->GetShotNodeData();
-		if (IsInvalid(shot_node_data))
+		if (next_link.IsShotLink())
 		{
-			const FString error_message = TEXT("A Shot node does not have valid node data.");
-			_out_errors.Add(error_message);
-			shot_node->SetCompileError(error_message);
+			if (IsInvalid(_StorySceneAsset->FindShotNode(next_link.NextShotID)))
+			{
+				node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_link.NextShotID.Get().ToString()));
+			}
 			continue;
 		}
 
-		TArray<FString> node_errors;
-
-		if (shot_node_data->GetShotID().IsValid() == false)
+		if (next_link.IsSceneLink())
 		{
-			node_errors.Add(TEXT("ShotID is empty."));
-		}
-		else if (used_shot_ids.Contains(shot_node_data->GetShotID().Get()))
-		{
-			node_errors.Add(FString::Printf(TEXT("Duplicated ShotID: %s"), *shot_node_data->GetShotID().Get().ToString()));
-		}
-		else
-		{
-			used_shot_ids.Add(shot_node_data->GetShotID().Get());
-		}
-
-		if (IsInvalid(shot_node_data->GetShotTemplate()))
-		{
-			node_errors.Add(TEXT("ShotTemplate is missing."));
-		}
-
-		for (const FStoryShotID& next_shot_id : shot_node_data->GetNextShotIDs())
-		{
-			if (next_shot_id.IsValid() == false)
+			if (scene_registry == nullptr || scene_registry->FindSceneReference(next_link.NextSceneID) == nullptr)
 			{
-				node_errors.Add(TEXT("NextShotIDs contains an empty ShotID."));
-				continue;
+				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
 			}
-
-			if (IsInvalid(_StorySceneAsset->FindShotNode(next_shot_id)))
-			{
-				node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_shot_id.Get().ToString()));
-			}
+			continue;
 		}
 
-		if (node_errors.Num() > 0)
+		node_errors.Add(TEXT("NextLinks contains an invalid branch link."));
+	}
+
+	if (node_errors.Num() == 0)
+	{
+		return;
+	}
+
+	const FString joined_error_message = FString::Join(node_errors, TEXT("\n"));
+	_branch_node->SetCompileError(joined_error_message);
+	_out_errors.Add(FString::Printf(TEXT("[%s] %s"), *branch_node_data->GetDisplayNameText().ToString(), *joined_error_message));
+}
+
+void FStorySceneEditor::ValidateShotNode(UStorySceneGraphNode_Shot* _shot_node, TSet<FName>& _used_shot_ids, TArray<FString>& _out_errors) const
+{
+	if (IsInvalid(_shot_node))
+	{
+		return;
+	}
+
+	UStorySceneNodeData* shot_node_data = _shot_node->GetShotNodeData();
+	if (IsInvalid(shot_node_data))
+	{
+		const FString error_message = TEXT("A Shot node does not have valid node data.");
+		_out_errors.Add(error_message);
+		_shot_node->SetCompileError(error_message);
+		return;
+	}
+
+	TArray<FString> node_errors;
+	const UStoryFlowDeveloperSettings* settings = GetDefault<UStoryFlowDeveloperSettings>();
+
+	if (shot_node_data->GetShotID().IsValid() == false)
+	{
+		node_errors.Add(TEXT("ShotID is empty."));
+	}
+	else if (_used_shot_ids.Contains(shot_node_data->GetShotID().Get()))
+	{
+		node_errors.Add(FString::Printf(TEXT("Duplicated ShotID: %s"), *shot_node_data->GetShotID().Get().ToString()));
+	}
+	else
+	{
+		_used_shot_ids.Add(shot_node_data->GetShotID().Get());
+	}
+
+	if (IsInvalid(shot_node_data->GetShotTemplate()))
+	{
+		node_errors.Add(TEXT("ShotTemplate is missing."));
+	}
+
+	if (IsValid(settings) == false || settings->_StorySceneRegistry.IsNull())
+	{
+		node_errors.Add(TEXT("StorySceneRegistry is missing."));
+	}
+
+	UStorySceneRegistryAsset* scene_registry = (IsValid(settings) && settings->_StorySceneRegistry.IsNull() == false)
+		? settings->_StorySceneRegistry.LoadSynchronous()
+		: nullptr;
+
+	for (const FStorySceneBranchLink& next_link : shot_node_data->GetNextLinks())
+	{
+		if (next_link.IsShotLink())
 		{
-			const FString joined_error_message = FString::Join(node_errors, TEXT("\n"));
-			shot_node->SetCompileError(joined_error_message);
-			_out_errors.Add(FString::Printf(TEXT("[%s] %s"), *shot_node_data->GetDisplayNameText().ToString(), *joined_error_message));
+			if (IsInvalid(_StorySceneAsset->FindShotNode(next_link.NextShotID)))
+			{
+				node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_link.NextShotID.Get().ToString()));
+			}
+			continue;
+		}
+
+		if (next_link.IsBranchLink())
+		{
+			if (IsInvalid(_StorySceneAsset->FindBranchNode(next_link.NextBranchID)))
+			{
+				node_errors.Add(FString::Printf(TEXT("NextBranchID '%s' does not exist."), *next_link.NextBranchID.Get().ToString()));
+			}
+			continue;
+		}
+
+		if (next_link.IsSceneLink())
+		{
+			if (scene_registry == nullptr || scene_registry->FindSceneReference(next_link.NextSceneID) == nullptr)
+			{
+				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+			}
+			continue;
+		}
+
+		node_errors.Add(TEXT("NextLinks contains an invalid branch link."));
+	}
+
+	if (node_errors.Num() == 0)
+	{
+		return;
+	}
+
+	const FString joined_error_message = FString::Join(node_errors, TEXT("\n"));
+	_shot_node->SetCompileError(joined_error_message);
+	_out_errors.Add(FString::Printf(TEXT("[%s] %s"), *shot_node_data->GetDisplayNameText().ToString(), *joined_error_message));
+}
+
+void FStorySceneEditor::ValidateTransitionNode(UStorySceneGraphNode_Transition* _transition_node, TArray<FString>& _out_errors) const
+{
+	if (IsInvalid(_transition_node))
+	{
+		return;
+	}
+
+	TArray<FString> node_errors;
+	const UEdGraphPin* input_pin = _transition_node->FindPin(TEXT("In"));
+	const bool is_connected_from_shot = input_pin && input_pin->LinkedTo.Num() > 0;
+	const UStoryFlowDeveloperSettings* settings = GetDefault<UStoryFlowDeveloperSettings>();
+
+	if (is_connected_from_shot && _transition_node->GetNextSceneID().IsValid() == false)
+	{
+		node_errors.Add(TEXT("NextSceneID is missing."));
+	}
+
+	if (_transition_node->GetNextSceneID().IsValid())
+	{
+		if (IsInvalid(settings) || settings->_StorySceneRegistry.IsNull())
+		{
+			node_errors.Add(TEXT("StorySceneRegistry is missing."));
+		}
+		else if (UStorySceneRegistryAsset* scene_registry = settings->_StorySceneRegistry.LoadSynchronous())
+		{
+			if (scene_registry->FindSceneReference(_transition_node->GetNextSceneID()) == nullptr)
+			{
+				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *_transition_node->GetNextSceneID().Get().ToString()));
+			}
 		}
 	}
 
-	return _out_errors.Num() == 0;
+	if (node_errors.Num() == 0)
+	{
+		return;
+	}
+
+	const FString joined_error_message = FString::Join(node_errors, TEXT("\n"));
+	_transition_node->SetCompileError(joined_error_message);
+	_out_errors.Add(FString::Printf(TEXT("[Transition] %s"), *joined_error_message));
 }
 
 void FStorySceneEditor::ClearNodeCompileMessages(UStorySceneEdGraph* _graph) const
@@ -675,10 +881,47 @@ void FStorySceneEditor::ClearNodeCompileMessages(UStorySceneEdGraph* _graph) con
 
 	for (UEdGraphNode* node : _graph->Nodes)
 	{
+		UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node);
+		if (IsValid(branch_node))
+		{
+			branch_node->ClearCompileMessage();
+			continue;
+		}
+
 		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
 		if (IsValid(shot_node))
 		{
 			shot_node->ClearCompileMessage();
+			continue;
+		}
+
+		UStorySceneGraphNode_Transition* transition_node = Cast<UStorySceneGraphNode_Transition>(node);
+		if (IsValid(transition_node))
+		{
+			transition_node->ClearCompileMessage();
+		}
+	}
+}
+
+void FStorySceneEditor::SyncGraphNodePins(UStorySceneEdGraph* _graph) const
+{
+	if (IsInvalid(_graph))
+	{
+		return;
+	}
+
+	for (UEdGraphNode* node : _graph->Nodes)
+	{
+		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node))
+		{
+			branch_node->SyncNextPinsToNodeData();
+			continue;
+		}
+
+		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
+		if (IsInvalid(shot_node) || IsInvalid(shot_node->GetShotNodeData()))
+		{
+			continue;
 		}
 	}
 }

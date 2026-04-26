@@ -11,6 +11,7 @@
 
 class UStorySceneAsset;
 class UStorySceneBase;
+class UStoryBranchNodeData;
 class UStorySceneNodeData;
 class UStoryShotBase;
 class UWorld;
@@ -35,6 +36,9 @@ protected:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UStorySceneNodeData> _CurrentShotNode = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UStoryBranchNodeData> _CurrentBranchNode = nullptr;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UStorySceneBase> _CurrentSceneInstance = nullptr;
@@ -74,8 +78,11 @@ public:
 	void StopScene();
 
 protected:
+	const class UStoryFlowDeveloperSettings* GetStoryFlowDeveloperSettings() const;
 	UStorySceneAsset* FindSceneAssetBySceneID(const FStorySceneID& _scene_id) const;
 
+	FStoryFlowRef MakeResolvedStartRef(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref) const;
+	bool BeginPendingSceneTravel(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref);
 	bool StartResolvedScene(UStorySceneAsset* _scene_asset, const FStoryFlowRef& _story_flow_ref);
 	bool ShouldOpenTargetLevel(UStorySceneAsset* _scene_asset) const;
 	void RequestOpenLoadingLevel();
@@ -87,12 +94,15 @@ protected:
 	FString GetCurrentLevelPackageName() const;
 	static FString GetLevelPackageName(const TSoftObjectPtr<UWorld>& _level);
 	static FString GetWorldPackageName(const UWorld* _world);
+	float GetMinimumLoadingTimeProgress() const;
 
 	bool EnterScene(const FStoryFlowRef& _story_flow_ref);
+	bool EvaluateBranch(const FStoryBranchID& _branch_id, const FStoryFlowRef& _story_flow_ref);
 	bool MoveToShot(const FStoryShotID& _shot_id);
 	bool MoveToNextShot();
 
 	void ClearCurrentScene();
+	void ClearCurrentBranch();
 	void ClearCurrentShot();
 
 public:
