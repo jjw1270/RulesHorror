@@ -81,6 +81,8 @@ public:
 
 	UStorySceneNodeData* CreateShotNode();
 	UStoryBranchNodeData* CreateBranchNode();
+	void AddShotNode(UStorySceneNodeData* _shot_node);
+	void AddBranchNode(UStoryBranchNodeData* _branch_node);
 	void RemoveShotNode(UStorySceneNodeData* _shot_node);
 	void RemoveBranchNode(UStoryBranchNodeData* _branch_node);
 #endif

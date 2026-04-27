@@ -28,8 +28,8 @@ protected:
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "StoryFlow")
 	TObjectPtr<UStoryBranchBase> _BranchTemplate = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow", meta = (ClampMin = "1"))
-	int32 _BranchCount = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow", meta = (ClampMin = "1", ClampMax = "9", UIMin = "1", UIMax = "9"))
+	int32 _BranchCount = 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
 	TMap<int32, FStorySceneBranchLink> _NextLinksByPinIndex;

@@ -27,7 +27,8 @@ public class StoryFlowEditor : ModuleRules
 				"PropertyEditor",
 				"Slate",
 				"SlateCore",
-				"InputCore"
+				"InputCore",
+				"ApplicationCore"
 			});
 	}
 }

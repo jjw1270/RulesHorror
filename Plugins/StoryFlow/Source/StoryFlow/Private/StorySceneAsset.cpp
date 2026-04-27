@@ -98,6 +98,30 @@ UStoryBranchNodeData* UStorySceneAsset::CreateBranchNode()
 	return branch_node;
 }
 
+void UStorySceneAsset::AddShotNode(UStorySceneNodeData* _shot_node)
+{
+	if (IsInvalid(_shot_node) || _ShotNodes.Contains(_shot_node))
+	{
+		return;
+	}
+
+	Modify();
+	_ShotNodes.Add(_shot_node);
+	MarkPackageDirty();
+}
+
+void UStorySceneAsset::AddBranchNode(UStoryBranchNodeData* _branch_node)
+{
+	if (IsInvalid(_branch_node) || _BranchNodes.Contains(_branch_node))
+	{
+		return;
+	}
+
+	Modify();
+	_BranchNodes.Add(_branch_node);
+	MarkPackageDirty();
+}
+
 void UStorySceneAsset::RemoveShotNode(UStorySceneNodeData* _shot_node)
 {
 	if (IsInvalid(_shot_node))

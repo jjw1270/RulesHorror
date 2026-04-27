@@ -71,12 +71,12 @@ protected:
 	TObjectPtr<UStoryShotBase> _ShotTemplate = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
-	TArray<FStorySceneBranchLink> _NextLinks;
+	FStorySceneBranchLink _NextLink;
 
 #if WITH_EDITOR
 public:
 	void SetShotID(const FStoryShotID& _shot_id);
-	void SetNextLinks(const TArray<FStorySceneBranchLink>& _next_links);
+	void SetNextLink(const FStorySceneBranchLink& _next_link);
 #endif
 
 public:
@@ -93,5 +93,5 @@ public:
 	UStoryShotBase* GetShotTemplate() const { return _ShotTemplate; }
 
 	UFUNCTION(BlueprintPure)
-	const TArray<FStorySceneBranchLink>& GetNextLinks() const { return _NextLinks; }
+	const FStorySceneBranchLink& GetNextLink() const { return _NextLink; }
 };

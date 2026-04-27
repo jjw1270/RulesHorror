@@ -19,5 +19,6 @@ public:
 	UStorySceneAsset* GetOwningSceneAsset() const;
 	UStorySceneGraphNode_Entry* FindEntryNode() const;
 	void EnsureEntryNode();
+	void GetReachableNodes(TSet<UEdGraphNode*>& _out_nodes) const;
 	void RebuildRuntimeData();
 };

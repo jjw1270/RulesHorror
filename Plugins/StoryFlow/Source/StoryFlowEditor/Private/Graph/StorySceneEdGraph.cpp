@@ -10,6 +10,37 @@
 #include "StorySceneNodeData.h"
 #include "CommonUtils.h"
 
+namespace
+{
+	static void CollectReachableNodes(UEdGraphNode* _node, TSet<UEdGraphNode*>& _out_nodes)
+	{
+		if (IsInvalid(_node) || _out_nodes.Contains(_node))
+		{
+			return;
+		}
+
+		_out_nodes.Add(_node);
+
+		for (UEdGraphPin* pin : _node->Pins)
+		{
+			if (pin == nullptr || pin->Direction != EGPD_Output)
+			{
+				continue;
+			}
+
+			for (UEdGraphPin* linked_pin : pin->LinkedTo)
+			{
+				if (linked_pin == nullptr)
+				{
+					continue;
+				}
+
+				CollectReachableNodes(linked_pin->GetOwningNode(), _out_nodes);
+			}
+		}
+	}
+}
+
 void UStorySceneEdGraph::PostLoad()
 {
 	Super::PostLoad();
@@ -50,6 +81,19 @@ void UStorySceneEdGraph::EnsureEntryNode()
 	entry_node->AllocateDefaultPins();
 }
 
+void UStorySceneEdGraph::GetReachableNodes(TSet<UEdGraphNode*>& _out_nodes) const
+{
+	_out_nodes.Reset();
+
+	UStorySceneGraphNode_Entry* entry_node = FindEntryNode();
+	if (IsInvalid(entry_node))
+	{
+		return;
+	}
+
+	CollectReachableNodes(entry_node, _out_nodes);
+}
+
 void UStorySceneEdGraph::RebuildRuntimeData()
 {
 	UStorySceneAsset* scene_asset = GetOwningSceneAsset();
@@ -59,8 +103,10 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 	}
 
 	FStoryShotID rebuilt_entry_shot_id;
-	TMap<UStorySceneNodeData*, TArray<FStorySceneBranchLink>> rebuilt_next_links;
+	TMap<UStorySceneNodeData*, FStorySceneBranchLink> rebuilt_next_links;
 	TMap<UStoryBranchNodeData*, TMap<int32, FStorySceneBranchLink>> rebuilt_branch_next_links_by_pin_index;
+	TSet<UEdGraphNode*> reachable_nodes;
+	GetReachableNodes(reachable_nodes);
 
 	for (UEdGraphNode* node : Nodes)
 	{
@@ -71,22 +117,20 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 		}
 
 		rebuilt_next_links.FindOrAdd(shot_node->GetShotNodeData());
-
-		UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node);
-		if (IsValid(branch_node) && IsValid(branch_node->GetBranchNodeData()))
-		{
-			rebuilt_branch_next_links_by_pin_index.FindOrAdd(branch_node->GetBranchNodeData());
-		}
 	}
 
 	if (UStorySceneGraphNode_Entry* entry_node = FindEntryNode())
 	{
-		if (UEdGraphPin* next_pin = entry_node->FindPin(TEXT("Next")))
+		if (reachable_nodes.Contains(entry_node) == false)
+		{
+			scene_asset->SetEntryShotID(rebuilt_entry_shot_id);
+		}
+		else if (UEdGraphPin* next_pin = entry_node->FindPin(TEXT("Next")))
 		{
 			if (next_pin->LinkedTo.Num() > 0)
 			{
 				UStorySceneGraphNode_Shot* target_node = Cast<UStorySceneGraphNode_Shot>(next_pin->LinkedTo[0]->GetOwningNode());
-				if (IsValid(target_node) && IsValid(target_node->GetShotNodeData()))
+				if (IsValid(target_node) && reachable_nodes.Contains(target_node) && IsValid(target_node->GetShotNodeData()))
 				{
 					rebuilt_entry_shot_id = target_node->GetShotNodeData()->GetShotID();
 				}
@@ -102,8 +146,12 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 			continue;
 		}
 
-		TArray<FStorySceneBranchLink>& next_links = rebuilt_next_links.FindOrAdd(shot_node->GetShotNodeData());
-		next_links.Reset();
+		FStorySceneBranchLink& next_link = rebuilt_next_links.FindOrAdd(shot_node->GetShotNodeData());
+		next_link = FStorySceneBranchLink();
+		if (reachable_nodes.Contains(shot_node) == false)
+		{
+			continue;
+		}
 
 		UEdGraphPin* next_pin = shot_node->FindPin(TEXT("Next"));
 		if (next_pin == nullptr || next_pin->LinkedTo.Num() == 0)
@@ -135,7 +183,7 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 
 		if (branch_link.IsValid())
 		{
-			next_links.Add(branch_link);
+			next_link = branch_link;
 		}
 	}
 
@@ -149,6 +197,10 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 
 		TMap<int32, FStorySceneBranchLink>& next_links_by_pin_index = rebuilt_branch_next_links_by_pin_index.FindOrAdd(branch_node->GetBranchNodeData());
 		next_links_by_pin_index.Reset();
+		if (reachable_nodes.Contains(branch_node) == false)
+		{
+			continue;
+		}
 
 		const TArray<UEdGraphPin*> next_pins = branch_node->GetNextPins();
 		for (int32 next_pin_index = 0; next_pin_index < next_pins.Num(); ++next_pin_index)
@@ -183,11 +235,11 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 
 	scene_asset->SetEntryShotID(rebuilt_entry_shot_id);
 
-	for (const TPair<UStorySceneNodeData*, TArray<FStorySceneBranchLink>>& rebuilt_pair : rebuilt_next_links)
+	for (const TPair<UStorySceneNodeData*, FStorySceneBranchLink>& rebuilt_pair : rebuilt_next_links)
 	{
 		if (IsValid(rebuilt_pair.Key))
 		{
-			rebuilt_pair.Key->SetNextLinks(rebuilt_pair.Value);
+			rebuilt_pair.Key->SetNextLink(rebuilt_pair.Value);
 		}
 	}
 

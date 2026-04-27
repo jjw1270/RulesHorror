@@ -105,6 +105,7 @@ bool UStoryFlowSubsystem::StartFromRef(const FStoryFlowRef& _story_flow_ref)
 
 void UStoryFlowSubsystem::StopScene()
 {
+	ClearPendingSceneStart();
 	ClearCurrentShot();
 	ClearCurrentBranch();
 	ClearCurrentScene();
@@ -517,22 +518,13 @@ bool UStoryFlowSubsystem::MoveToNextShot()
 		current_shot->ExitShot();
 	}
 
-	const TArray<FStorySceneBranchLink>& next_links = _CurrentShotNode->GetNextLinks();
-	if (next_links.Num() == 0)
+	const FStorySceneBranchLink& next_link = _CurrentShotNode->GetNextLink();
+	if (next_link.IsValid() == false)
 	{
 		_CurrentShotInstance = nullptr;
 		_CurrentShotNode = nullptr;
 		return false;
 	}
-
-	int32 next_index = 0;
-	if (next_links.Num() > 1 && IsValid(current_shot))
-	{
-		next_index = current_shot->SelectNextShotIndex(next_links.Num());
-	}
-
-	next_index = FMath::Clamp(next_index, 0, next_links.Num() - 1);
-	const FStorySceneBranchLink& next_link = next_links[next_index];
 
 	_CurrentShotInstance = nullptr;
 	_CurrentShotNode = nullptr;

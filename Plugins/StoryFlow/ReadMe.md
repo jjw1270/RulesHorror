@@ -87,8 +87,6 @@
 - Shot 식별자
 - 내부 값은 `FName`
 
-TODO : property customization을 추가하여 에디터에서 뎁스 줄이기
-
 ---
 
 ## 3.3 `FStoryBranchID`
@@ -96,8 +94,6 @@ TODO : property customization을 추가하여 에디터에서 뎁스 줄이기
 
 - Branch 식별자
 - 내부 값은 `FName`
-
-TODO : property customization을 추가하여 에디터에서 뎁스 줄이기
 
 ---
 
@@ -158,7 +154,7 @@ Shot 단위 실행 로직 베이스 클래스.
 - Tick
 - 완료 판정
 - 종료
-- 다음 링크 선택 지원
+- 단일 다음 링크 실행
 
 주요 함수:
 
@@ -170,13 +166,13 @@ Shot 단위 실행 로직 베이스 클래스.
 - `OnEnterShot`
 - `OnTickShot`
 - `OnExitShot`
-- `SelectNextShotIndex(int32 NextShotCount)`
 
 중요:
 
 - `ExitShot()` 후 다음 링크 판정이 이어진다
 - 현재 그래프 에디터 기준 Shot 노드는 출력 핀 `Next` 1개를 가지므로, **다중 갈래 편집은 Branch 노드를 통해 만드는 구조**다
-- 런타임 자료구조는 `NextLinks` 배열 기반이라 내부 흐름은 분기 확장 가능 형태를 유지한다
+- 현재 런타임 자료구조도 Shot은 단일 `NextLink`만 가진다
+- 따라서 **Shot에서 분기 판단은 하지 않고**, 다중 갈래 선택은 반드시 `Branch` 노드를 통해 수행한다
 
 ---
 
@@ -238,7 +234,7 @@ Shot 노드 1개에 대응하는 데이터 오브젝트.
 - `_DisplayName`
 - `_Description`
 - `_ShotTemplate`
-- `_NextLinks`
+- `_NextLink`
 
 책임:
 
@@ -249,7 +245,8 @@ Shot 노드 1개에 대응하는 데이터 오브젝트.
 중요:
 
 - 현재 코드상 Shot 쪽에는 별도 `BranchCount`가 없다
-- Compile 시 그래프 연결 기준으로 `_NextLinks`가 다시 생성된다
+- Compile 시 그래프 연결 기준으로 `_NextLink`가 다시 생성된다
+- Shot은 다음 링크를 **최대 1개만** 가진다
 
 ---
 
@@ -267,7 +264,7 @@ Branch 노드 1개에 대응하는 데이터 오브젝트.
 - `_Description`
 - `_BranchTemplate`
 - `_BranchCount`
-- `_NextLinks`
+- `_NextLinksByPinIndex`
 
 책임:
 
@@ -278,9 +275,9 @@ Branch 노드 1개에 대응하는 데이터 오브젝트.
 
 중요:
 
-- `_BranchCount` 기본값은 `2` TODO : 기본값 1로 변경
+- `_BranchCount` 기본값은 `1`이며, 최대값은 `9`로 제한된다.
 - Details에서 `_BranchCount`를 바꾸면 그래프 출력 핀 `Next_0`, `Next_1` ... 수가 동기화된다
-- `_NextLinks`는 Compile 시 그래프 연결을 다시 읽어 재구성된다
+- `_NextLinksByPinIndex`는 Compile 시 그래프 연결을 다시 읽어 재구성된다
 
 ---
 
@@ -471,7 +468,7 @@ Pending 상태:
 
 1. Tick에서 `IsFinished()` 감지
 2. `ExitShot()` 먼저 호출
-3. 현재 Shot의 `NextLinks` 확인
+3. 현재 Shot의 `NextLink` 확인
 4. 링크 타입에 따라 분기
    - `NextShotID`면 다음 Shot 이동
    - `NextBranchID`면 Branch 평가
@@ -492,8 +489,8 @@ Pending 상태:
 3. BranchTemplate 찾기
 4. `DuplicateObject<UStoryBranchBase>(template, this)`
 5. `InitializeBranch(CurrentRef)`
-6. 링크가 2개 이상이면 `SelectNextIndex(NextLinkCount)` 호출
-   - 링크가 1개면 0번 링크를 그대로 사용
+6. `BranchCount`가 2개 이상이면 `SelectNextIndex(BranchCount)` 호출
+   - `BranchCount`가 1이면 0번 링크를 그대로 사용
 7. 선택된 Branch 링크로 이동
    - Shot이면 `MoveToShot()`
    - Scene이면 `StartFromScene()`
@@ -584,7 +581,10 @@ Story Scene 전용 에디터.
 중요:
 
 - 런타임 데이터 동기화 책임은 GraphSchema가 아니라 `RebuildRuntimeData()`
-- Compile 시 Entry 연결, Shot의 다음 링크, Branch의 다음 링크를 읽어 `_EntryShotID`, `_NextLinks`로 접어 넣는다
+- Compile 시 Entry 연결, Shot의 다음 링크, Branch의 다음 링크를 읽어 다음 런타임 데이터로 접어 넣는다
+  - `EntryShotID`
+  - Shot `_NextLink`
+  - Branch `_NextLinksByPinIndex`
 
 ---
 
@@ -623,6 +623,9 @@ Story Scene 전용 에디터.
 - 노드 바깥 우측 상단 Play 버튼
 - 버튼 클릭 시 해당 Shot부터 PIE 시작
 - PIE 중 버튼 숨김
+- `Ctrl+C / Ctrl+V` 복제 지원
+  - Details 설정값은 유지
+  - `ShotID`는 새로 재발급
 
 Desc 표시:
 
@@ -648,6 +651,9 @@ Desc 표시:
 - 생성 시 BranchID를 `Branch_###` 형식으로 자동 부여한다
 - 새 노드 오토와이어 시 비어 있는 `Next_*` 핀을 우선 사용한다
 - Compile 에러 메시지를 노드 단위로 표시한다
+- `Ctrl+C / Ctrl+V` 복제 지원
+  - Details 설정값은 유지
+  - `BranchID`는 새로 재발급
 
 ---
 
@@ -664,7 +670,8 @@ Desc 표시:
 
 특징:
 
-- 복제 불가
+- `Ctrl+C / Ctrl+V` 복제 지원
+- 복제 시 `NextSceneID` 유지
 - 연결되어 있는데 `NextSceneID`가 비어 있으면 Compile 에러 대상
 
 ---
@@ -699,11 +706,20 @@ Desc 표시:
 
 1. ShotID 자동 보정
 2. Desc를 comment bubble용 `NodeComment`로 동기화
-3. 그래프 기준 런타임 데이터 재생성
+3. `Entry`에서 **도달 가능한 노드 집합** 계산
+4. 그래프 기준 런타임 데이터 재생성
    - `EntryShotID`
-   - Shot `_NextLinks`
-   - Branch `_NextLinks`
-4. 무결성 검사
+   - Shot `_NextLink`
+   - Branch `_NextLinksByPinIndex`
+5. 무결성 검사
+
+중요:
+
+- 현재 Compile은 **`Entry`에서 도달 가능한 노드만** 대상으로 한다
+- 즉, 그래프에 존재하더라도 미연결 노드는:
+  - 런타임 데이터 재구성 대상에서 제외
+  - 유효성 검사 대상에서도 제외
+  - 실행 경로에 포함되지 않는다
 
 ---
 
@@ -726,15 +742,15 @@ Desc 표시:
 - `ShotID`가 중복되지 않는가
 - `ShotTemplate`이 설정되어 있는가
 - `StorySceneRegistry`가 있는가
-- `NextLinks`가 실존 Shot / Branch / Registry 등록 Scene을 가리키는가
-- `NextLinks` 안에 유효하지 않은 링크가 없는가
+- `NextLink`가 실존 Shot / Branch / Registry 등록 Scene을 가리키는가
+- `NextLink` 안에 유효하지 않은 링크가 없는가
 
 ## Branch 수준
 
 - `BranchID`가 비어 있지 않은가
 - `BranchTemplate`이 설정되어 있는가
-- `NextLinks`가 실존 Shot 또는 Registry 등록 Scene을 가리키는가
-- `NextLinks` 안에 유효하지 않은 링크가 없는가
+- `NextLinksByPinIndex`가 실존 Shot 또는 Registry 등록 Scene을 가리키는가
+- `NextLinksByPinIndex` 안에 유효하지 않은 링크가 없는가
 
 ## Transition 수준
 
@@ -792,16 +808,17 @@ Desc 표시:
 - Transition을 통해 다음 Scene 전이 가능
 - 저장/복원이 `SceneID + ShotID`로 단순함
 - 에디터 편집과 런타임 실행이 분리됨
+- 미연결 노드를 compile/runtime 경로에서 자동 제외할 수 있음
+- `Shot` / `Branch` / `Transition` 노드의 복제 편의성이 있음
 
 ---
 
-# 12. 현재 한계
+# 12. 현재 한계 / TODO
 
-- 저장/복원 단위가 아직 `SceneID + ShotID`라 Branch 중간 상태까지는 직접 보존하지 않음 TODO : branch 중간 상태는 있을 수 없어야 함.
+- 저장/복원 단위가 아직 `SceneID + ShotID`다.
+  - 다만 설계 의도상 **Branch 중간 상태는 존재하지 않아야 하며**, 저장 시점은 항상 Shot 기준 상태만 다루는 것이 맞다.
 
 TODO : 에디터에서 ShotBase, SceneBase, BranchBase의 생성을 StorySceneAsset 과 비슷하게 우클릭-StoryFlow-안에 바로가기 추가
-TODO : 에디터에서 사용 편의성을 위해 노드 복제 기능 추가
-TODO : 사용 편의성을 위해 Scene Asset 컴파일 시 연결되지 않은 노드는 컴파일에서 제외
 
 ---
 

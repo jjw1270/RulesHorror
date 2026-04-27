@@ -52,10 +52,6 @@ protected:
 	virtual void OnExitShot_Implementation() {};
 
 public:
-	UFUNCTION(BlueprintNativeEvent, Category = "StoryFlow")
-	int32 SelectNextShotIndex(int32 _next_shot_count) const;
-	virtual int32 SelectNextShotIndex_Implementation(int32 _next_shot_count) const { return 0; }
-
 	UFUNCTION(BlueprintPure, Category = "StoryFlow")
 	const FStoryShotID& GetShotID() const { return _ShotID; }
 

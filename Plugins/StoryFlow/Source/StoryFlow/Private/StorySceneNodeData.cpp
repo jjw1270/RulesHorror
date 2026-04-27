@@ -15,15 +15,15 @@ void UStorySceneNodeData::SetShotID(const FStoryShotID& _shot_id)
 	MarkPackageDirty();
 }
 
-void UStorySceneNodeData::SetNextLinks(const TArray<FStorySceneBranchLink>& _next_links)
+void UStorySceneNodeData::SetNextLink(const FStorySceneBranchLink& _next_link)
 {
-	if (_NextLinks == _next_links)
+	if (_NextLink == _next_link)
 	{
 		return;
 	}
 
 	Modify();
-	_NextLinks = _next_links;
+	_NextLink = _next_link;
 	MarkPackageDirty();
 }
 #endif

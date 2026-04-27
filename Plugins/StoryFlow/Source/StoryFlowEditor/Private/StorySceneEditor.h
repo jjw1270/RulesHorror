@@ -37,7 +37,6 @@ private:
 	TSharedPtr<class FUICommandList> _EditorCommands;
 
 	FDelegateHandle _OnGraphChangedHandle;
-	FDelegateHandle _PreBeginPIEHandle;
 	TWeakObjectPtr<UStorySceneEdGraph> _ObservedGraph;
 
 	static const FName _CompileMessageLogName;
@@ -78,17 +77,23 @@ private:
 	void OnGraphSelectionChanged(const TSet<UObject*>& _selection);
 	void OnDetailsFinishedChangingProperties(const FPropertyChangedEvent& _property_changed_event);
 	void OnGraphChanged(const struct FEdGraphEditAction& _graph_edit_action);
-	void OnPreBeginPIE(bool _is_simulating);
 	void BindGraphCommands();
 	void BindEditorCommands();
 	void CompileScene();
 	bool CompileSceneInternal();
+	void CopySelectedNodes();
+	bool CanCopySelectedNodes() const;
+	void CutSelectedNodes();
+	bool CanCutSelectedNodes() const;
+	void PasteNodes();
+	bool CanPasteNodes() const;
+	void PasteNodesHere(const FVector2D& _location);
 	void ReportCompileFailureForPIE() const;
 	void RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) const;
 	void RefreshShotNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const;
 	bool ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors);
 	void ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const;
-	void ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TArray<FString>& _out_errors) const;
+	void ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TSet<FName>& _used_branch_ids, TArray<FString>& _out_errors) const;
 	void ValidateShotNode(UStorySceneGraphNode_Shot* _shot_node, TSet<FName>& _used_shot_ids, TArray<FString>& _out_errors) const;
 	void ValidateTransitionNode(UStorySceneGraphNode_Transition* _transition_node, TArray<FString>& _out_errors) const;
 	void ClearNodeCompileMessages(UStorySceneEdGraph* _graph) const;

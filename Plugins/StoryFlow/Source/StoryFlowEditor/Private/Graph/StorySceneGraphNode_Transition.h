@@ -19,7 +19,7 @@ public:
 	virtual void AllocateDefaultPins() override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type _title_type) const override;
 	virtual FText GetTooltipText() const override;
-	virtual bool CanDuplicateNode() const override { return false; }
+	virtual bool CanDuplicateNode() const override { return true; }
 
 	void ClearCompileMessage();
 	void SetCompileError(const FString& _error_message);

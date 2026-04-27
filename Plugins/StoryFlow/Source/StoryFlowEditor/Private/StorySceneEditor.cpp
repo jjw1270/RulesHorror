@@ -30,7 +30,10 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
+#include "EdGraphUtilities.h"
 #include "Editor/Transactor.h"
+#include "HAL/PlatformApplicationMisc.h"
+#include "Misc/PackageName.h"
 #include "Styling/AppStyle.h"
 #include "CommonUtils.h"
 
@@ -99,6 +102,35 @@ namespace
 
 		return FStoryShotID(*FString::Printf(TEXT("Shot_%03d"), next_index));
 	}
+
+	static int32 CountSceneRegistryMatches(const UStorySceneRegistryAsset* _scene_registry, const FStorySceneID& _scene_id)
+	{
+		if (IsInvalid(_scene_registry) || _scene_id.IsValid() == false)
+		{
+			return 0;
+		}
+
+		int32 match_count = 0;
+		for (const FStorySceneReference& scene_reference : _scene_registry->GetScenes())
+		{
+			if (scene_reference.GetSceneID() == _scene_id)
+			{
+				++match_count;
+			}
+		}
+
+		return match_count;
+	}
+
+	static FString GetLevelPackageName(const TSoftObjectPtr<UWorld>& _level)
+	{
+		if (_level.IsNull())
+		{
+			return FString();
+		}
+
+		return FPackageName::ObjectPathToPackageName(_level.ToSoftObjectPath().ToString());
+	}
 }
 
 FStorySceneEditor::~FStorySceneEditor()
@@ -108,11 +140,6 @@ FStorySceneEditor::~FStorySceneEditor()
 	if (_ObservedGraph.IsValid() && _OnGraphChangedHandle.IsValid())
 	{
 		_ObservedGraph->RemoveOnGraphChangedHandler(_OnGraphChangedHandle);
-	}
-
-	if (_PreBeginPIEHandle.IsValid())
-	{
-		FEditorDelegates::PreBeginPIE.Remove(_PreBeginPIEHandle);
 	}
 
 	if (GEditor)
@@ -175,11 +202,6 @@ void FStorySceneEditor::InitEditor(const EToolkitMode::Type _mode, const TShared
 		_EditorCommands,
 		FToolBarExtensionDelegate::CreateSP(this, &FStorySceneEditor::FillToolbar));
 	AddToolbarExtender(toolbar_extender);
-
-	if (_PreBeginPIEHandle.IsValid() == false)
-	{
-		_PreBeginPIEHandle = FEditorDelegates::PreBeginPIE.AddRaw(this, &FStorySceneEditor::OnPreBeginPIE);
-	}
 
 	RegenerateMenusAndToolbars();
 	CompileSceneInternal();
@@ -429,10 +451,6 @@ void FStorySceneEditor::OnGraphChanged(const FEdGraphEditAction& _graph_edit_act
 	MarkCompileDirty();
 }
 
-void FStorySceneEditor::OnPreBeginPIE(bool _is_simulating)
-{
-}
-
 void FStorySceneEditor::BindGraphCommands()
 {
 	_GraphEditorCommands = MakeShared<FUICommandList>();
@@ -441,6 +459,21 @@ void FStorySceneEditor::BindGraphCommands()
 		FGenericCommands::Get().Delete,
 		FExecuteAction::CreateSP(this, &FStorySceneEditor::DeleteSelectedNodes),
 		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanDeleteSelectedNodes));
+
+	_GraphEditorCommands->MapAction(
+		FGenericCommands::Get().Copy,
+		FExecuteAction::CreateSP(this, &FStorySceneEditor::CopySelectedNodes),
+		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanCopySelectedNodes));
+
+	_GraphEditorCommands->MapAction(
+		FGenericCommands::Get().Cut,
+		FExecuteAction::CreateSP(this, &FStorySceneEditor::CutSelectedNodes),
+		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanCutSelectedNodes));
+
+	_GraphEditorCommands->MapAction(
+		FGenericCommands::Get().Paste,
+		FExecuteAction::CreateSP(this, &FStorySceneEditor::PasteNodes),
+		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanPasteNodes));
 
 	_GraphEditorCommands->MapAction(
 		FGenericCommands::Get().Undo,
@@ -461,6 +494,141 @@ void FStorySceneEditor::BindEditorCommands()
 void FStorySceneEditor::CompileScene()
 {
 	CompileSceneInternal();
+}
+
+void FStorySceneEditor::CopySelectedNodes()
+{
+	if (IsInvalid(_GraphEditorWidget))
+	{
+		return;
+	}
+
+	const FGraphPanelSelectionSet selected_nodes = _GraphEditorWidget->GetSelectedNodes();
+	FGraphPanelSelectionSet copyable_nodes;
+
+	for (UObject* selected_object : selected_nodes)
+	{
+		UEdGraphNode* selected_node = Cast<UEdGraphNode>(selected_object);
+		if (IsInvalid(selected_node) || selected_node->CanDuplicateNode() == false)
+		{
+			continue;
+		}
+
+		selected_node->PrepareForCopying();
+		copyable_nodes.Add(selected_node);
+	}
+
+	if (copyable_nodes.IsEmpty())
+	{
+		return;
+	}
+
+	FString exported_text;
+	FEdGraphUtilities::ExportNodesToText(copyable_nodes, exported_text);
+	FPlatformApplicationMisc::ClipboardCopy(*exported_text);
+
+	for (UObject* copied_object : copyable_nodes)
+	{
+		if (UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(copied_object))
+		{
+			shot_node->PostCopyNode();
+			continue;
+		}
+
+		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(copied_object))
+		{
+			branch_node->PostCopyNode();
+		}
+	}
+}
+
+bool FStorySceneEditor::CanCopySelectedNodes() const
+{
+	return CanDeleteSelectedNodes();
+}
+
+void FStorySceneEditor::CutSelectedNodes()
+{
+	CopySelectedNodes();
+	DeleteSelectedNodes();
+}
+
+bool FStorySceneEditor::CanCutSelectedNodes() const
+{
+	return CanDeleteSelectedNodes() && CanCopySelectedNodes();
+}
+
+void FStorySceneEditor::PasteNodes()
+{
+	if (IsInvalid(_GraphEditorWidget))
+	{
+		return;
+	}
+
+	PasteNodesHere(FVector2D(_GraphEditorWidget->GetPasteLocation2f()));
+}
+
+bool FStorySceneEditor::CanPasteNodes() const
+{
+	if (IsInvalid(_GraphEditorWidget))
+	{
+		return false;
+	}
+
+	FString clipboard_content;
+	FPlatformApplicationMisc::ClipboardPaste(clipboard_content);
+	return FEdGraphUtilities::CanImportNodesFromText(_GraphEditorWidget->GetCurrentGraph(), clipboard_content);
+}
+
+void FStorySceneEditor::PasteNodesHere(const FVector2D& _location)
+{
+	if (IsInvalid(_GraphEditorWidget))
+	{
+		return;
+	}
+
+	UEdGraph* graph = _GraphEditorWidget->GetCurrentGraph();
+	if (IsInvalid(graph))
+	{
+		return;
+	}
+
+	const FScopedTransaction transaction(FGenericCommands::Get().Paste->GetDescription());
+	graph->Modify();
+	_GraphEditorWidget->ClearSelectionSet();
+
+	FString text_to_import;
+	FPlatformApplicationMisc::ClipboardPaste(text_to_import);
+
+	TSet<UEdGraphNode*> pasted_nodes;
+	FEdGraphUtilities::ImportNodesFromText(graph, text_to_import, pasted_nodes);
+	if (pasted_nodes.IsEmpty())
+	{
+		return;
+	}
+
+	FVector2D average_node_position(0.0f, 0.0f);
+	for (UEdGraphNode* pasted_node : pasted_nodes)
+	{
+		average_node_position.X += pasted_node->NodePosX;
+		average_node_position.Y += pasted_node->NodePosY;
+	}
+
+	const double pasted_node_count = static_cast<double>(pasted_nodes.Num());
+	average_node_position /= pasted_node_count;
+
+	for (UEdGraphNode* pasted_node : pasted_nodes)
+	{
+		_GraphEditorWidget->SetNodeSelection(pasted_node, true);
+
+		pasted_node->NodePosX = static_cast<int32>((pasted_node->NodePosX - average_node_position.X) + _location.X);
+		pasted_node->NodePosY = static_cast<int32>((pasted_node->NodePosY - average_node_position.Y) + _location.Y);
+		pasted_node->SnapToGrid(16);
+		pasted_node->CreateNewGuid();
+	}
+
+	MarkCompileDirty();
+	_GraphEditorWidget->NotifyGraphChanged();
 }
 
 bool FStorySceneEditor::ValidateForPIE(FString& _out_denied_reason)
@@ -592,13 +760,16 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 	ClearNodeCompileMessages(_graph);
 	ValidateSceneMetadata(_graph, _out_errors);
 
+	TSet<FName> used_branch_ids;
 	TSet<FName> used_shot_ids;
+	TSet<UEdGraphNode*> reachable_nodes;
+	_graph->GetReachableNodes(reachable_nodes);
 
-	for (UEdGraphNode* node : _graph->Nodes)
+	for (UEdGraphNode* node : reachable_nodes)
 	{
 		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node))
 		{
-			ValidateBranchNode(branch_node, _out_errors);
+			ValidateBranchNode(branch_node, used_branch_ids, _out_errors);
 			continue;
 		}
 
@@ -620,6 +791,9 @@ bool FStorySceneEditor::ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray
 void FStorySceneEditor::ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const
 {
 	const UStoryFlowDeveloperSettings* settings = GetDefault<UStoryFlowDeveloperSettings>();
+	UStorySceneRegistryAsset* scene_registry = (IsValid(settings) && settings->_StorySceneRegistry.IsNull() == false)
+		? settings->_StorySceneRegistry.LoadSynchronous()
+		: nullptr;
 
 	if (_StorySceneAsset->GetSceneID().IsValid() == false)
 	{
@@ -635,10 +809,28 @@ void FStorySceneEditor::ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray
 	{
 		_out_errors.Add(TEXT("TargetLevel is missing."));
 	}
+	else if (IsValid(settings) && settings->_LoadingLevel.IsNull() == false
+		&& GetLevelPackageName(settings->_LoadingLevel) == GetLevelPackageName(_StorySceneAsset->GetTargetLevel()))
+	{
+		_out_errors.Add(TEXT("LoadingLevel must be different from TargetLevel."));
+	}
 
 	if (IsInvalid(_StorySceneAsset->GetSceneTemplate()))
 	{
 		_out_errors.Add(TEXT("SceneTemplate is missing."));
+	}
+
+	if (_StorySceneAsset->GetSceneID().IsValid() && IsValid(scene_registry))
+	{
+		const int32 matching_scene_count = CountSceneRegistryMatches(scene_registry, _StorySceneAsset->GetSceneID());
+		if (matching_scene_count == 0)
+		{
+			_out_errors.Add(FString::Printf(TEXT("SceneID '%s' is not registered in StorySceneRegistry."), *_StorySceneAsset->GetSceneID().Get().ToString()));
+		}
+		else if (matching_scene_count > 1)
+		{
+			_out_errors.Add(FString::Printf(TEXT("SceneID '%s' is duplicated in StorySceneRegistry."), *_StorySceneAsset->GetSceneID().Get().ToString()));
+		}
 	}
 
 	if (_StorySceneAsset->GetEntryShotID().IsValid() == false)
@@ -663,7 +855,7 @@ void FStorySceneEditor::ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray
 	}
 }
 
-void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TArray<FString>& _out_errors) const
+void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TSet<FName>& _used_branch_ids, TArray<FString>& _out_errors) const
 {
 	if (IsInvalid(_branch_node))
 	{
@@ -689,13 +881,31 @@ void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_
 	{
 		node_errors.Add(TEXT("BranchID is empty."));
 	}
+	else if (_used_branch_ids.Contains(branch_node_data->GetBranchID().Get()))
+	{
+		node_errors.Add(FString::Printf(TEXT("Duplicated BranchID: %s"), *branch_node_data->GetBranchID().Get().ToString()));
+	}
+	else
+	{
+		_used_branch_ids.Add(branch_node_data->GetBranchID().Get());
+	}
 
 	if (IsInvalid(branch_node_data->GetBranchTemplate()))
 	{
 		node_errors.Add(TEXT("BranchTemplate is missing."));
 	}
 
-	for (const TPair<int32, FStorySceneBranchLink>& next_link_pair : branch_node_data->GetNextLinksByPinIndex())
+	const TMap<int32, FStorySceneBranchLink>& next_links_by_pin_index = branch_node_data->GetNextLinksByPinIndex();
+	for (int32 next_pin_index = 0; next_pin_index < branch_node_data->GetBranchCount(); ++next_pin_index)
+	{
+		const FStorySceneBranchLink* next_link = next_links_by_pin_index.Find(next_pin_index);
+		if (next_link == nullptr || next_link->IsValid() == false)
+		{
+			node_errors.Add(FString::Printf(TEXT("Next pin index '%d' is not connected."), next_pin_index));
+		}
+	}
+
+	for (const TPair<int32, FStorySceneBranchLink>& next_link_pair : next_links_by_pin_index)
 	{
 		const int32 next_pin_index = next_link_pair.Key;
 		const FStorySceneBranchLink& next_link = next_link_pair.Value;
@@ -717,14 +927,26 @@ void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_
 
 		if (next_link.IsSceneLink())
 		{
-			if (scene_registry == nullptr || scene_registry->FindSceneReference(next_link.NextSceneID) == nullptr)
+			if (scene_registry == nullptr)
 			{
 				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+			}
+			else
+			{
+				const int32 matching_scene_count = CountSceneRegistryMatches(scene_registry, next_link.NextSceneID);
+				if (matching_scene_count == 0)
+				{
+					node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+				}
+				else if (matching_scene_count > 1)
+				{
+					node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is duplicated in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+				}
 			}
 			continue;
 		}
 
-		node_errors.Add(TEXT("NextLinks contains an invalid branch link."));
+		node_errors.Add(TEXT("NextLinksByPinIndex contains an invalid branch link."));
 	}
 
 	if (node_errors.Num() == 0)
@@ -783,36 +1005,50 @@ void FStorySceneEditor::ValidateShotNode(UStorySceneGraphNode_Shot* _shot_node, 
 		? settings->_StorySceneRegistry.LoadSynchronous()
 		: nullptr;
 
-	for (const FStorySceneBranchLink& next_link : shot_node_data->GetNextLinks())
+	const FStorySceneBranchLink next_link = shot_node_data->GetNextLink();
+	if (next_link.IsValid() == false)
 	{
-		if (next_link.IsShotLink())
+		if (node_errors.Num() == 0)
 		{
-			if (IsInvalid(_StorySceneAsset->FindShotNode(next_link.NextShotID)))
-			{
-				node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_link.NextShotID.Get().ToString()));
-			}
-			continue;
+			return;
 		}
-
-		if (next_link.IsBranchLink())
+	}
+	else if (next_link.IsShotLink())
+	{
+		if (IsInvalid(_StorySceneAsset->FindShotNode(next_link.NextShotID)))
 		{
-			if (IsInvalid(_StorySceneAsset->FindBranchNode(next_link.NextBranchID)))
-			{
-				node_errors.Add(FString::Printf(TEXT("NextBranchID '%s' does not exist."), *next_link.NextBranchID.Get().ToString()));
-			}
-			continue;
+			node_errors.Add(FString::Printf(TEXT("NextShotID '%s' does not exist."), *next_link.NextShotID.Get().ToString()));
 		}
-
-		if (next_link.IsSceneLink())
+	}
+	else if (next_link.IsBranchLink())
+	{
+		if (IsInvalid(_StorySceneAsset->FindBranchNode(next_link.NextBranchID)))
 		{
-			if (scene_registry == nullptr || scene_registry->FindSceneReference(next_link.NextSceneID) == nullptr)
+			node_errors.Add(FString::Printf(TEXT("NextBranchID '%s' does not exist."), *next_link.NextBranchID.Get().ToString()));
+		}
+	}
+	else if (next_link.IsSceneLink())
+	{
+		if (scene_registry == nullptr)
+		{
+			node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+		}
+		else
+		{
+			const int32 matching_scene_count = CountSceneRegistryMatches(scene_registry, next_link.NextSceneID);
+			if (matching_scene_count == 0)
 			{
 				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
 			}
-			continue;
+			else if (matching_scene_count > 1)
+			{
+				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is duplicated in StorySceneRegistry."), *next_link.NextSceneID.Get().ToString()));
+			}
 		}
-
-		node_errors.Add(TEXT("NextLinks contains an invalid branch link."));
+	}
+	else
+	{
+		node_errors.Add(TEXT("NextLink contains an invalid branch link."));
 	}
 
 	if (node_errors.Num() == 0)
@@ -850,9 +1086,14 @@ void FStorySceneEditor::ValidateTransitionNode(UStorySceneGraphNode_Transition* 
 		}
 		else if (UStorySceneRegistryAsset* scene_registry = settings->_StorySceneRegistry.LoadSynchronous())
 		{
-			if (scene_registry->FindSceneReference(_transition_node->GetNextSceneID()) == nullptr)
+			const int32 matching_scene_count = CountSceneRegistryMatches(scene_registry, _transition_node->GetNextSceneID());
+			if (matching_scene_count == 0)
 			{
 				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is not registered in StorySceneRegistry."), *_transition_node->GetNextSceneID().Get().ToString()));
+			}
+			else if (matching_scene_count > 1)
+			{
+				node_errors.Add(FString::Printf(TEXT("NextSceneID '%s' is duplicated in StorySceneRegistry."), *_transition_node->GetNextSceneID().Get().ToString()));
 			}
 		}
 	}
@@ -915,13 +1156,6 @@ void FStorySceneEditor::SyncGraphNodePins(UStorySceneEdGraph* _graph) const
 		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node))
 		{
 			branch_node->SyncNextPinsToNodeData();
-			continue;
-		}
-
-		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
-		if (IsInvalid(shot_node) || IsInvalid(shot_node->GetShotNodeData()))
-		{
-			continue;
 		}
 	}
 }

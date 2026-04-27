@@ -12,6 +12,30 @@ namespace
 {
 	static const FName StorySceneBranchPinCategory(TEXT("StoryFlow"));
 
+	static bool TryGetNextPinIndex(const UEdGraphPin* _pin, int32& _out_index)
+	{
+		_out_index = INDEX_NONE;
+		if (_pin == nullptr)
+		{
+			return false;
+		}
+
+		const FString pin_name = _pin->PinName.ToString();
+		FString numeric_suffix;
+		if (pin_name.Split(TEXT("Next_"), nullptr, &numeric_suffix) == false)
+		{
+			return false;
+		}
+
+		if (numeric_suffix.IsNumeric() == false)
+		{
+			return false;
+		}
+
+		_out_index = FCString::Atoi(*numeric_suffix);
+		return true;
+	}
+
 	static FStoryBranchID MakeNextBranchID(const UStorySceneAsset* _scene_asset)
 	{
 		if (IsInvalid(_scene_asset))
@@ -81,6 +105,40 @@ void UStorySceneGraphNode_Branch::PostPlacedNewNode()
 	if (IsValid(_BranchNodeData))
 	{
 		_BranchNodeData->SetBranchID(MakeNextBranchID(scene_asset));
+	}
+}
+
+void UStorySceneGraphNode_Branch::PrepareForCopying()
+{
+	Super::PrepareForCopying();
+
+	if (IsValid(_BranchNodeData))
+	{
+		_BranchNodeData->Rename(nullptr, this, REN_DontCreateRedirectors | REN_DoNotDirty);
+	}
+}
+
+void UStorySceneGraphNode_Branch::PostPasteNode()
+{
+	Super::PostPasteNode();
+	ResetBranchNodeDataOwner();
+
+	if (UStorySceneAsset* scene_asset = GetOwningSceneAsset())
+	{
+		if (IsInvalid(_BranchNodeData))
+		{
+			_BranchNodeData = scene_asset->CreateBranchNode();
+		}
+		else
+		{
+			scene_asset->AddBranchNode(_BranchNodeData);
+		}
+
+		if (IsValid(_BranchNodeData))
+		{
+			_BranchNodeData->SetBranchID(MakeNextBranchID(scene_asset));
+			SyncNextPinsToNodeData();
+		}
 	}
 }
 
@@ -179,6 +237,15 @@ TArray<UEdGraphPin*> UStorySceneGraphNode_Branch::GetNextPins() const
 
 	next_pins.Sort([](const UEdGraphPin& _lhs, const UEdGraphPin& _rhs)
 		{
+			int32 lhs_index = INDEX_NONE;
+			int32 rhs_index = INDEX_NONE;
+			const bool has_lhs_index = TryGetNextPinIndex(&_lhs, lhs_index);
+			const bool has_rhs_index = TryGetNextPinIndex(&_rhs, rhs_index);
+			if (has_lhs_index && has_rhs_index)
+			{
+				return lhs_index < rhs_index;
+			}
+
 			return _lhs.PinName.LexicalLess(_rhs.PinName);
 		});
 
@@ -248,4 +315,25 @@ void UStorySceneGraphNode_Branch::SetCompileError(const FString& _error_message)
 	bHasCompilerMessage = true;
 	ErrorType = 1;
 	ErrorMsg = _error_message;
+}
+
+void UStorySceneGraphNode_Branch::PostCopyNode()
+{
+	ResetBranchNodeDataOwner();
+}
+
+void UStorySceneGraphNode_Branch::ResetBranchNodeDataOwner()
+{
+	if (IsValid(_BranchNodeData) == false)
+	{
+		return;
+	}
+
+	if (UStorySceneAsset* scene_asset = GetOwningSceneAsset())
+	{
+		if (_BranchNodeData->GetOuter() != scene_asset)
+		{
+			_BranchNodeData->Rename(nullptr, scene_asset, REN_DontCreateRedirectors | REN_DoNotDirty);
+		}
+	}
 }

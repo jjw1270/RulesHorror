@@ -18,7 +18,7 @@ void UStoryBranchNodeData::SetBranchID(const FStoryBranchID& _branch_id)
 
 void UStoryBranchNodeData::SetBranchCount(int32 _branch_count)
 {
-	const int32 branch_count = FMath::Max(_branch_count, 1);
+	const int32 branch_count = FMath::Clamp(_branch_count, 1, 9);
 	if (_BranchCount == branch_count)
 	{
 		return;

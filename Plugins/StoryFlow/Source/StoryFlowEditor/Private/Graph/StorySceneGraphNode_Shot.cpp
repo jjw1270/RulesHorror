@@ -74,6 +74,39 @@ void UStorySceneGraphNode_Shot::PostPlacedNewNode()
 	}
 }
 
+void UStorySceneGraphNode_Shot::PrepareForCopying()
+{
+	Super::PrepareForCopying();
+
+	if (IsValid(_ShotNodeData))
+	{
+		_ShotNodeData->Rename(nullptr, this, REN_DontCreateRedirectors | REN_DoNotDirty);
+	}
+}
+
+void UStorySceneGraphNode_Shot::PostPasteNode()
+{
+	Super::PostPasteNode();
+	ResetShotNodeDataOwner();
+
+	if (UStorySceneAsset* scene_asset = GetOwningSceneAsset())
+	{
+		if (IsInvalid(_ShotNodeData))
+		{
+			_ShotNodeData = scene_asset->CreateShotNode();
+		}
+		else
+		{
+			scene_asset->AddShotNode(_ShotNodeData);
+		}
+
+		if (IsValid(_ShotNodeData))
+		{
+			_ShotNodeData->SetShotID(MakeNextShotID(scene_asset));
+		}
+	}
+}
+
 void UStorySceneGraphNode_Shot::DestroyNode()
 {
 	if (UStorySceneAsset* scene_asset = GetOwningSceneAsset())
@@ -137,11 +170,6 @@ FText UStorySceneGraphNode_Shot::GetNodeTitle(ENodeTitleType::Type _title_type) 
 	return FText::FromString(TEXT("Shot"));
 }
 
-FText UStorySceneGraphNode_Shot::GetTooltipText() const
-{
-	return Super::GetTooltipText();
-}
-
 void UStorySceneGraphNode_Shot::ClearCompileMessage()
 {
 	bHasCompilerMessage = false;
@@ -156,7 +184,28 @@ void UStorySceneGraphNode_Shot::SetCompileError(const FString& _error_message)
 	ErrorMsg = _error_message;
 }
 
+void UStorySceneGraphNode_Shot::PostCopyNode()
+{
+	ResetShotNodeDataOwner();
+}
+
 UStorySceneAsset* UStorySceneGraphNode_Shot::GetOwningSceneAsset() const
 {
 	return GetGraph() ? Cast<UStorySceneAsset>(GetGraph()->GetOuter()) : nullptr;
+}
+
+void UStorySceneGraphNode_Shot::ResetShotNodeDataOwner()
+{
+	if (IsValid(_ShotNodeData) == false)
+	{
+		return;
+	}
+
+	if (UStorySceneAsset* scene_asset = GetOwningSceneAsset())
+	{
+		if (_ShotNodeData->GetOuter() != scene_asset)
+		{
+			_ShotNodeData->Rename(nullptr, scene_asset, REN_DontCreateRedirectors | REN_DoNotDirty);
+		}
+	}
 }
