@@ -1,9 +1,14 @@
 // Copyright (c) 2026 장윤제. All rights reserved.
 
 #include "StoryFlowEditorModule.h"
+#include "StoryFlowBlueprintFactories.h"
+#include "StoryFlowIDCustomization.h"
 #include "StorySceneAssetTypeActions.h"
 #include "StorySceneEditor.h"
 #include "StorySceneAsset.h"
+#include "StorySceneBase.h"
+#include "StoryShotBase.h"
+#include "StoryBranchBase.h"
 #include "StorySceneNodeData.h"
 #include "StoryFlowSubsystem.h"
 #include "Graph/SStorySceneGraphNode_Shot.h"
@@ -14,6 +19,7 @@
 #include "IAssetTools.h"
 #include "Modules/ModuleManager.h"
 #include "PlayInEditorDataTypes.h"
+#include "PropertyEditorModule.h"
 #include "Styling/AppStyle.h"
 #include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
@@ -25,9 +31,16 @@
 IMPLEMENT_MODULE(FStoryFlowEditorModule, StoryFlowEditor)
 
 static const FName StyleSetName(TEXT("StoryFlowEditorStyle"));
+uint32 FStoryFlowEditorModule::_AssetCategory = EAssetTypeCategories::Misc;
 
 namespace
 {
+	static FSlateBrush* MakeClonedBrush(const FSlateBrush* _source_brush)
+	{
+		FSlateBrush* brush = new FSlateBrush(*_source_brush);
+		return brush;
+	}
+
 	class FStoryFlowGraphNodeFactory : public FGraphPanelNodeFactory
 	{
 	public:
@@ -95,17 +108,29 @@ FStoryFlowEditorModule& FStoryFlowEditorModule::Get()
 void FStoryFlowEditorModule::StartupModule()
 {
 	IAssetTools& asset_tools = FAssetToolsModule::GetModule().Get();
-	const EAssetTypeCategories::Type category = asset_tools.RegisterAdvancedAssetCategory(FName("StoryFlow"), FText::FromString(TEXT("StoryFlow")));
+	_AssetCategory = asset_tools.RegisterAdvancedAssetCategory(FName("StoryFlow"), FText::FromString(TEXT("StoryFlow")));
 
-	_StorySceneAssetTypeActions = MakeShared<FStorySceneAssetTypeActions>(category);
+	_StorySceneAssetTypeActions = MakeShared<FStorySceneAssetTypeActions>(static_cast<EAssetTypeCategories::Type>(_AssetCategory));
 	asset_tools.RegisterAssetTypeActions(_StorySceneAssetTypeActions.ToSharedRef());
 
 	_StyleSet = MakeShared<FSlateStyleSet>(StyleSetName);
 	const FSlateBrush* icon = FAppStyle::GetBrush(TEXT("ClassIcon.Blueprint"));
 	const FSlateBrush* thumbnail = FAppStyle::GetBrush(TEXT("ClassThumbnail.Blueprint"));
+	const FSlateBrush* world_icon = FAppStyle::GetBrush(TEXT("ClassIcon.World"));
+	const FSlateBrush* world_thumbnail = FAppStyle::GetBrush(TEXT("ClassThumbnail.World"));
+	const FSlateBrush* cine_camera_icon = FAppStyle::GetBrush(TEXT("ClassIcon.CineCameraActor"));
+	const FSlateBrush* cine_camera_thumbnail = FAppStyle::GetBrush(TEXT("ClassThumbnail.CineCameraActor"));
+	const FSlateBrush* behavior_tree_icon = FAppStyle::GetBrush(TEXT("ClassIcon.BehaviorTree"));
+	const FSlateBrush* behavior_tree_thumbnail = FAppStyle::GetBrush(TEXT("ClassThumbnail.BehaviorTree"));
 
-	_StyleSet->Set(TEXT("ClassIcon.StorySceneAsset"), new FSlateBrush(*icon));
-	_StyleSet->Set(TEXT("ClassThumbnail.StorySceneAsset"), new FSlateBrush(*thumbnail));
+	_StyleSet->Set(TEXT("ClassIcon.StorySceneAsset"), MakeClonedBrush(icon));
+	_StyleSet->Set(TEXT("ClassThumbnail.StorySceneAsset"), MakeClonedBrush(thumbnail));
+	_StyleSet->Set(TEXT("ClassIcon.StorySceneBase"), MakeClonedBrush(world_icon));
+	_StyleSet->Set(TEXT("ClassThumbnail.StorySceneBase"), MakeClonedBrush(world_thumbnail));
+	_StyleSet->Set(TEXT("ClassIcon.StoryShotBase"), MakeClonedBrush(cine_camera_icon));
+	_StyleSet->Set(TEXT("ClassThumbnail.StoryShotBase"), MakeClonedBrush(cine_camera_thumbnail));
+	_StyleSet->Set(TEXT("ClassIcon.StoryBranchBase"), MakeClonedBrush(behavior_tree_icon));
+	_StyleSet->Set(TEXT("ClassThumbnail.StoryBranchBase"), MakeClonedBrush(behavior_tree_thumbnail));
 
 	if (FSlateStyleRegistry::FindSlateStyle(StyleSetName) != nullptr)
 	{
@@ -113,6 +138,12 @@ void FStoryFlowEditorModule::StartupModule()
 	}
 
 	FSlateStyleRegistry::RegisterSlateStyle(*_StyleSet);
+
+	FPropertyEditorModule& property_editor_module = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	property_editor_module.RegisterCustomPropertyTypeLayout(TEXT("StorySceneID"), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FStoryFlowIDCustomization::MakeInstance));
+	property_editor_module.RegisterCustomPropertyTypeLayout(TEXT("StoryShotID"), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FStoryFlowIDCustomization::MakeInstance));
+	property_editor_module.RegisterCustomPropertyTypeLayout(TEXT("StoryBranchID"), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FStoryFlowIDCustomization::MakeInstance));
+	property_editor_module.NotifyCustomizationModuleChanged();
 
 	_PIEAuthorizer = MakeUnique<FStoryFlowPIEAuthorizer>();
 	IModularFeatures::Get().RegisterModularFeature(IPIEAuthorizer::GetModularFeatureName(), _PIEAuthorizer.Get());
@@ -158,6 +189,15 @@ void FStoryFlowEditorModule::ShutdownModule()
 			asset_tools.UnregisterAssetTypeActions(_StorySceneAssetTypeActions.ToSharedRef());
 			_StorySceneAssetTypeActions.Reset();
 		}
+	}
+
+	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+	{
+		FPropertyEditorModule& property_editor_module = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		property_editor_module.UnregisterCustomPropertyTypeLayout(TEXT("StorySceneID"));
+		property_editor_module.UnregisterCustomPropertyTypeLayout(TEXT("StoryShotID"));
+		property_editor_module.UnregisterCustomPropertyTypeLayout(TEXT("StoryBranchID"));
+		property_editor_module.NotifyCustomizationModuleChanged();
 	}
 
 	if (_StyleSet.IsValid())

@@ -15,6 +15,8 @@ class UStorySceneNodeData;
 class STORYFLOWEDITOR_API FStoryFlowEditorModule : public IModuleInterface
 {
 private:
+	static uint32 _AssetCategory;
+
 	TSharedPtr<FStorySceneAssetTypeActions> _StorySceneAssetTypeActions;
 	TSharedPtr<FSlateStyleSet> _StyleSet;
 	TUniquePtr<IPIEAuthorizer> _PIEAuthorizer;
@@ -27,6 +29,7 @@ private:
 
 public:
 	static FStoryFlowEditorModule& Get();
+	static uint32 GetAssetCategory() { return _AssetCategory; }
 
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
