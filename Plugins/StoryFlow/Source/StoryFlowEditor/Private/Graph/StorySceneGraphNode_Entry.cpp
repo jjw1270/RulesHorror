@@ -12,6 +12,11 @@ void UStorySceneGraphNode_Entry::AllocateDefaultPins()
 	CreatePin(EGPD_Output, StorySceneEntryPinCategory, NAME_None, TEXT("Next"));
 }
 
+FLinearColor UStorySceneGraphNode_Entry::GetNodeTitleColor() const
+{
+	return FLinearColor(0.18f, 0.48f, 0.22f);
+}
+
 void UStorySceneGraphNode_Entry::ClearCompileMessage()
 {
 	bHasCompilerMessage = false;

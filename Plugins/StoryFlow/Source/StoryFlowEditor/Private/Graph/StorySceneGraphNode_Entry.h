@@ -13,6 +13,7 @@ class UStorySceneGraphNode_Entry : public UEdGraphNode
 public:
 	virtual void AllocateDefaultPins() override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type _title_type) const override { return FText::FromString(TEXT("Entry")); }
+	virtual FLinearColor GetNodeTitleColor() const override;
 	virtual bool CanUserDeleteNode() const override { return false; }
 	virtual bool CanDuplicateNode() const override { return false; }
 

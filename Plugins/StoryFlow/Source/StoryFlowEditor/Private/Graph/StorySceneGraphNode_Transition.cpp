@@ -12,7 +12,7 @@ void UStorySceneGraphNode_Transition::AllocateDefaultPins()
 	CreatePin(EGPD_Input, StorySceneTransitionPinCategory, NAME_None, TEXT("In"));
 }
 
-FText UStorySceneGraphNode_Transition::GetNodeTitle(ENodeTitleType::Type _title_type) const
+FText UStorySceneGraphNode_Transition::GetNodeTitle(ENodeTitleType::Type) const
 {
 	if (_NextSceneID.IsValid())
 	{
@@ -22,11 +22,9 @@ FText UStorySceneGraphNode_Transition::GetNodeTitle(ENodeTitleType::Type _title_
 	return FText::FromString(TEXT("Transition"));
 }
 
-FText UStorySceneGraphNode_Transition::GetTooltipText() const
+FLinearColor UStorySceneGraphNode_Transition::GetNodeTitleColor() const
 {
-	return _NextSceneID.IsValid()
-		? FText::Format(FText::FromString(TEXT("Next Scene: {0}")), FText::FromName(_NextSceneID.Get()))
-		: FText::FromString(TEXT("Next Scene is not set."));
+	return FLinearColor(0.50f, 0.28f, 0.72f);
 }
 
 void UStorySceneGraphNode_Transition::ClearCompileMessage()

@@ -16,7 +16,7 @@ class STORYFLOW_API UStoryBranchNodeData : public UObject
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	UPROPERTY()
 	FStoryBranchID _BranchID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow")
@@ -31,7 +31,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow", meta = (ClampMin = "1", ClampMax = "9", UIMin = "1", UIMax = "9"))
 	int32 _BranchCount = 1;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	UPROPERTY()
 	TMap<int32, FStorySceneBranchLink> _NextLinksByPinIndex;
 
 #if WITH_EDITOR

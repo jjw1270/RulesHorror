@@ -58,7 +58,7 @@ class STORYFLOW_API UStorySceneNodeData : public UObject
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
 	FStoryShotID _ShotID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow")
@@ -70,7 +70,7 @@ protected:
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "StoryFlow")
 	TObjectPtr<UStoryShotBase> _ShotTemplate = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	UPROPERTY()
 	FStorySceneBranchLink _NextLink;
 
 #if WITH_EDITOR
@@ -85,6 +85,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	FText GetDisplayNameText() const;
+
+	UFUNCTION(BlueprintPure)
+	const FText& GetDisplayName() const { return _DisplayName; }
 
 	UFUNCTION(BlueprintPure)
 	const FText& GetDescriptionText() const { return _Description; }

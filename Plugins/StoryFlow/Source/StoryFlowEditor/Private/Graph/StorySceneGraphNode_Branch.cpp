@@ -185,38 +185,14 @@ void UStorySceneGraphNode_Branch::AutowireNewNode(UEdGraphPin* _from_pin)
 	}
 }
 
-FText UStorySceneGraphNode_Branch::GetNodeTitle(ENodeTitleType::Type _title_type) const
+FText UStorySceneGraphNode_Branch::GetNodeTitle(ENodeTitleType::Type) const
 {
-	if (IsValid(_BranchNodeData))
-	{
-		const FText display_name = _BranchNodeData->GetDisplayNameText();
-		const FText branch_id_text = _BranchNodeData->GetBranchID().IsValid()
-			? FText::FromName(_BranchNodeData->GetBranchID().Get())
-			: FText::FromString(TEXT("BranchID: None"));
-
-		if (_title_type == ENodeTitleType::FullTitle || _title_type == ENodeTitleType::EditableTitle)
-		{
-			return FText::Format(FText::FromString(TEXT("{0}\n{1}")), display_name, branch_id_text);
-		}
-
-		return display_name;
-	}
-
 	return FText::FromString(TEXT("Branch"));
 }
 
-FText UStorySceneGraphNode_Branch::GetTooltipText() const
+FLinearColor UStorySceneGraphNode_Branch::GetNodeTitleColor() const
 {
-	if (IsValid(_BranchNodeData))
-	{
-		const FText description = _BranchNodeData->GetDescriptionText();
-		if (description.IsEmpty() == false)
-		{
-			return description;
-		}
-	}
-
-	return Super::GetTooltipText();
+	return FLinearColor(0.78f, 0.40f, 0.10f);
 }
 
 UStorySceneAsset* UStorySceneGraphNode_Branch::GetOwningSceneAsset() const

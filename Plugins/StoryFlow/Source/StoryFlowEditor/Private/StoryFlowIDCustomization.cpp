@@ -24,6 +24,10 @@ void FStoryFlowIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _str
 
 	_header_row
 	.OverrideResetToDefault(FResetToDefaultOverride::Hide())
+	.IsValueEnabled(TAttribute<bool>::CreateLambda([_struct_property_handle]()
+	{
+		return _struct_property_handle->IsEditable();
+	}))
 	.NameContent()
 	[
 		_struct_property_handle->CreatePropertyNameWidget()

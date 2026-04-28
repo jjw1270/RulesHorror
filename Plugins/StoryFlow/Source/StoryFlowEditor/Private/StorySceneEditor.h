@@ -88,9 +88,11 @@ private:
 	void PasteNodes();
 	bool CanPasteNodes() const;
 	void PasteNodesHere(const FVector2D& _location);
+	void CreateCommentNode();
+	bool CanCreateCommentNode() const;
 	void ReportCompileFailureForPIE() const;
 	void RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) const;
-	void RefreshShotNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const;
+	void RefreshGraphNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const;
 	bool ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors);
 	void ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const;
 	void ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TSet<FName>& _used_branch_ids, TArray<FString>& _out_errors) const;

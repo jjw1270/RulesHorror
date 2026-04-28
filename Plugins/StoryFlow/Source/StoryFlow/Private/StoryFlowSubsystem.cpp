@@ -10,26 +10,268 @@
 #include "StoryFlowDeveloperSettings.h"
 #include "StorySceneRegistryAsset.h"
 #include "StoryShotBase.h"
+#include "Debug/DebugDrawService.h"
+#include "Engine/Canvas.h"
 #include "Curves/CurveFloat.h"
 #include "Engine/AssetManager.h"
 #include "Engine/Engine.h"
+#include "Engine/Font.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
 #include "Subsystems/SubsystemCollection.h"
 #include "UObject/UObjectGlobals.h"
 #include "CommonUtils.h"
 
+namespace
+{
+	const FLinearColor DEBUG_KEY_COLOR = FLinearColor::White;
+	const FLinearColor DEBUG_VALUE_COLOR(0.0f, 1.0f, 1.0f, 1.0f);
+	const FLinearColor DEBUG_ID_VALUE_COLOR(1.0f, 0.84f, 0.0f, 1.0f);
+	const FLinearColor DEBUG_SHADOW_COLOR = FLinearColor::Black;
+	const FVector2D DEBUG_SHADOW_OFFSET(1.0f, 1.0f);
+	const float DEBUG_X_MARGIN = 24.0f;
+	const float DEBUG_Y_MARGIN = 32.0f;
+	const float DEBUG_LINE_PADDING = 2.0f;
+	const float DEBUG_TEXT_SCALE = 1.0f;
+
+	static FString ToDebugString(const FStorySceneID& _scene_id)
+	{
+		return _scene_id.IsValid() ? _scene_id.Get().ToString() : TEXT("None");
+	}
+
+	static FString ToDebugString(const FStoryShotID& _shot_id)
+	{
+		return _shot_id.IsValid() ? _shot_id.Get().ToString() : TEXT("None");
+	}
+
+	static FString ToDebugString(const FStoryBranchID& _branch_id)
+	{
+		return _branch_id.IsValid() ? _branch_id.Get().ToString() : TEXT("None");
+	}
+
+	static FString ToDebugString(EStoryFlowPendingTravelPhase _pending_travel_phase)
+	{
+		switch (_pending_travel_phase)
+		{
+		case EStoryFlowPendingTravelPhase::None:
+			return TEXT("None");
+		case EStoryFlowPendingTravelPhase::LoadingLevel:
+			return TEXT("LoadingLevel");
+		case EStoryFlowPendingTravelPhase::AsyncLoadingTargetLevel:
+			return TEXT("AsyncLoadingTargetLevel");
+		case EStoryFlowPendingTravelPhase::OpeningTargetLevel:
+			return TEXT("OpeningTargetLevel");
+		default:
+			return TEXT("Unknown");
+		}
+	}
+
+	static FString ToDebugString(const FStorySceneBranchLink& _next_link)
+	{
+		if (_next_link.IsShotLink())
+		{
+			return FString::Printf(TEXT("Shot -> %s"), *ToDebugString(_next_link.NextShotID));
+		}
+
+		if (_next_link.IsBranchLink())
+		{
+			return FString::Printf(TEXT("Branch -> %s"), *ToDebugString(_next_link.NextBranchID));
+		}
+
+		if (_next_link.IsSceneLink())
+		{
+			return FString::Printf(TEXT("Scene -> %s"), *ToDebugString(_next_link.NextSceneID));
+		}
+
+		return TEXT("None");
+	}
+
+	static FString ToDebugLevelName(const TSoftObjectPtr<UWorld>& _level)
+	{
+		if (_level.IsNull())
+		{
+			return TEXT("None");
+		}
+
+		const FString level_package_name = FPackageName::ObjectPathToPackageName(_level.ToSoftObjectPath().ToString());
+		return FPackageName::GetShortName(level_package_name);
+	}
+
+	static FLinearColor GetDebugValueColor(const FString& _line)
+	{
+		if (_line.StartsWith(TEXT("SceneID:")) || _line.StartsWith(TEXT("ShotID:")))
+		{
+			return DEBUG_ID_VALUE_COLOR;
+		}
+
+		return DEBUG_VALUE_COLOR;
+	}
+
+	static float DrawDebugTextSegment(UCanvas* _canvas, UFont* _font, const FString& _text, const FVector2D& _position, const FLinearColor& _color, float _scale)
+	{
+		if (_text.IsEmpty())
+		{
+			return 0.0f;
+		}
+
+		_canvas->K2_DrawText(
+			_font,
+			_text,
+			_position,
+			FVector2D(_scale, _scale),
+			_color,
+			0.0f,
+			DEBUG_SHADOW_COLOR,
+			DEBUG_SHADOW_OFFSET,
+			false,
+			false,
+			false,
+			DEBUG_SHADOW_COLOR);
+
+		float text_width = 0.0f;
+		float text_height = 0.0f;
+		_canvas->TextSize(_font, _text, text_width, text_height, _scale, _scale);
+		return text_width;
+	}
+
+	static bool DrawDebugKeyValueLine(UCanvas* _canvas, UFont* _font, const FString& _line, const FVector2D& _position, const FLinearColor& _value_color, float _scale)
+	{
+		const int32 value_separator_index = _line.Find(TEXT(": "), ESearchCase::CaseSensitive);
+		if (value_separator_index == INDEX_NONE)
+		{
+			return false;
+		}
+
+		const FString label = _line.Left(value_separator_index + 2);
+		const FString value = _line.Mid(value_separator_index + 2);
+
+		float x = _position.X;
+		x += DrawDebugTextSegment(_canvas, _font, label, FVector2D(x, _position.Y), DEBUG_KEY_COLOR, _scale);
+		DrawDebugTextSegment(_canvas, _font, value, FVector2D(x, _position.Y), _value_color, _scale);
+		return true;
+	}
+
+	static bool DrawPendingStartDebugLine(UCanvas* _canvas, UFont* _font, const FString& _line, const FVector2D& _position, float _scale)
+	{
+		const FString scene_marker = TEXT("SceneID=");
+		const FString shot_marker = TEXT(" ShotID=");
+		int32 scene_marker_index = INDEX_NONE;
+		int32 shot_marker_index = INDEX_NONE;
+		scene_marker_index = _line.Find(scene_marker, ESearchCase::CaseSensitive);
+		if (scene_marker_index == INDEX_NONE || _line.Find(shot_marker, ESearchCase::CaseSensitive, ESearchDir::FromStart, scene_marker_index) == INDEX_NONE)
+		{
+			return false;
+		}
+
+		shot_marker_index = _line.Find(shot_marker, ESearchCase::CaseSensitive, ESearchDir::FromStart, scene_marker_index);
+		const int32 scene_value_index = scene_marker_index + scene_marker.Len();
+		const int32 shot_value_index = shot_marker_index + shot_marker.Len();
+
+		const FString prefix = _line.Left(scene_value_index);
+		const FString scene_id = _line.Mid(scene_value_index, shot_marker_index - scene_value_index);
+		const FString middle = _line.Mid(shot_marker_index, shot_value_index - shot_marker_index);
+		const FString shot_id = _line.Mid(shot_value_index);
+
+		float x = _position.X;
+		x += DrawDebugTextSegment(_canvas, _font, prefix, FVector2D(x, _position.Y), DEBUG_KEY_COLOR, _scale);
+		x += DrawDebugTextSegment(_canvas, _font, scene_id, FVector2D(x, _position.Y), DEBUG_ID_VALUE_COLOR, _scale);
+		x += DrawDebugTextSegment(_canvas, _font, middle, FVector2D(x, _position.Y), DEBUG_KEY_COLOR, _scale);
+		DrawDebugTextSegment(_canvas, _font, shot_id, FVector2D(x, _position.Y), DEBUG_ID_VALUE_COLOR, _scale);
+		return true;
+	}
+
+	static float GetDebugLineHeight(UCanvas* _canvas, UFont* _font, const FString& _line, float _scale)
+	{
+		if (_line.IsEmpty())
+		{
+			return _font->GetMaxCharHeight();
+		}
+
+		float text_width = 0.0f;
+		float text_height = 0.0f;
+		_canvas->TextSize(_font, _line, text_width, text_height, _scale, _scale);
+		return text_height;
+	}
+
+	static void DrawBottomLeftDebugText(UCanvas* _canvas, const FString& _message)
+	{
+		if (IsInvalid(_canvas))
+		{
+			return;
+		}
+
+		UFont* font = UEngine::GetSmallFont();
+		if (IsInvalid(font))
+		{
+			return;
+		}
+
+		TArray<FString> lines;
+		_message.ParseIntoArrayLines(lines, false);
+
+		float total_height = 0.0f;
+
+		for (const FString& line : lines)
+		{
+			total_height += GetDebugLineHeight(_canvas, font, line, DEBUG_TEXT_SCALE) + DEBUG_LINE_PADDING;
+		}
+
+		float y = FMath::Max(0.0f, _canvas->ClipY - DEBUG_Y_MARGIN - total_height);
+
+		for (const FString& line : lines)
+		{
+			if (line.IsEmpty())
+			{
+				y += font->GetMaxCharHeight() + DEBUG_LINE_PADDING;
+				continue;
+			}
+
+			const float text_height = GetDebugLineHeight(_canvas, font, line, DEBUG_TEXT_SCALE);
+
+			const float x = DEBUG_X_MARGIN;
+			bool drawn = false;
+			if (line.StartsWith(TEXT("[")))
+			{
+				DrawDebugTextSegment(_canvas, font, line, FVector2D(x, y), DEBUG_KEY_COLOR, DEBUG_TEXT_SCALE);
+				drawn = true;
+			}
+			else if (line.StartsWith(TEXT("PendingStart:")))
+			{
+				drawn = DrawPendingStartDebugLine(_canvas, font, line, FVector2D(x, y), DEBUG_TEXT_SCALE);
+			}
+			else
+			{
+				drawn = DrawDebugKeyValueLine(_canvas, font, line, FVector2D(x, y), GetDebugValueColor(line), DEBUG_TEXT_SCALE);
+			}
+
+			if (drawn == false)
+			{
+				DrawDebugTextSegment(_canvas, font, line, FVector2D(x, y), DEBUG_VALUE_COLOR, DEBUG_TEXT_SCALE);
+			}
+
+			y += text_height + DEBUG_LINE_PADDING;
+		}
+	}
+}
+
 void UStoryFlowSubsystem::Initialize(FSubsystemCollectionBase& _collection)
 {
 	Super::Initialize(_collection);
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UStoryFlowSubsystem::HandlePostLoadMap);
+	_DebugDrawDelegateHandle = UDebugDrawService::Register(TEXT("Game"), FDebugDrawDelegate::CreateUObject(this, &UStoryFlowSubsystem::DrawDebugOverlay));
 }
 
 void UStoryFlowSubsystem::Deinitialize()
 {
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+	if (_DebugDrawDelegateHandle.IsValid())
+	{
+		UDebugDrawService::Unregister(_DebugDrawDelegateHandle);
+		_DebugDrawDelegateHandle.Reset();
+	}
 
 	StopScene();
 	ClearPendingSceneStart();
@@ -573,6 +815,21 @@ void UStoryFlowSubsystem::ClearCurrentShot()
 	_CurrentShotNode = nullptr;
 }
 
+void UStoryFlowSubsystem::DrawDebugOverlay(UCanvas* _canvas, APlayerController* _player_controller)
+{
+	if (_IsDebugOverlayEnabled == false)
+	{
+		return;
+	}
+
+	if (IsValid(_player_controller) && _player_controller->GetGameInstance() != GetGameInstance())
+	{
+		return;
+	}
+
+	DrawBottomLeftDebugText(_canvas, BuildDebugSummary());
+}
+
 FStoryFlowRef UStoryFlowSubsystem::GetCurrentRef() const
 {
 	FStoryFlowRef current_ref;
@@ -612,4 +869,36 @@ float UStoryFlowSubsystem::GetTargetLevelLoadingProgressRate() const
 	}
 
 	return FMath::Min(target_level_load_progress, GetMinimumLoadingTimeProgress());
+}
+
+FString UStoryFlowSubsystem::BuildDebugSummary() const
+{
+	const FStoryFlowRef current_ref = GetCurrentRef();
+	const FString next_link = IsValid(_CurrentShotNode)
+		? ToDebugString(_CurrentShotNode->GetNextLink())
+		: TEXT("None");
+
+	return FString::Printf(
+		TEXT("[StoryFlow Debug]\n")
+		TEXT("SceneID: %s\n")
+		TEXT("ShotID: %s\n")
+		TEXT("NextLink: %s\n")
+		TEXT("\n")
+		TEXT("TravelPhase: %s\n")
+		TEXT("PendingStart: SceneID=%s ShotID=%s\n")
+		TEXT("PendingTargetLevel: %s\n")
+		TEXT("TargetLoadProgress: %.0f%%"),
+		*ToDebugString(current_ref.SceneID),
+		*ToDebugString(current_ref.ShotID),
+		*next_link,
+		*ToDebugString(_PendingTravelPhase),
+		*ToDebugString(_PendingStartRef.SceneID),
+		*ToDebugString(_PendingStartRef.ShotID),
+		*ToDebugLevelName(_PendingTargetLevel),
+		GetTargetLevelLoadingProgressRate() * 100.0f);
+}
+
+void UStoryFlowSubsystem::SetDebugOverlayEnabled(bool _is_enabled)
+{
+	_IsDebugOverlayEnabled = _is_enabled;
 }

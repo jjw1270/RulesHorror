@@ -25,6 +25,7 @@ public:
 	virtual void DestroyNode() override;
 	virtual void AutowireNewNode(UEdGraphPin* _from_pin) override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type _title_type) const override;
+	virtual FLinearColor GetNodeTitleColor() const override;
 	virtual bool CanDuplicateNode() const override { return true; }
 
 	UStorySceneNodeData* GetShotNodeData() const { return _ShotNodeData; }

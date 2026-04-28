@@ -14,7 +14,9 @@ class UStorySceneBase;
 class UStoryBranchNodeData;
 class UStorySceneNodeData;
 class UStoryShotBase;
+class UCanvas;
 class UWorld;
+class APlayerController;
 
 UENUM()
 enum class EStoryFlowPendingTravelPhase : uint8
@@ -56,8 +58,10 @@ protected:
 	EStoryFlowPendingTravelPhase _PendingTravelPhase = EStoryFlowPendingTravelPhase::None;
 
 	TSharedPtr<FStreamableHandle> _PendingTargetLevelLoadHandle;
+	FDelegateHandle _DebugDrawDelegateHandle;
 	bool _PendingTargetLevelLoadCompleted = false;
 	double _PendingLoadingLevelEnterTime = 0.0;
+	bool _IsDebugOverlayEnabled = false;
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& _collection) override;
@@ -104,6 +108,7 @@ protected:
 	void ClearCurrentScene();
 	void ClearCurrentBranch();
 	void ClearCurrentShot();
+	void DrawDebugOverlay(UCanvas* _canvas, APlayerController* _player_controller);
 
 public:
 	UFUNCTION(BlueprintPure, Category = "StoryFlow")
@@ -120,5 +125,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "StoryFlow")
 	float GetTargetLevelLoadingProgressRate() const;
+
+	FString BuildDebugSummary() const;
+	void SetDebugOverlayEnabled(bool _is_enabled);
+	bool IsDebugOverlayEnabled() const { return _IsDebugOverlayEnabled; }
 
 };

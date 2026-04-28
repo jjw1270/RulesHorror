@@ -150,24 +150,23 @@ void UStorySceneGraphNode_Shot::AutowireNewNode(UEdGraphPin* _from_pin)
 	}
 }
 
-FText UStorySceneGraphNode_Shot::GetNodeTitle(ENodeTitleType::Type _title_type) const
+FText UStorySceneGraphNode_Shot::GetNodeTitle(ENodeTitleType::Type) const
 {
 	if (IsValid(_ShotNodeData))
 	{
-		const FText display_name = _ShotNodeData->GetDisplayNameText();
-		const FText shot_id_text = _ShotNodeData->GetShotID().IsValid()
-			? FText::FromName(_ShotNodeData->GetShotID().Get())
-			: FText::FromString(TEXT("ShotID: None"));
-
-		if (_title_type == ENodeTitleType::FullTitle || _title_type == ENodeTitleType::EditableTitle)
+		const FText& display_name = _ShotNodeData->GetDisplayName();
+		if (display_name.IsEmpty() == false)
 		{
-			return FText::Format(FText::FromString(TEXT("{0}\n{1}")), display_name, shot_id_text);
+			return FText::Format(FText::FromString(TEXT("Shot\n{0}")), display_name);
 		}
-
-		return display_name;
 	}
 
 	return FText::FromString(TEXT("Shot"));
+}
+
+FLinearColor UStorySceneGraphNode_Shot::GetNodeTitleColor() const
+{
+	return FLinearColor(0.16f, 0.34f, 0.72f);
 }
 
 void UStorySceneGraphNode_Shot::ClearCompileMessage()

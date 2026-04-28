@@ -19,6 +19,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/SOverlay.h"
 #include "GraphEditor.h"
+#include "GraphEditorActions.h"
 #include "PropertyEditorModule.h"
 #include "IDetailsView.h"
 #include "Modules/ModuleManager.h"
@@ -130,6 +131,18 @@ namespace
 		}
 
 		return FPackageName::ObjectPathToPackageName(_level.ToSoftObjectPath().ToString());
+	}
+
+	static void SetNodeCommentFromDescription(UEdGraphNode* _node, const FText& _description)
+	{
+		if (IsInvalid(_node))
+		{
+			return;
+		}
+
+		const FString description = _description.ToString();
+		_node->NodeComment = description;
+		_node->bCommentBubbleVisible = description.IsEmpty() == false;
 	}
 }
 
@@ -484,6 +497,11 @@ void FStorySceneEditor::BindGraphCommands()
 		FGenericCommands::Get().Redo,
 		FExecuteAction::CreateSP(this, &FStorySceneEditor::RedoGraphAction),
 		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanRedoGraphAction));
+
+	_GraphEditorCommands->MapAction(
+		FGraphEditorCommands::Get().CreateComment,
+		FExecuteAction::CreateSP(this, &FStorySceneEditor::CreateCommentNode),
+		FCanExecuteAction::CreateSP(this, &FStorySceneEditor::CanCreateCommentNode));
 }
 
 void FStorySceneEditor::BindEditorCommands()
@@ -631,6 +649,38 @@ void FStorySceneEditor::PasteNodesHere(const FVector2D& _location)
 	_GraphEditorWidget->NotifyGraphChanged();
 }
 
+void FStorySceneEditor::CreateCommentNode()
+{
+	if (IsInvalid(_GraphEditorWidget))
+	{
+		return;
+	}
+
+	UEdGraph* graph = _GraphEditorWidget->GetCurrentGraph();
+	if (IsInvalid(graph))
+	{
+		return;
+	}
+
+	TSharedPtr<FEdGraphSchemaAction> action = graph->GetSchema()->GetCreateCommentAction();
+	if (action.IsValid() == false)
+	{
+		return;
+	}
+
+	const FScopedTransaction transaction(FGraphEditorCommands::Get().CreateComment->GetDescription());
+	graph->Modify();
+	action->PerformAction(graph, nullptr, FVector2f::ZeroVector);
+
+	MarkCompileDirty();
+	_GraphEditorWidget->NotifyGraphChanged();
+}
+
+bool FStorySceneEditor::CanCreateCommentNode() const
+{
+	return _GraphEditorWidget.IsValid() && IsValid(_GraphEditorWidget->GetCurrentGraph());
+}
+
 bool FStorySceneEditor::ValidateForPIE(FString& _out_denied_reason)
 {
 	const bool is_compile_success = (_CompileStatus == ECompileStatus::Good) ? true : CompileSceneInternal();
@@ -660,7 +710,7 @@ bool FStorySceneEditor::CompileSceneInternal()
 		_StorySceneAsset->SetSceneID(MakeDefaultSceneID(_StorySceneAsset));
 	}
 	RefreshShotIDsForCompile(graph);
-	RefreshShotNodeDescriptionsForCompile(graph);
+	RefreshGraphNodeDescriptionsForCompile(graph);
 	graph->RebuildRuntimeData();
 
 	_CompileErrors.Reset();
@@ -726,7 +776,7 @@ void FStorySceneEditor::RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) con
 	}
 }
 
-void FStorySceneEditor::RefreshShotNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const
+void FStorySceneEditor::RefreshGraphNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const
 {
 	if (IsInvalid(_graph))
 	{
@@ -735,17 +785,35 @@ void FStorySceneEditor::RefreshShotNodeDescriptionsForCompile(UStorySceneEdGraph
 
 	for (UEdGraphNode* node : _graph->Nodes)
 	{
-		UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node);
-		if (IsInvalid(shot_node) || IsInvalid(shot_node->GetShotNodeData()))
+		if (UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node))
+		{
+			if (IsInvalid(shot_node->GetShotNodeData()))
+			{
+				continue;
+			}
+
+			SetNodeCommentFromDescription(shot_node, shot_node->GetShotNodeData()->GetDescriptionText());
+			continue;
+		}
+
+		if (UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(node))
+		{
+			if (IsInvalid(branch_node->GetBranchNodeData()))
+			{
+				continue;
+			}
+
+			SetNodeCommentFromDescription(branch_node, branch_node->GetBranchNodeData()->GetDescriptionText());
+			continue;
+		}
+
+		UStorySceneGraphNode_Transition* transition_node = Cast<UStorySceneGraphNode_Transition>(node);
+		if (IsInvalid(transition_node))
 		{
 			continue;
 		}
 
-		const FString description = shot_node->GetShotNodeData()->GetDescriptionText().ToString();
-		const bool has_description = description.IsEmpty() == false;
-
-		shot_node->NodeComment = description;
-		shot_node->bCommentBubbleVisible = has_description;
+		SetNodeCommentFromDescription(transition_node, transition_node->GetDescriptionText());
 	}
 }
 

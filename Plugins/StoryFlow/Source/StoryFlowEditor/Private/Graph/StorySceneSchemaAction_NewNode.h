@@ -13,5 +13,15 @@ struct FStorySceneSchemaAction_NewNode : public FEdGraphSchemaAction
 	{
 	}
 
-	virtual UEdGraphNode* PerformAction(UEdGraph* _parent_graph, UEdGraphPin* _from_pin, const FVector2D _location, bool _is_select_new_node = true) override;
+	virtual UEdGraphNode* PerformAction(UEdGraph* _parent_graph, UEdGraphPin* _from_pin, const FVector2f& _location, bool _is_select_new_node = true) override;
+};
+
+struct FStorySceneSchemaAction_AddComment : public FEdGraphSchemaAction
+{
+	FStorySceneSchemaAction_AddComment()
+		: FEdGraphSchemaAction(FText::FromString(TEXT("StoryFlow")), FText::FromString(TEXT("Add Comment")), FText::FromString(TEXT("Create a comment box.")), 0)
+	{
+	}
+
+	virtual UEdGraphNode* PerformAction(UEdGraph* _parent_graph, UEdGraphPin* _from_pin, const FVector2f& _location, bool _is_select_new_node = true) override;
 };

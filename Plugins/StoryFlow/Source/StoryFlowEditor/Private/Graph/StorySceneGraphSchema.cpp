@@ -45,6 +45,11 @@ void UStorySceneGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& _c
 	_context_menu_builder.AddAction(transition_action);
 }
 
+TSharedPtr<FEdGraphSchemaAction> UStorySceneGraphSchema::GetCreateCommentAction() const
+{
+	return MakeShared<FStorySceneSchemaAction_AddComment>();
+}
+
 const FPinConnectionResponse UStorySceneGraphSchema::CanCreateConnection(const UEdGraphPin* _a, const UEdGraphPin* _b) const
 {
 	if (_a == nullptr || _b == nullptr)
