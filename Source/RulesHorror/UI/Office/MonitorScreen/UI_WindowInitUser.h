@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UI/Office/MonitorScreen/UI_MonitorScreenWidget.h"
-#include "UI_InitUser.generated.h"
+#include "UI_WindowInitUser.generated.h"
 
 /**
  * 
  */
 UCLASS(abstract)
-class RULESHORROR_API UUI_InitUser : public UUI_MonitorScreenWidget
+class RULESHORROR_API UUI_WindowInitUser : public UUI_MonitorScreenWidget
 {
 	GENERATED_BODY()
 

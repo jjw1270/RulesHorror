@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UI/Office/MonitorScreen/UI_MonitorScreenWidget.h"
-#include "UI_Loading.generated.h"
+#include "UI_WindowLoading.generated.h"
 
 /**
  * 초기 데이터 로딩 중
  */
 UCLASS(abstract)
-class RULESHORROR_API UUI_Loading : public UUI_MonitorScreenWidget
+class RULESHORROR_API UUI_WindowLoading : public UUI_MonitorScreenWidget
 {
 	GENERATED_BODY()
 

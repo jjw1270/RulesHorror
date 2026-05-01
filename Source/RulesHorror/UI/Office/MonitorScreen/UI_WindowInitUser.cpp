@@ -1,7 +1,7 @@
 // Copyright (c) 2026 장윤제. All rights reserved.
 
 
-#include "UI_InitUser.h"
+#include "UI_WindowInitUser.h"
 #include "RulesHorrorUtils.h"
 #include "WidgetHelper.h"
 #include "SaveGameSubsystem.h"
@@ -9,7 +9,7 @@
 #include "UI/Common/UI_EditableTextBox.h"
 
 
-void UUI_InitUser::OnShow_Implementation()
+void UUI_WindowInitUser::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
 
@@ -21,7 +21,7 @@ void UUI_InitUser::OnShow_Implementation()
 	}
 }
 
-void UUI_InitUser::OpenEditableTextBoxWidget()
+void UUI_WindowInitUser::OpenEditableTextBoxWidget()
 {
 	_EditableTextBoxWidget = Cast<UUI_EditableTextBox>(UWidgetHelper::GetRegisteredWidget(this, TEXT("EditableTextBox")));
 	if (IsInvalid(_EditableTextBoxWidget))
@@ -29,20 +29,20 @@ void UUI_InitUser::OpenEditableTextBoxWidget()
 
 	_EditableTextBoxWidget->InitEditableTextBox(_EditableTextBoxWidgetSize, ETB_Nickname->GetText(), ETB_Nickname->GetHintText(), true);
 
-	_EditableTextBoxWidget->_OnTextCommittedEvent.AddDynamic(this, &UUI_InitUser::OnEditableTextBoxWidgetCommitted);
+	_EditableTextBoxWidget->_OnTextCommittedEvent.AddDynamic(this, &UUI_WindowInitUser::OnEditableTextBoxWidgetCommitted);
 
-	_EditableTextBoxWidget->_OnHideEvent.AddDynamic(this, &UUI_InitUser::OnHideEditableTextBoxWidget);
+	_EditableTextBoxWidget->_OnHideEvent.AddDynamic(this, &UUI_WindowInitUser::OnHideEditableTextBoxWidget);
 	RequestShowMonitorCursor(false);
 
 	_EditableTextBoxWidget->AddToViewport((int32)ERulesHorrorWidgetZOrder::Popup);
 }
 
-void UUI_InitUser::OnEditableTextBoxWidgetCommitted(const FText& _text)
+void UUI_WindowInitUser::OnEditableTextBoxWidgetCommitted(const FText& _text)
 {
 	ETB_Nickname->SetText(_text);
 }
 
-void UUI_InitUser::OnHideEditableTextBoxWidget(UWidgetBase* _widget, EWidgetHideType _hide_type)
+void UUI_WindowInitUser::OnHideEditableTextBoxWidget(UWidgetBase* _widget, EWidgetHideType _hide_type)
 {
 	if (IsInvalid(_EditableTextBoxWidget))
 		return;
@@ -55,7 +55,7 @@ void UUI_InitUser::OnHideEditableTextBoxWidget(UWidgetBase* _widget, EWidgetHide
 	_EditableTextBoxWidget = nullptr;
 }
 
-bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_error_text)
+bool UUI_WindowInitUser::SetNewNickname(const FString& _new_nickname, FText& _out_error_text)
 {
 	const FString prev_nickname = _CurrentNickname;
 
@@ -86,7 +86,7 @@ bool UUI_InitUser::SetNewNickname(const FString& _new_nickname, FText& _out_erro
 	return false;
 }
 
-bool UUI_InitUser::CheckNickname(const FString& _nickname, FText& _out_error_text) const
+bool UUI_WindowInitUser::CheckNickname(const FString& _nickname, FText& _out_error_text) const
 {
 	_out_error_text = FText::GetEmpty();
 

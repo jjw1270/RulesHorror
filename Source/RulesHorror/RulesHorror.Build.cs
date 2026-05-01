@@ -26,6 +26,7 @@ public class RulesHorror : ModuleRules
 			"ItemCore",
 			"InteractionSystem",
 			"SaveGame",
+			"StoryFlow"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

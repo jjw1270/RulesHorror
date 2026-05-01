@@ -1,9 +1,9 @@
 // Copyright (c) 2026 장윤제. All rights reserved.
 
 
-#include "UI_Loading.h"
+#include "UI_WindowLoading.h"
 
-void UUI_Loading::OnShow_Implementation()
+void UUI_WindowLoading::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
 
@@ -11,7 +11,7 @@ void UUI_Loading::OnShow_Implementation()
 	_LoadingTimer = 0.0f;
 }
 
-void UUI_Loading::NativeTick(const FGeometry& _geo, float _delta)
+void UUI_WindowLoading::NativeTick(const FGeometry& _geo, float _delta)
 {
 	Super::NativeTick(_geo, _delta);
 
