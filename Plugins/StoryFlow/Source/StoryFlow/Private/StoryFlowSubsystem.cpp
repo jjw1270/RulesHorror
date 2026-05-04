@@ -748,6 +748,13 @@ bool UStoryFlowSubsystem::EvaluateBranch(const FStoryBranchID& _branch_id, const
 		return false;
 	}
 
+	const TArray<FStoryBranchOutput> branch_outputs = branch_template->GetBranchOutputs();
+	const int32 branch_output_count = branch_outputs.Num();
+	if (branch_output_count == 0)
+	{
+		return false;
+	}
+
 	_CurrentBranchNode = branch_node;
 	UStoryBranchBase* branch_instance = DuplicateObject<UStoryBranchBase>(branch_template, this);
 	if (IsInvalid(branch_instance))
@@ -766,12 +773,12 @@ bool UStoryFlowSubsystem::EvaluateBranch(const FStoryBranchID& _branch_id, const
 	}
 
 	int32 next_index = 0;
-	if (branch_node->GetBranchCount() > 1)
+	if (branch_output_count > 1)
 	{
-		next_index = branch_instance->SelectNextIndex(branch_node->GetBranchCount());
+		next_index = branch_instance->SelectNextIndex(branch_output_count);
 	}
 
-	next_index = FMath::Clamp(next_index, 0, FMath::Max(branch_node->GetBranchCount() - 1, 0));
+	next_index = FMath::Clamp(next_index, 0, branch_output_count - 1);
 	const FStorySceneBranchLink* next_link = next_links_by_pin_index.Find(next_index);
 	_CurrentBranchNode = nullptr;
 

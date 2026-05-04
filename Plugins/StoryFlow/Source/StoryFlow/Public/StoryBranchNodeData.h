@@ -28,9 +28,6 @@ protected:
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly, Category = "StoryFlow")
 	TObjectPtr<UStoryBranchBase> _BranchTemplate = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow", meta = (ClampMin = "1", ClampMax = "9", UIMin = "1", UIMax = "9"))
-	int32 _BranchCount = 1;
-
 	UPROPERTY()
 	TMap<int32, FStorySceneBranchLink> _NextLinksByPinIndex;
 
@@ -39,7 +36,6 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event) override;
 
 	void SetBranchID(const FStoryBranchID& _branch_id);
-	void SetBranchCount(int32 _branch_count);
 	void SetNextLinksByPinIndex(const TMap<int32, FStorySceneBranchLink>& _next_links_by_pin_index);
 #endif
 
@@ -55,9 +51,6 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UStoryBranchBase* GetBranchTemplate() const { return _BranchTemplate; }
-
-	UFUNCTION(BlueprintPure)
-	int32 GetBranchCount() const { return _BranchCount; }
 
 	UFUNCTION(BlueprintPure)
 	const TMap<int32, FStorySceneBranchLink>& GetNextLinksByPinIndex() const { return _NextLinksByPinIndex; }

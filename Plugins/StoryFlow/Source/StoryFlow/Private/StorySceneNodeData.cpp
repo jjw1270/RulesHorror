@@ -2,33 +2,10 @@
 
 #include "StorySceneNodeData.h"
 #include "StoryShotBase.h"
+#include "StoryFlowDisplayNameUtils.h"
 #include "CommonUtils.h"
 
 #if WITH_EDITOR
-namespace
-{
-	static FText MakeDisplayNameFromTemplate(const UObject* _template)
-	{
-		if (IsInvalid(_template))
-		{
-			return FText::GetEmpty();
-		}
-
-		FString template_name;
-		const UClass* template_class = _template->GetClass();
-		if (IsValid(template_class) && IsValid(template_class->ClassGeneratedBy))
-		{
-			template_name = template_class->ClassGeneratedBy->GetName();
-		}
-		else
-		{
-			template_name = _template->GetName();
-		}
-
-		return FText::FromString(FName::NameToDisplayString(template_name, false));
-	}
-}
-
 void UStorySceneNodeData::PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event)
 {
 	Super::PostEditChangeProperty(_property_changed_event);
@@ -44,7 +21,7 @@ void UStorySceneNodeData::PostEditChangeProperty(FPropertyChangedEvent& _propert
 	}
 
 	Modify();
-	_DisplayName = MakeDisplayNameFromTemplate(_ShotTemplate);
+	_DisplayName = StoryFlowDisplayNameUtils::MakeDisplayNameFromTemplate(_ShotTemplate);
 	MarkPackageDirty();
 }
 

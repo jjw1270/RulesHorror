@@ -1,6 +1,7 @@
 // Copyright (c) 2026 장윤제. All rights reserved.
 
 #include "Graph/StorySceneGraphNode_Branch.h"
+#include "StoryBranchBase.h"
 #include "StoryBranchNodeData.h"
 #include "StorySceneAsset.h"
 #include "StoryFlowDefines.h"
@@ -67,16 +68,46 @@ namespace
 
 		return FStoryBranchID(*FString::Printf(TEXT("Branch_%03d"), next_index));
 	}
+
+	static TArray<FStoryBranchOutput> GetBranchOutputs(const UStoryBranchNodeData* _branch_node_data)
+	{
+		if (IsInvalid(_branch_node_data) || IsInvalid(_branch_node_data->GetBranchTemplate()))
+		{
+			return TArray<FStoryBranchOutput>();
+		}
+
+		return _branch_node_data->GetBranchTemplate()->GetBranchOutputs();
+	}
+
+	static FText GetNextPinDisplayName(const UEdGraphPin* _pin, const TArray<FStoryBranchOutput>& _branch_outputs)
+	{
+		int32 next_pin_index = INDEX_NONE;
+		if (TryGetNextPinIndex(_pin, next_pin_index) && _branch_outputs.IsValidIndex(next_pin_index))
+		{
+			const FText& output_display_name = _branch_outputs[next_pin_index].DisplayName;
+			if (output_display_name.IsEmpty() == false)
+			{
+				return output_display_name;
+			}
+		}
+
+		return _pin ? FText::FromName(_pin->PinName) : FText::GetEmpty();
+	}
 }
 
 void UStorySceneGraphNode_Branch::AllocateDefaultPins()
 {
 	CreatePin(EGPD_Input, StorySceneBranchPinCategory, NAME_None, TEXT("In"));
 
-	const int32 next_pin_count = IsValid(_BranchNodeData) ? FMath::Max(_BranchNodeData->GetBranchCount(), 1) : 1;
+	const TArray<FStoryBranchOutput> branch_outputs = GetBranchOutputs(_BranchNodeData);
+	const int32 next_pin_count = branch_outputs.Num();
 	for (int32 index = 0; index < next_pin_count; ++index)
 	{
-		CreatePin(EGPD_Output, StorySceneBranchPinCategory, NAME_None, *FString::Printf(TEXT("Next_%d"), index));
+		UEdGraphPin* next_pin = CreatePin(EGPD_Output, StorySceneBranchPinCategory, NAME_None, *FString::Printf(TEXT("Next_%d"), index));
+		if (next_pin)
+		{
+			next_pin->PinFriendlyName = GetNextPinDisplayName(next_pin, branch_outputs);
+		}
 	}
 }
 
@@ -249,11 +280,36 @@ UEdGraphPin* UStorySceneGraphNode_Branch::FindFirstAvailableNextPin() const
 
 void UStorySceneGraphNode_Branch::SyncNextPinsToNodeData()
 {
-	const int32 desired_branch_count = IsValid(_BranchNodeData) ? FMath::Max(_BranchNodeData->GetBranchCount(), 1) : 1;
+	const TArray<FStoryBranchOutput> branch_outputs = GetBranchOutputs(_BranchNodeData);
+	const int32 desired_branch_count = branch_outputs.Num();
 	TArray<UEdGraphPin*> next_pins = GetNextPins();
 	const int32 current_branch_count = next_pins.Num();
+	bool is_pin_display_name_dirty = false;
+	for (UEdGraphPin* next_pin : next_pins)
+	{
+		if (next_pin == nullptr)
+		{
+			continue;
+		}
+
+		const FText desired_pin_display_name = GetNextPinDisplayName(next_pin, branch_outputs);
+		if (next_pin->PinFriendlyName.EqualTo(desired_pin_display_name) == false)
+		{
+			next_pin->PinFriendlyName = desired_pin_display_name;
+			is_pin_display_name_dirty = true;
+		}
+	}
+
 	if (desired_branch_count == current_branch_count)
 	{
+		if (is_pin_display_name_dirty)
+		{
+			if (UEdGraph* graph = GetGraph())
+			{
+				graph->NotifyGraphChanged();
+			}
+		}
+
 		return;
 	}
 
@@ -262,7 +318,11 @@ void UStorySceneGraphNode_Branch::SyncNextPinsToNodeData()
 	{
 		for (int32 index = current_branch_count; index < desired_branch_count; ++index)
 		{
-			CreatePin(EGPD_Output, StorySceneBranchPinCategory, NAME_None, *FString::Printf(TEXT("Next_%d"), index));
+			UEdGraphPin* next_pin = CreatePin(EGPD_Output, StorySceneBranchPinCategory, NAME_None, *FString::Printf(TEXT("Next_%d"), index));
+			if (next_pin)
+			{
+				next_pin->PinFriendlyName = GetNextPinDisplayName(next_pin, branch_outputs);
+			}
 		}
 	}
 	else

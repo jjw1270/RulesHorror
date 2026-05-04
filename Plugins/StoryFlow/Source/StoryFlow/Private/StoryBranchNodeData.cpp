@@ -2,34 +2,10 @@
 
 #include "StoryBranchNodeData.h"
 #include "StoryBranchBase.h"
-#include "StorySceneNodeData.h"
+#include "StoryFlowDisplayNameUtils.h"
 #include "CommonUtils.h"
 
 #if WITH_EDITOR
-namespace
-{
-	static FText MakeDisplayNameFromTemplate(const UObject* _template)
-	{
-		if (IsInvalid(_template))
-		{
-			return FText::GetEmpty();
-		}
-
-		FString template_name;
-		const UClass* template_class = _template->GetClass();
-		if (IsValid(template_class) && IsValid(template_class->ClassGeneratedBy))
-		{
-			template_name = template_class->ClassGeneratedBy->GetName();
-		}
-		else
-		{
-			template_name = _template->GetName();
-		}
-
-		return FText::FromString(FName::NameToDisplayString(template_name, false));
-	}
-}
-
 void UStoryBranchNodeData::PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event)
 {
 	Super::PostEditChangeProperty(_property_changed_event);
@@ -45,7 +21,7 @@ void UStoryBranchNodeData::PostEditChangeProperty(FPropertyChangedEvent& _proper
 	}
 
 	Modify();
-	_DisplayName = MakeDisplayNameFromTemplate(_BranchTemplate);
+	_DisplayName = StoryFlowDisplayNameUtils::MakeDisplayNameFromTemplate(_BranchTemplate);
 	MarkPackageDirty();
 }
 
@@ -58,19 +34,6 @@ void UStoryBranchNodeData::SetBranchID(const FStoryBranchID& _branch_id)
 
 	Modify();
 	_BranchID = _branch_id;
-	MarkPackageDirty();
-}
-
-void UStoryBranchNodeData::SetBranchCount(int32 _branch_count)
-{
-	const int32 branch_count = FMath::Clamp(_branch_count, 1, 9);
-	if (_BranchCount == branch_count)
-	{
-		return;
-	}
-
-	Modify();
-	_BranchCount = branch_count;
 	MarkPackageDirty();
 }
 

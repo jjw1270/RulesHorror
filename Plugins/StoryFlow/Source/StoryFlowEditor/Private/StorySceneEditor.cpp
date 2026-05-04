@@ -2,6 +2,7 @@
 
 #include "StorySceneEditor.h"
 #include "StorySceneAsset.h"
+#include "StoryBranchBase.h"
 #include "StoryBranchNodeData.h"
 #include "StorySceneNodeData.h"
 #include "StoryFlowDeveloperSettings.h"
@@ -1017,13 +1018,22 @@ void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_
 		_used_branch_ids.Add(branch_node_data->GetBranchID().Get());
 	}
 
-	if (IsInvalid(branch_node_data->GetBranchTemplate()))
+	UStoryBranchBase* branch_template = branch_node_data->GetBranchTemplate();
+	const bool has_branch_template = IsValid(branch_template);
+	const TArray<FStoryBranchOutput> branch_outputs = has_branch_template ? branch_template->GetBranchOutputs() : TArray<FStoryBranchOutput>();
+	const int32 branch_output_count = branch_outputs.Num();
+
+	if (has_branch_template == false)
 	{
 		node_errors.Add(TEXT("BranchTemplate is missing."));
 	}
+	else if (branch_output_count == 0)
+	{
+		node_errors.Add(TEXT("Branch outputs are empty."));
+	}
 
 	const TMap<int32, FStorySceneBranchLink>& next_links_by_pin_index = branch_node_data->GetNextLinksByPinIndex();
-	for (int32 next_pin_index = 0; next_pin_index < branch_node_data->GetBranchCount(); ++next_pin_index)
+	for (int32 next_pin_index = 0; next_pin_index < branch_output_count; ++next_pin_index)
 	{
 		const FStorySceneBranchLink* next_link = next_links_by_pin_index.Find(next_pin_index);
 		if (next_link == nullptr || next_link->IsValid() == false)
@@ -1037,7 +1047,7 @@ void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_
 		const int32 next_pin_index = next_link_pair.Key;
 		const FStorySceneBranchLink& next_link = next_link_pair.Value;
 
-		if (next_pin_index < 0 || next_pin_index >= branch_node_data->GetBranchCount())
+		if (next_pin_index < 0 || next_pin_index >= branch_output_count)
 		{
 			node_errors.Add(FString::Printf(TEXT("Next pin index '%d' is out of range."), next_pin_index));
 			continue;

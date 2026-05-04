@@ -6,9 +6,6 @@
 #include "Graph/StorySceneGraphNode_Branch.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
 #include "Graph/StorySceneGraphNode_Transition.h"
-#include "StorySceneAsset.h"
-#include "StorySceneNodeData.h"
-#include "CommonUtils.h"
 
 namespace
 {

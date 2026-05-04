@@ -97,8 +97,7 @@ Branch 노드에 대응하는 데이터 오브젝트다.
 - `_BranchID` — 자동 발급, Details에는 숨김
 - `_DisplayName` — Branch 노드 제목의 두 번째 줄로 표시. 비어 있으면 `BranchTemplate` 설정 시 템플릿 이름으로 자동 채움
 - `_Description` — 그래프 comment bubble로 표시
-- `_BranchTemplate` — 실행할 `UStoryBranchBase` 인스턴스 템플릿
-- `_BranchCount` — 출력 핀 개수, 1~9
+- `_BranchTemplate` — 실행할 `UStoryBranchBase` 인스턴스 템플릿. 출력 핀 개수와 표시명도 이 템플릿의 Outputs가 정의한다
 - `_NextLinksByPinIndex` — Compile 결과로 채워지는 내부 링크 맵, Details에는 숨김
 
 ### `FStorySceneBranchLink`
@@ -119,7 +118,7 @@ Branch 노드에 대응하는 데이터 오브젝트다.
 | --- | --- | --- |
 | `UStorySceneBase` | Scene 시작/종료 로직 | `OnEnterScene`, `OnExitScene` |
 | `UStoryShotBase` | Shot 시작/Tick/종료/완료 | `OnEnterShot`, `OnTickShot`, `OnExitShot`, `FinishShot` |
-| `UStoryBranchBase` | Branch 분기 선택 | `SelectNextIndex(int32 NextCount)` |
+| `UStoryBranchBase` | Branch 출력 정의/분기 선택 | `BranchOutputs`, `SelectNextIndex(int32 NextCount)` |
 
 각 실행 객체는 템플릿을 그대로 실행하지 않고, 런타임에서 `DuplicateObject`로 인스턴스를 만들어 사용한다.
 
@@ -193,11 +192,12 @@ StoryFlow->StartFromRef(Ref);
 ### Branch 진행
 
 1. Shot의 NextLink가 Branch면 `EvaluateBranch` 실행
-2. BranchTemplate 인스턴스 생성
-3. `InitializeBranch(CurrentRef)`
-4. `BranchCount > 1`이면 `SelectNextIndex(BranchCount)` 호출
-5. 반환 인덱스를 안전 범위로 clamp
-6. 해당 출력 핀 링크로 Shot 또는 Scene 전이
+2. BranchTemplate의 Outputs 개수를 확인
+3. BranchTemplate 인스턴스 생성
+4. `InitializeBranch(CurrentRef)`
+5. Outputs가 2개 이상이면 `SelectNextIndex(OutputCount)` 호출
+6. 반환 인덱스를 안전 범위로 clamp
+7. 해당 출력 핀 링크로 Shot 또는 Scene 전이
 
 Branch는 저장 가능한 지속 상태가 아니라 순간 판단 단계로 취급한다.
 
@@ -274,6 +274,8 @@ ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은
 - 출력 핀은 1개 연결만 허용한다.
 - 입력 핀은 여러 연결을 허용한다.
 - Branch 출력 핀은 `Next_0`, `Next_1` 순서로 정렬/사용한다.
+- BranchTemplate이 없거나 Outputs가 비어 있으면 Branch 출력 핀을 표시하지 않는다.
+- Branch 출력 핀의 내부 이름은 `Next_i`를 유지하고, 그래프 표시명은 Outputs의 DisplayName을 사용한다.
 
 ---
 
@@ -323,7 +325,7 @@ Branch:
 
 - `BranchID` 유효성/중복
 - `BranchTemplate` 설정 여부
-- BranchCount 범위
+- BranchTemplate Outputs가 비어 있지 않은지
 - 각 출력 핀이 연결되었는지
 - 각 출력 링크가 실존 Shot 또는 Registry에 등록된 Scene을 가리키는지
 

@@ -107,6 +107,14 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 
 - `SelectNextIndex(NextCount)`
 
+`Branch Outputs` 배열은 Branch 노드의 출력 핀 개수와 표시명을 정의한다.
+
+예:
+
+- `Yes`
+- `No`
+- `Ignore`
+
 반환값:
 
 - `0`이면 `Next_0`
@@ -169,12 +177,12 @@ Branch 노드 Details에서 주로 편집하는 항목:
 | --- | --- |
 | DisplayName | 노드 제목 아래에 표시되는 이름. 비어 있으면 BranchTemplate 설정 시 템플릿 이름으로 자동 입력 |
 | Description | 노드 comment bubble로 표시되는 설명 |
-| BranchTemplate | 실행할 Branch Blueprint 인스턴스 |
-| BranchCount | 출력 핀 개수, 1~9 |
+| BranchTemplate | 실행할 Branch Blueprint 인스턴스. Outputs가 출력 핀 개수와 표시명을 정의 |
 
 BranchID는 자동 관리되며 Details에 표시하지 않는다. 노드 제목은 `Branch`이며, DisplayName이 있으면 아래 줄에 표시된다.
 
-BranchCount를 늘리면 `Next_0`, `Next_1`, ... 출력 핀이 생긴다.
+BranchTemplate이 없거나 Outputs가 비어 있으면 출력 핀은 표시되지 않는다.
+Outputs를 설정하면 `Next_0`, `Next_1`, ... 출력 핀이 생기고, 핀 표시명은 각 Output의 DisplayName을 사용한다.
 
 ### 5.4 Transition 노드
 
