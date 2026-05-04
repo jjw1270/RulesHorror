@@ -61,7 +61,7 @@ Scene 전체를 나타내는 `UPrimaryDataAsset`이다.
 - `_SceneID`
 - `_DisplayName`
 - `_TargetLevel`
-- `_EntryShotID`
+- `_EntryLink` — Compile 결과로 채워지는 Entry의 내부 시작 링크, Details에는 숨김
 - `_SceneTemplate`
 - `_ShotNodes`
 - `_BranchNodes`
@@ -81,7 +81,7 @@ Shot 노드에 대응하는 데이터 오브젝트다.
 주요 데이터:
 
 - `_ShotID` — 자동 발급, Details에서는 읽기 전용
-- `_DisplayName` — Shot 노드 제목의 두 번째 줄로 표시
+- `_DisplayName` — Shot 노드 제목의 두 번째 줄로 표시. 비어 있으면 `ShotTemplate` 설정 시 템플릿 이름으로 자동 채움
 - `_Description` — 그래프 comment bubble로 표시
 - `_ShotTemplate` — 실행할 `UStoryShotBase` 인스턴스 템플릿
 - `_NextLink` — Compile 결과로 채워지는 내부 링크, Details에는 숨김
@@ -95,7 +95,7 @@ Branch 노드에 대응하는 데이터 오브젝트다.
 주요 데이터:
 
 - `_BranchID` — 자동 발급, Details에는 숨김
-- `_DisplayName`
+- `_DisplayName` — Branch 노드 제목의 두 번째 줄로 표시. 비어 있으면 `BranchTemplate` 설정 시 템플릿 이름으로 자동 채움
 - `_Description` — 그래프 comment bubble로 표시
 - `_BranchTemplate` — 실행할 `UStoryBranchBase` 인스턴스 템플릿
 - `_BranchCount` — 출력 핀 개수, 1~9
@@ -178,7 +178,7 @@ StoryFlow->StartFromRef(Ref);
 4. `TargetLevel`을 async load한다.
 5. 최소 로딩 시간 조건을 만족하면 TargetLevel을 연다.
 6. TargetLevel 진입 후 SceneTemplate을 실행한다.
-7. EntryShot 또는 지정 Shot을 시작한다.
+7. Entry 링크 또는 지정 Shot을 시작한다.
 
 ### Shot 진행
 
@@ -188,7 +188,7 @@ StoryFlow->StartFromRef(Ref);
 4. `InitializeShot`
 5. `EnterShot`
 6. 매 Tick에서 `TickShot`
-7. `FinishShot` 이후 다음 Tick에서 `ExitShot` 및 다음 링크 처리
+7. `FinishShot` 호출 즉시 `ExitShot` 및 다음 링크 처리
 
 ### Branch 진행
 
@@ -244,7 +244,7 @@ Content Browser의 `StoryFlow` 카테고리에서 다음을 생성할 수 있다
 | --- | --- | --- | --- |
 | Entry | `Entry` | 없음 | 녹색 계열 |
 | Shot | `Shot` + 선택적 DisplayName | Description을 comment bubble로 표시 | 파란색 계열 |
-| Branch | `Branch` | Description을 comment bubble로 표시 | 주황색 계열 |
+| Branch | `Branch` + 선택적 DisplayName | Description을 comment bubble로 표시 | 주황색 계열 |
 | Transition | `Transition` + NextSceneID | Description을 comment bubble로 표시 | 보라색 계열 |
 
 ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은 목적지가 핵심 정보이므로 `NextSceneID`를 제목 아래에 표시한다.
@@ -254,6 +254,8 @@ ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은
 허용:
 
 - `Entry -> Shot`
+- `Entry -> Branch`
+- `Entry -> Transition`
 - `Shot -> Shot`
 - `Shot -> Branch`
 - `Shot -> Transition`
@@ -262,7 +264,6 @@ ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은
 
 금지:
 
-- `Entry -> Transition`
 - `Transition -> *`
 - `Branch -> Branch`
 - 같은 방향 핀 연결
@@ -271,7 +272,7 @@ ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은
 추가 규칙:
 
 - 출력 핀은 1개 연결만 허용한다.
-- 입력 핀은 1개 연결만 허용한다.
+- 입력 핀은 여러 연결을 허용한다.
 - Branch 출력 핀은 `Next_0`, `Next_1` 순서로 정렬/사용한다.
 
 ---
@@ -286,7 +287,7 @@ Compile은 에디터 그래프를 런타임 데이터로 접어 넣는 과정이
 2. Shot/Branch/Transition Description을 comment bubble로 동기화
 3. Entry에서 도달 가능한 노드 집합 계산
 4. 런타임 데이터 재생성
-   - `EntryShotID`
+   - Entry `_EntryLink`
    - Shot `_NextLink`
    - Branch `_NextLinksByPinIndex`
 5. 무결성 검사
@@ -309,8 +310,8 @@ Scene:
 - `SceneTemplate` 설정 여부
 - Registry에 Scene 등록 여부
 - Registry 내 SceneID 중복 여부
-- Entry가 Shot에 연결되었는지
-- `EntryShotID`가 실제 ShotNodes에 존재하는지
+- Entry가 Shot/Branch/Transition 중 하나에 연결되었는지
+- Entry 링크가 실제 Shot/Branch 또는 Registry에 등록된 Scene을 가리키는지
 
 Shot:
 

@@ -12,6 +12,32 @@
 
 namespace
 {
+	static FStorySceneBranchLink MakeBranchLinkFromTargetNode(const UEdGraphNode* _target_node)
+	{
+		FStorySceneBranchLink branch_link;
+
+		if (const UStorySceneGraphNode_Shot* target_shot_node = Cast<UStorySceneGraphNode_Shot>(_target_node))
+		{
+			if (IsValid(target_shot_node->GetShotNodeData()))
+			{
+				branch_link.NextShotID = target_shot_node->GetShotNodeData()->GetShotID();
+			}
+		}
+		else if (const UStorySceneGraphNode_Branch* target_branch_node = Cast<UStorySceneGraphNode_Branch>(_target_node))
+		{
+			if (IsValid(target_branch_node->GetBranchNodeData()))
+			{
+				branch_link.NextBranchID = target_branch_node->GetBranchNodeData()->GetBranchID();
+			}
+		}
+		else if (const UStorySceneGraphNode_Transition* target_transition_node = Cast<UStorySceneGraphNode_Transition>(_target_node))
+		{
+			branch_link.NextSceneID = target_transition_node->GetNextSceneID();
+		}
+
+		return branch_link;
+	}
+
 	static void CollectReachableNodes(UEdGraphNode* _node, TSet<UEdGraphNode*>& _out_nodes)
 	{
 		if (IsInvalid(_node) || _out_nodes.Contains(_node))
@@ -102,7 +128,7 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 		return;
 	}
 
-	FStoryShotID rebuilt_entry_shot_id;
+	FStorySceneBranchLink rebuilt_entry_link;
 	TMap<UStorySceneNodeData*, FStorySceneBranchLink> rebuilt_next_links;
 	TMap<UStoryBranchNodeData*, TMap<int32, FStorySceneBranchLink>> rebuilt_branch_next_links_by_pin_index;
 	TSet<UEdGraphNode*> reachable_nodes;
@@ -123,16 +149,16 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 	{
 		if (reachable_nodes.Contains(entry_node) == false)
 		{
-			scene_asset->SetEntryShotID(rebuilt_entry_shot_id);
+			scene_asset->SetEntryLink(rebuilt_entry_link);
 		}
 		else if (UEdGraphPin* next_pin = entry_node->FindPin(TEXT("Next")))
 		{
 			if (next_pin->LinkedTo.Num() > 0)
 			{
-				UStorySceneGraphNode_Shot* target_node = Cast<UStorySceneGraphNode_Shot>(next_pin->LinkedTo[0]->GetOwningNode());
-				if (IsValid(target_node) && reachable_nodes.Contains(target_node) && IsValid(target_node->GetShotNodeData()))
+				UEdGraphNode* target_node = next_pin->LinkedTo[0]->GetOwningNode();
+				if (IsValid(target_node) && reachable_nodes.Contains(target_node))
 				{
-					rebuilt_entry_shot_id = target_node->GetShotNodeData()->GetShotID();
+					rebuilt_entry_link = MakeBranchLinkFromTargetNode(target_node);
 				}
 			}
 		}
@@ -159,27 +185,7 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 			continue;
 		}
 
-		UEdGraphNode* target_node = next_pin->LinkedTo[0]->GetOwningNode();
-		FStorySceneBranchLink branch_link;
-
-		if (UStorySceneGraphNode_Shot* target_shot_node = Cast<UStorySceneGraphNode_Shot>(target_node))
-		{
-			if (IsValid(target_shot_node->GetShotNodeData()))
-			{
-				branch_link.NextShotID = target_shot_node->GetShotNodeData()->GetShotID();
-			}
-		}
-		else if (UStorySceneGraphNode_Branch* target_branch_node = Cast<UStorySceneGraphNode_Branch>(target_node))
-		{
-			if (IsValid(target_branch_node->GetBranchNodeData()))
-			{
-				branch_link.NextBranchID = target_branch_node->GetBranchNodeData()->GetBranchID();
-			}
-		}
-		else if (UStorySceneGraphNode_Transition* target_transition_node = Cast<UStorySceneGraphNode_Transition>(target_node))
-		{
-			branch_link.NextSceneID = target_transition_node->GetNextSceneID();
-		}
+		const FStorySceneBranchLink branch_link = MakeBranchLinkFromTargetNode(next_pin->LinkedTo[0]->GetOwningNode());
 
 		if (branch_link.IsValid())
 		{
@@ -211,20 +217,7 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 				continue;
 			}
 
-			UEdGraphNode* target_node = next_pin->LinkedTo[0]->GetOwningNode();
-			FStorySceneBranchLink branch_link;
-
-			if (UStorySceneGraphNode_Shot* target_shot_node = Cast<UStorySceneGraphNode_Shot>(target_node))
-			{
-				if (IsValid(target_shot_node->GetShotNodeData()))
-				{
-					branch_link.NextShotID = target_shot_node->GetShotNodeData()->GetShotID();
-				}
-			}
-			else if (UStorySceneGraphNode_Transition* target_transition_node = Cast<UStorySceneGraphNode_Transition>(target_node))
-			{
-				branch_link.NextSceneID = target_transition_node->GetNextSceneID();
-			}
+			const FStorySceneBranchLink branch_link = MakeBranchLinkFromTargetNode(next_pin->LinkedTo[0]->GetOwningNode());
 
 			if (branch_link.IsValid())
 			{
@@ -233,7 +226,7 @@ void UStorySceneEdGraph::RebuildRuntimeData()
 		}
 	}
 
-	scene_asset->SetEntryShotID(rebuilt_entry_shot_id);
+	scene_asset->SetEntryLink(rebuilt_entry_link);
 
 	for (const TPair<UStorySceneNodeData*, FStorySceneBranchLink>& rebuilt_pair : rebuilt_next_links)
 	{

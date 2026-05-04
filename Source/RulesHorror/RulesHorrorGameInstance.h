@@ -23,4 +23,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void PauseGame(bool _is_pause);
+
+	bool CanStartSavedGame() const;
+	void StartNewGame();
+	void StartSavedGame();
+	
 };

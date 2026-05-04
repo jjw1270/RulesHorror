@@ -75,6 +75,8 @@ protected:
 
 #if WITH_EDITOR
 public:
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event) override;
+
 	void SetShotID(const FStoryShotID& _shot_id);
 	void SetNextLink(const FStorySceneBranchLink& _next_link);
 #endif

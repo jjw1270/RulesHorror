@@ -2,9 +2,15 @@
 
 
 #include "StoryShotBase.h"
+#include "StoryFlowSubsystem.h"
 
 UWorld* UStoryShotBase::GetWorld() const
 {
+	if (HasAnyFlags(RF_ClassDefaultObject))
+	{
+		return nullptr;
+	}
+
 	const UObject* outer_object = GetOuter();
 	return outer_object ? outer_object->GetWorld() : nullptr;
 }
@@ -56,4 +62,9 @@ void UStoryShotBase::ExitShot()
 void UStoryShotBase::FinishShot()
 {
 	_IsFinished = true;
+
+	if (UStoryFlowSubsystem* story_flow_subsystem = Cast<UStoryFlowSubsystem>(GetOuter()))
+	{
+		story_flow_subsystem->FinishCurrentShot(this);
+	}
 }

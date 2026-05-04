@@ -36,6 +36,8 @@ protected:
 
 #if WITH_EDITOR
 public:
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event) override;
+
 	void SetBranchID(const FStoryBranchID& _branch_id);
 	void SetBranchCount(int32 _branch_count);
 	void SetNextLinksByPinIndex(const TMap<int32, FStorySceneBranchLink>& _next_links_by_pin_index);

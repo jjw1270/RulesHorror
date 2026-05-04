@@ -3,28 +3,33 @@
 
 #include "UI_MainLobby.h"
 #include "RulesHorrorUtils.h"
-#include "SaveGameSubsystem.h"
+#include "RulesHorrorGameInstance.h"
 
 void UUI_MainLobby::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	const auto save_game = USaveGameHelper::GetSaveGame_ReadOnly(this);
-	SetEnableLoadGame(IsValid(save_game));
-}
-
-void UUI_MainLobby::OnClick_NewGame()
-{
-	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
-	if (IsInvalid(save_game_subsystem))
+	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
+	if (IsInvalid(game_inst))
 		return;
 
-	save_game_subsystem->NewGame();
-
-	// todo : map jump
+	SetCanStartSavedGame(game_inst->CanStartSavedGame());
 }
 
-void UUI_MainLobby::OnClick_LoadGame()
+void UUI_MainLobby::OnClick_StartNewGame()
 {
-	// todo : map jump
+	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
+	if (IsInvalid(game_inst))
+		return;
+
+	game_inst->StartNewGame();
+}
+
+void UUI_MainLobby::OnClick_StartSavedGame()
+{
+	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
+	if (IsInvalid(game_inst))
+		return;
+
+	game_inst->StartSavedGame();
 }

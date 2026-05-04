@@ -72,11 +72,6 @@ const FPinConnectionResponse UStorySceneGraphSchema::CanCreateConnection(const U
 	const UEdGraphNode* output_node = output_pin->GetOwningNode();
 	const UEdGraphNode* input_node = input_pin->GetOwningNode();
 
-	if (Cast<UStorySceneGraphNode_Entry>(output_node) && Cast<UStorySceneGraphNode_Transition>(input_node))
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Entry cannot connect to Transition."));
-	}
-
 	if (Cast<UStorySceneGraphNode_Transition>(output_node))
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Transition cannot connect to other nodes."));
@@ -89,12 +84,8 @@ const FPinConnectionResponse UStorySceneGraphSchema::CanCreateConnection(const U
 
 	if (output_pin->LinkedTo.Num() > 0)
 	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_A, TEXT("Output supports only one connection."));
-	}
-
-	if (input_pin->LinkedTo.Num() > 0)
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_BREAK_OTHERS_B, TEXT("Input supports only one connection."));
+		const ECanCreateConnectionResponse response = (output_pin == _a) ? CONNECT_RESPONSE_BREAK_OTHERS_A : CONNECT_RESPONSE_BREAK_OTHERS_B;
+		return FPinConnectionResponse(response, TEXT("Output supports only one connection."));
 	}
 
 	return FPinConnectionResponse(CONNECT_RESPONSE_MAKE, TEXT(""));

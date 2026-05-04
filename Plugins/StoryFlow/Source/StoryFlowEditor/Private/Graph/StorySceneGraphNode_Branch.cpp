@@ -187,6 +187,11 @@ void UStorySceneGraphNode_Branch::AutowireNewNode(UEdGraphPin* _from_pin)
 
 FText UStorySceneGraphNode_Branch::GetNodeTitle(ENodeTitleType::Type) const
 {
+	if (IsValid(_BranchNodeData))
+	{
+		return FText::Format(FText::FromString(TEXT("Branch\n{0}")), _BranchNodeData->GetDisplayNameText());
+	}
+
 	return FText::FromString(TEXT("Branch"));
 }
 

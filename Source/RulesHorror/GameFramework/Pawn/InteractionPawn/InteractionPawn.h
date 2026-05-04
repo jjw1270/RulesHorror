@@ -89,6 +89,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _IA_Interact = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Interaction")
 	bool _CanInteract = true;
 
 	EInteractionDetectMode _DefaultDetectMode = EInteractionDetectMode::NA;

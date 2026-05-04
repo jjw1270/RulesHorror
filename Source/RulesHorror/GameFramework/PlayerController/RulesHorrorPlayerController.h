@@ -16,10 +16,6 @@ class RULESHORROR_API ARulesHorrorPlayerController : public AWidgetPlayerControl
 {
 	GENERATED_BODY()
 
-protected:
-	UPROPERTY(EditAnywhere)
-	bool _IsLobby = false;
-	
 public:
 	ARulesHorrorPlayerController();
 

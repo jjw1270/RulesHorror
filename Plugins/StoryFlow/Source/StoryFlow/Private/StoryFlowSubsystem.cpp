@@ -310,13 +310,6 @@ void UStoryFlowSubsystem::Tick(float _delta_time)
 		return;
 
 	_CurrentShotInstance->TickShot(_delta_time);
-	if (_CurrentShotInstance->IsFinished())
-	{
-		if (MoveToNextShot() == false)
-		{
-			StopScene();
-		}
-	}
 }
 
 bool UStoryFlowSubsystem::StartFromScene(const FStorySceneID& _scene_id)
@@ -347,11 +340,29 @@ bool UStoryFlowSubsystem::StartFromRef(const FStoryFlowRef& _story_flow_ref)
 
 void UStoryFlowSubsystem::StopScene()
 {
+	_FinishingShotInstance = nullptr;
 	ClearPendingSceneStart();
 	ClearCurrentShot();
 	ClearCurrentBranch();
 	ClearCurrentScene();
 	_CurrentSceneAsset = nullptr;
+}
+
+void UStoryFlowSubsystem::FinishCurrentShot(UStoryShotBase* _shot_instance)
+{
+	if (IsInvalid(_shot_instance) || _shot_instance != _CurrentShotInstance || _FinishingShotInstance == _shot_instance)
+	{
+		return;
+	}
+
+	_FinishingShotInstance = _shot_instance;
+	const bool is_moved_to_next = MoveToNextShot();
+	_FinishingShotInstance = nullptr;
+
+	if (is_moved_to_next == false)
+	{
+		StopScene();
+	}
 }
 
 UStorySceneAsset* UStoryFlowSubsystem::FindSceneAssetBySceneID(const FStorySceneID& _scene_id) const
@@ -376,7 +387,6 @@ FStoryFlowRef UStoryFlowSubsystem::MakeResolvedStartRef(UStorySceneAsset* _scene
 	if (IsValid(_scene_asset))
 	{
 		start_ref.SceneID = _scene_asset->GetSceneID();
-		start_ref.ShotID = start_ref.ShotID.IsValid() ? start_ref.ShotID : _scene_asset->GetEntryShotID();
 	}
 
 	return start_ref;
@@ -430,7 +440,18 @@ bool UStoryFlowSubsystem::StartResolvedScene(UStorySceneAsset* _scene_asset, con
 		return false;
 	}
 
-	if (MoveToShot(start_ref.ShotID) == false)
+	if (start_ref.ShotID.IsValid())
+	{
+		if (MoveToShot(start_ref.ShotID) == false)
+		{
+			StopScene();
+			return false;
+		}
+
+		return true;
+	}
+
+	if (MoveToLink(_CurrentSceneAsset->GetEntryLink(), start_ref) == false)
 	{
 		StopScene();
 		return false;
@@ -683,6 +704,31 @@ bool UStoryFlowSubsystem::MoveToShot(const FStoryShotID& _shot_id)
 	return true;
 }
 
+bool UStoryFlowSubsystem::MoveToLink(const FStorySceneBranchLink& _next_link, const FStoryFlowRef& _story_flow_ref)
+{
+	if (_next_link.IsValid() == false)
+	{
+		return false;
+	}
+
+	if (_next_link.IsShotLink())
+	{
+		return MoveToShot(_next_link.NextShotID);
+	}
+
+	if (_next_link.IsBranchLink())
+	{
+		return EvaluateBranch(_next_link.NextBranchID, _story_flow_ref);
+	}
+
+	if (_next_link.IsSceneLink())
+	{
+		return StartFromScene(_next_link.NextSceneID);
+	}
+
+	return false;
+}
+
 bool UStoryFlowSubsystem::EvaluateBranch(const FStoryBranchID& _branch_id, const FStoryFlowRef& _story_flow_ref)
 {
 	if (IsInvalid(_CurrentSceneAsset) || _branch_id.IsValid() == false)
@@ -734,17 +780,7 @@ bool UStoryFlowSubsystem::EvaluateBranch(const FStoryBranchID& _branch_id, const
 		return false;
 	}
 
-	if (next_link->IsShotLink())
-	{
-		return MoveToShot(next_link->NextShotID);
-	}
-
-	if (next_link->IsSceneLink())
-	{
-		return StartFromScene(next_link->NextSceneID);
-	}
-
-	return false;
+	return MoveToLink(*next_link, _story_flow_ref);
 }
 
 bool UStoryFlowSubsystem::MoveToNextShot()
@@ -754,13 +790,15 @@ bool UStoryFlowSubsystem::MoveToNextShot()
 		return false;
 	}
 
+	const FStoryFlowRef current_ref = GetCurrentRef();
+	const FStorySceneBranchLink next_link = _CurrentShotNode->GetNextLink();
+
 	UStoryShotBase* current_shot = _CurrentShotInstance;
 	if (IsValid(current_shot))
 	{
 		current_shot->ExitShot();
 	}
 
-	const FStorySceneBranchLink& next_link = _CurrentShotNode->GetNextLink();
 	if (next_link.IsValid() == false)
 	{
 		_CurrentShotInstance = nullptr;
@@ -771,22 +809,7 @@ bool UStoryFlowSubsystem::MoveToNextShot()
 	_CurrentShotInstance = nullptr;
 	_CurrentShotNode = nullptr;
 
-	if (next_link.IsShotLink())
-	{
-		return MoveToShot(next_link.NextShotID);
-	}
-
-	if (next_link.IsBranchLink())
-	{
-		return EvaluateBranch(next_link.NextBranchID, GetCurrentRef());
-	}
-
-	if (next_link.IsSceneLink())
-	{
-		return StartFromScene(next_link.NextSceneID);
-	}
-
-	return false;
+	return MoveToLink(next_link, current_ref);
 }
 
 void UStoryFlowSubsystem::ClearCurrentScene()

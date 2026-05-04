@@ -19,13 +19,13 @@ protected:
 	
 protected:
 	UFUNCTION(BlueprintCallable)
-	void OnClick_NewGame();
+	void OnClick_StartNewGame();
 
 	UFUNCTION(BlueprintCallable)
-	void OnClick_LoadGame();
+	void OnClick_StartSavedGame();
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void SetEnableLoadGame(bool _value);
+	void SetCanStartSavedGame(bool _value);
 
 };

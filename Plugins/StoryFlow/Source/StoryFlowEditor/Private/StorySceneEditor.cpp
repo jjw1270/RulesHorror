@@ -901,24 +901,83 @@ void FStorySceneEditor::ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray
 		}
 	}
 
-	if (_StorySceneAsset->GetEntryShotID().IsValid() == false)
+	const FStorySceneBranchLink entry_link = _StorySceneAsset->GetEntryLink();
+	if (entry_link.IsValid() == false)
 	{
-		_out_errors.Add(TEXT("Entry node is not connected to a Shot node."));
+		_out_errors.Add(TEXT("Entry node is not connected."));
 
 		if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
 		{
-			entry_node->SetCompileError(TEXT("Entry node is not connected to a Shot node."));
+			entry_node->SetCompileError(TEXT("Entry node is not connected."));
 		}
 		return;
 	}
 
-	if (IsInvalid(_StorySceneAsset->FindShotNode(_StorySceneAsset->GetEntryShotID())))
+	if (entry_link.IsShotLink())
 	{
-		_out_errors.Add(FString::Printf(TEXT("EntryShotID '%s' does not exist in ShotNodes."), *_StorySceneAsset->GetEntryShotID().Get().ToString()));
+		if (IsInvalid(_StorySceneAsset->FindShotNode(entry_link.NextShotID)))
+		{
+			_out_errors.Add(FString::Printf(TEXT("Entry shot link '%s' does not exist in ShotNodes."), *entry_link.NextShotID.Get().ToString()));
+
+			if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+			{
+				entry_node->SetCompileError(TEXT("Entry shot link does not exist in ShotNodes."));
+			}
+		}
+	}
+	else if (entry_link.IsBranchLink())
+	{
+		if (IsInvalid(_StorySceneAsset->FindBranchNode(entry_link.NextBranchID)))
+		{
+			_out_errors.Add(FString::Printf(TEXT("EntryBranchID '%s' does not exist in BranchNodes."), *entry_link.NextBranchID.Get().ToString()));
+
+			if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+			{
+				entry_node->SetCompileError(TEXT("EntryBranchID does not exist in BranchNodes."));
+			}
+		}
+	}
+	else if (entry_link.IsSceneLink())
+	{
+		if (scene_registry == nullptr)
+		{
+			_out_errors.Add(FString::Printf(TEXT("EntrySceneID '%s' is not registered in StorySceneRegistry."), *entry_link.NextSceneID.Get().ToString()));
+
+			if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+			{
+				entry_node->SetCompileError(TEXT("EntrySceneID is not registered in StorySceneRegistry."));
+			}
+		}
+		else
+		{
+			const int32 matching_scene_count = CountSceneRegistryMatches(scene_registry, entry_link.NextSceneID);
+			if (matching_scene_count == 0)
+			{
+				_out_errors.Add(FString::Printf(TEXT("EntrySceneID '%s' is not registered in StorySceneRegistry."), *entry_link.NextSceneID.Get().ToString()));
+
+				if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+				{
+					entry_node->SetCompileError(TEXT("EntrySceneID is not registered in StorySceneRegistry."));
+				}
+			}
+			else if (matching_scene_count > 1)
+			{
+				_out_errors.Add(FString::Printf(TEXT("EntrySceneID '%s' is duplicated in StorySceneRegistry."), *entry_link.NextSceneID.Get().ToString()));
+
+				if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
+				{
+					entry_node->SetCompileError(TEXT("EntrySceneID is duplicated in StorySceneRegistry."));
+				}
+			}
+		}
+	}
+	else
+	{
+		_out_errors.Add(TEXT("Entry link contains an invalid branch link."));
 
 		if (UStorySceneGraphNode_Entry* entry_node = _graph->FindEntryNode())
 		{
-			entry_node->SetCompileError(TEXT("EntryShotID does not exist in ShotNodes."));
+			entry_node->SetCompileError(TEXT("Entry link contains an invalid branch link."));
 		}
 	}
 }

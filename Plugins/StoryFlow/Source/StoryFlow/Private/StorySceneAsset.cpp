@@ -2,8 +2,35 @@
 
 #include "StorySceneAsset.h"
 #include "StoryBranchNodeData.h"
+#include "StorySceneBase.h"
 #include "StorySceneNodeData.h"
 #include "CommonUtils.h"
+
+#if WITH_EDITOR
+namespace
+{
+	static FText MakeDisplayNameFromTemplate(const UObject* _template)
+	{
+		if (IsInvalid(_template))
+		{
+			return FText::GetEmpty();
+		}
+
+		FString template_name;
+		const UClass* template_class = _template->GetClass();
+		if (IsValid(template_class) && IsValid(template_class->ClassGeneratedBy))
+		{
+			template_name = template_class->ClassGeneratedBy->GetName();
+		}
+		else
+		{
+			template_name = _template->GetName();
+		}
+
+		return FText::FromString(FName::NameToDisplayString(template_name, false));
+	}
+}
+#endif
 
 UStorySceneNodeData* UStorySceneAsset::FindShotNode(const FStoryShotID& _shot_id) const
 {
@@ -42,6 +69,25 @@ UStoryBranchNodeData* UStorySceneAsset::FindBranchNode(const FStoryBranchID& _br
 }
 
 #if WITH_EDITOR
+void UStorySceneAsset::PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event)
+{
+	Super::PostEditChangeProperty(_property_changed_event);
+
+	if (_property_changed_event.GetPropertyName() != GET_MEMBER_NAME_CHECKED(UStorySceneAsset, _SceneTemplate))
+	{
+		return;
+	}
+
+	if (_DisplayName.IsEmpty() == false || IsInvalid(_SceneTemplate))
+	{
+		return;
+	}
+
+	Modify();
+	_DisplayName = MakeDisplayNameFromTemplate(_SceneTemplate);
+	MarkPackageDirty();
+}
+
 void UStorySceneAsset::SetEditorGraph(UEdGraph* _editor_graph)
 {
 	if (_EditorGraph == _editor_graph)
@@ -66,15 +112,15 @@ void UStorySceneAsset::SetSceneID(const FStorySceneID& _scene_id)
 	MarkPackageDirty();
 }
 
-void UStorySceneAsset::SetEntryShotID(const FStoryShotID& _entry_shot_id)
+void UStorySceneAsset::SetEntryLink(const FStorySceneBranchLink& _entry_link)
 {
-	if (_EntryShotID == _entry_shot_id)
+	if (_EntryLink == _entry_link)
 	{
 		return;
 	}
 
 	Modify();
-	_EntryShotID = _entry_shot_id;
+	_EntryLink = _entry_link;
 	MarkPackageDirty();
 }
 

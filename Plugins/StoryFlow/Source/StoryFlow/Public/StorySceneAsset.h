@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "StoryFlowDefines.h"
+#include "StorySceneNodeData.h"
 #include "StorySceneAsset.generated.h"
 
 class UStorySceneBase;
@@ -27,8 +28,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UWorld> _TargetLevel = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FStoryShotID _EntryShotID;
+	UPROPERTY()
+	FStorySceneBranchLink _EntryLink;
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadOnly)
 	TObjectPtr<UStorySceneBase> _SceneTemplate = nullptr;
@@ -56,8 +57,7 @@ public:
 	UFUNCTION(BlueprintPure)
 	const TSoftObjectPtr<UWorld>& GetTargetLevel() const { return _TargetLevel; }
 
-	UFUNCTION(BlueprintPure)
-	const FStoryShotID& GetEntryShotID() const { return _EntryShotID; }
+	const FStorySceneBranchLink& GetEntryLink() const { return _EntryLink; }
 
 	UFUNCTION(BlueprintPure)
 	UStorySceneBase* GetSceneTemplate() const { return _SceneTemplate; }
@@ -73,11 +73,13 @@ protected:
 
 #if WITH_EDITOR
 public:
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& _property_changed_event) override;
+
 	void SetEditorGraph(UEdGraph* _editor_graph);
 	UEdGraph* GetEditorGraph() const { return _EditorGraph; }
 
 	void SetSceneID(const FStorySceneID& _scene_id);
-	void SetEntryShotID(const FStoryShotID& _entry_shot_id);
+	void SetEntryLink(const FStorySceneBranchLink& _entry_link);
 
 	UStorySceneNodeData* CreateShotNode();
 	UStoryBranchNodeData* CreateBranchNode();

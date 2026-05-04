@@ -17,6 +17,7 @@ class UStoryShotBase;
 class UCanvas;
 class UWorld;
 class APlayerController;
+struct FStorySceneBranchLink;
 
 UENUM()
 enum class EStoryFlowPendingTravelPhase : uint8
@@ -59,6 +60,7 @@ protected:
 
 	TSharedPtr<FStreamableHandle> _PendingTargetLevelLoadHandle;
 	FDelegateHandle _DebugDrawDelegateHandle;
+	UStoryShotBase* _FinishingShotInstance = nullptr;
 	bool _PendingTargetLevelLoadCompleted = false;
 	double _PendingLoadingLevelEnterTime = 0.0;
 	bool _IsDebugOverlayEnabled = false;
@@ -81,6 +83,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StopScene();
 
+	void FinishCurrentShot(UStoryShotBase* _shot_instance);
+
 protected:
 	const class UStoryFlowDeveloperSettings* GetStoryFlowDeveloperSettings() const;
 	UStorySceneAsset* FindSceneAssetBySceneID(const FStorySceneID& _scene_id) const;
@@ -101,6 +105,7 @@ protected:
 	float GetMinimumLoadingTimeProgress() const;
 
 	bool EnterScene(const FStoryFlowRef& _story_flow_ref);
+	bool MoveToLink(const FStorySceneBranchLink& _next_link, const FStoryFlowRef& _story_flow_ref);
 	bool EvaluateBranch(const FStoryBranchID& _branch_id, const FStoryFlowRef& _story_flow_ref);
 	bool MoveToShot(const FStoryShotID& _shot_id);
 	bool MoveToNextShot();

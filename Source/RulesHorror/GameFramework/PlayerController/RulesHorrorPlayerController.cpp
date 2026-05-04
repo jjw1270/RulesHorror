@@ -8,7 +8,6 @@
 #include "InputMappingContext.h"
 #include "GameFramework/RulesHorrorCameraManager.h"
 #include "GameFramework/Pawn/RulesHorrorCharacter.h"
-#include "SaveGameSubsystem.h"
 
 ARulesHorrorPlayerController::ARulesHorrorPlayerController()
 {
@@ -18,20 +17,6 @@ ARulesHorrorPlayerController::ARulesHorrorPlayerController()
 void ARulesHorrorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
-	if (IsValid(save_game_subsystem))
-	{
-		bool load_game_success = save_game_subsystem->LoadGame();
-
-#if WITH_EDITOR
-		if (load_game_success == false && _IsLobby == false)
-		{
-			// 원활한 테스트를 위해 로비를 통하지 않고 NewGame
-			save_game_subsystem->NewGame();
-		}
-	}
-#endif
 }
 
 void ARulesHorrorPlayerController::SetupInputComponent()

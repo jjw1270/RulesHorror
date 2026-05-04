@@ -56,7 +56,6 @@ public:
 
 	void SetInteractionActorState(AActor* _interaction_actor, EInteractionState _state);
 
-
 protected:
 	UUI_InteractionIndicator* PickIndicatorFromPool();
 

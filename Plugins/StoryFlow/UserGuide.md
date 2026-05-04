@@ -97,7 +97,7 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 1. `OnEnterShot`에서 대사 UI 표시
 2. 입력 또는 타이머를 기다림
 3. 완료 조건이 되면 `FinishShot` 호출
-4. 다음 Tick에서 Shot이 종료되고 NextLink로 진행
+4. Shot이 즉시 종료되고 NextLink로 진행
 
 ### 3.3 Branch Blueprint
 
@@ -126,7 +126,7 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 | 항목 | 설명 |
 | --- | --- |
 | SceneID | Registry와 런타임 시작에 쓰이는 고유 ID |
-| DisplayName | 사람이 읽기 쉬운 이름 |
+| DisplayName | 사람이 읽기 쉬운 이름. 비어 있으면 SceneTemplate 설정 시 템플릿 이름으로 자동 입력 |
 | TargetLevel | 이 Scene이 실행될 레벨 |
 | SceneTemplate | Scene Blueprint 인스턴스 |
 
@@ -155,7 +155,7 @@ Shot 노드 Details에서 주로 편집하는 항목:
 | 항목 | 설명 |
 | --- | --- |
 | ShotID | 자동 생성, 읽기 전용 |
-| DisplayName | 노드 제목 아래에 표시되는 이름 |
+| DisplayName | 노드 제목 아래에 표시되는 이름. 비어 있으면 ShotTemplate 설정 시 템플릿 이름으로 자동 입력 |
 | Description | 노드 comment bubble로 표시되는 설명 |
 | ShotTemplate | 실행할 Shot Blueprint 인스턴스 |
 
@@ -167,12 +167,12 @@ Branch 노드 Details에서 주로 편집하는 항목:
 
 | 항목 | 설명 |
 | --- | --- |
-| DisplayName | 관리용 이름 |
+| DisplayName | 노드 제목 아래에 표시되는 이름. 비어 있으면 BranchTemplate 설정 시 템플릿 이름으로 자동 입력 |
 | Description | 노드 comment bubble로 표시되는 설명 |
 | BranchTemplate | 실행할 Branch Blueprint 인스턴스 |
 | BranchCount | 출력 핀 개수, 1~9 |
 
-BranchID는 자동 관리되며 Details에 표시하지 않는다.
+BranchID는 자동 관리되며 Details에 표시하지 않는다. 노드 제목은 `Branch`이며, DisplayName이 있으면 아래 줄에 표시된다.
 
 BranchCount를 늘리면 `Next_0`, `Next_1`, ... 출력 핀이 생긴다.
 
@@ -193,6 +193,8 @@ Transition 노드 제목은 `Transition`이며, NextSceneID가 있으면 아래 
 
 ```text
 Entry -> Shot
+Entry -> Branch
+Entry -> Transition
 Shot -> Shot
 Shot -> Branch
 Shot -> Transition
@@ -203,12 +205,12 @@ Branch -> Transition
 불가능한 연결:
 
 ```text
-Entry -> Transition
 Transition -> Any
 Branch -> Branch
 ```
 
-모든 입력/출력 핀은 1개 연결만 가진다. 새 연결을 만들면 기존 연결은 자동으로 교체될 수 있다.
+출력 핀은 1개 연결만 가진다. 새 출력 연결을 만들면 기존 연결은 자동으로 교체될 수 있다.
+입력 핀은 여러 연결을 받을 수 있다.
 
 ---
 
@@ -219,7 +221,7 @@ Branch -> Branch
 Compile이 하는 일:
 
 - Entry에서 도달 가능한 노드만 런타임 데이터로 변환
-- EntryShotID 갱신
+- Entry 시작 링크 갱신
 - Shot/Branch의 다음 링크 갱신
 - Description을 comment bubble로 동기화
 - 필수 설정 누락/잘못된 연결 검사

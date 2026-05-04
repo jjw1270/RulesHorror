@@ -203,9 +203,19 @@ void UInteractorComponent::SetDetectMode(EInteractionDetectMode _detect_mode)
 	{
 		ClearInteractionState();
 		SetComponentTickEnabled(false);
+
+		if (IsValid(_IndicatorPanel))
+		{
+			_IndicatorPanel->Hide(EWidgetHideType::Collapsed, true);
+		}
 	}
 	else
 	{
+		if (IsValid(_IndicatorPanel))
+		{
+			_IndicatorPanel->Show(EWidgetShowType::SelfHitTestInvisible, true);
+		}
+
 		SetComponentTickEnabled(!_OverlappedActorInfos.IsEmpty());
 	}
 }
