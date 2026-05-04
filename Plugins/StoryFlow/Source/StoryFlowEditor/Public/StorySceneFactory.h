@@ -14,5 +14,6 @@ public:
 	UStorySceneFactory(const FObjectInitializer& _object_initializer);
 
 	virtual UObject* FactoryCreateNew(UClass* _class, UObject* _parent, FName _name, EObjectFlags _flags, UObject* _context, FFeedbackContext* _warn) override;
+	virtual FText GetDisplayName() const override;
 	virtual bool ShouldShowInNewMenu() const override { return true; }
 };

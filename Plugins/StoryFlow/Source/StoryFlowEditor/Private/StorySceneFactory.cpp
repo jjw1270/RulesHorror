@@ -21,3 +21,8 @@ UObject* UStorySceneFactory::FactoryCreateNew(UClass* _class, UObject* _parent, 
 
 	return story_scene_asset;
 }
+
+FText UStorySceneFactory::GetDisplayName() const
+{
+	return FText::FromString(TEXT("StoryFlow Scene Asset"));
+}

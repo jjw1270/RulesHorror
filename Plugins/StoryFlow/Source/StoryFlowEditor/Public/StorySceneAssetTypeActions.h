@@ -15,7 +15,7 @@ public:
 	{
 	}
 
-	virtual FText GetName() const override { return FText::FromString(TEXT("Story Scene")); }
+	virtual FText GetName() const override { return FText::FromString(TEXT("StoryFlow Scene Asset")); }
 	virtual FColor GetTypeColor() const override { return FLinearColor(0.35f, 0.55f, 0.9f).ToFColor(true); }
 	virtual UClass* GetSupportedClass() const override;
 	virtual void OpenAssetEditor(const TArray<UObject*>& _objects, TSharedPtr<IToolkitHost> _edit_within_level_editor = TSharedPtr<IToolkitHost>()) override;

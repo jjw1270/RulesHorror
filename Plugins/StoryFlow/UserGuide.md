@@ -117,9 +117,9 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 
 ---
 
-## 4. StorySceneAsset 만들기
+## 4. StoryFlow Scene Asset 만들기
 
-1. Content Browser에서 `StorySceneAsset`을 만든다.
+1. Content Browser의 `StoryFlow` 카테고리에서 `StoryFlow Scene Asset`을 만든다.
 2. 에셋 이름을 의미 있게 정한다.
 3. Details에서 다음을 설정한다.
 
@@ -130,13 +130,13 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 | TargetLevel | 이 Scene이 실행될 레벨 |
 | SceneTemplate | Scene Blueprint 인스턴스 |
 
-새 StorySceneAsset은 기본적으로 에셋 이름을 SceneID로 사용한다.
+새 StoryFlow Scene Asset은 기본적으로 에셋 이름을 SceneID로 사용한다.
 
 ---
 
 ## 5. 그래프 편집하기
 
-StorySceneAsset을 더블클릭하면 Story Scene Editor가 열린다.
+StoryFlow Scene Asset을 더블클릭하면 Story Scene Editor가 열린다.
 
 ### 5.1 노드 만들기
 

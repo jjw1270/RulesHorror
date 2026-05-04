@@ -213,14 +213,14 @@ Transition 노드는 런타임 인스턴스가 없다. Compile 시 `NextSceneID`
 
 Content Browser의 `StoryFlow` 카테고리에서 다음을 생성할 수 있다.
 
-- `StorySceneAsset`
-- `StoryFlow Scene Blueprint` (`UStorySceneBase`)
-- `StoryFlow Shot Blueprint` (`UStoryShotBase`)
-- `StoryFlow Branch Blueprint` (`UStoryBranchBase`)
+- `StoryFlow Scene Asset` (`UStorySceneAsset`)
+- `StoryFlow Scene` (`UStorySceneBase`)
+- `StoryFlow Shot` (`UStoryShotBase`)
+- `StoryFlow Branch` (`UStoryBranchBase`)
 
 ### Story Scene Editor
 
-`StorySceneAsset`을 열면 전용 에디터가 열린다.
+`StoryFlow Scene Asset`을 열면 전용 에디터가 열린다.
 
 구성:
 

@@ -17,7 +17,7 @@ UStorySceneBaseBlueprintFactory::UStorySceneBaseBlueprintFactory(const FObjectIn
 
 FText UStorySceneBaseBlueprintFactory::GetDisplayName() const
 {
-	return FText::FromString(TEXT("StoryFlow Scene Blueprint"));
+	return FText::FromString(TEXT("StoryFlow Scene"));
 }
 
 uint32 UStorySceneBaseBlueprintFactory::GetMenuCategories() const
@@ -46,7 +46,7 @@ UStoryShotBaseBlueprintFactory::UStoryShotBaseBlueprintFactory(const FObjectInit
 
 FText UStoryShotBaseBlueprintFactory::GetDisplayName() const
 {
-	return FText::FromString(TEXT("StoryFlow Shot Blueprint"));
+	return FText::FromString(TEXT("StoryFlow Shot"));
 }
 
 uint32 UStoryShotBaseBlueprintFactory::GetMenuCategories() const
@@ -75,7 +75,7 @@ UStoryBranchBaseBlueprintFactory::UStoryBranchBaseBlueprintFactory(const FObject
 
 FText UStoryBranchBaseBlueprintFactory::GetDisplayName() const
 {
-	return FText::FromString(TEXT("StoryFlow Branch Blueprint"));
+	return FText::FromString(TEXT("StoryFlow Branch"));
 }
 
 uint32 UStoryBranchBaseBlueprintFactory::GetMenuCategories() const
