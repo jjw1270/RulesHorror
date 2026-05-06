@@ -68,7 +68,13 @@ FItemIDValidationResult FItemID::Validate() const
 	}
 
 	// sub type check
-	const uint8 sub_type = GetSubType();
+	const uint32 raw_sub_type = GetRawSubType();
+	if (raw_sub_type > MaxSubTypeValue)
+	{
+		return { false, FString::Printf(TEXT("SubType 값 %d 가 최대값 %d 를 초과했습니다."), raw_sub_type, MaxSubTypeValue) };
+	}
+
+	const uint8 sub_type = static_cast<uint8>(raw_sub_type);
 
 	if (sub_type == 0)
 	{

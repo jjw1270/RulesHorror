@@ -107,9 +107,14 @@ public:
 		return static_cast<EItemType>(Value / TypeMultiplier);
 	}
 
+	uint32 GetRawSubType() const
+	{
+		return (Value / SubTypeMultiplier) % 1000;
+	}
+
 	uint8 GetSubType() const
 	{
-		return static_cast<uint8>((Value / SubTypeMultiplier) % 1000);
+		return static_cast<uint8>(GetRawSubType());
 	}
 
 	static const UEnum* GetSubTypeEnum(EItemType _type);

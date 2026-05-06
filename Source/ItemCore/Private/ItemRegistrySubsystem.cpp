@@ -2,10 +2,8 @@
 
 #include "ItemRegistrySubsystem.h"
 #include "ItemCore.h"
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "AssetRegistry/IAssetRegistry.h"
-#include "Modules/ModuleManager.h"
 #include "ItemDeveloperSettings.h"
+#include "ItemRegistryDataAsset.h"
 #include "CommonUtils.h"
 
 void UItemRegistrySubsystem::Initialize(FSubsystemCollectionBase& _collection)
@@ -26,72 +24,38 @@ void UItemRegistrySubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-bool UItemRegistrySubsystem::AutoRegisterItemTables()
+bool UItemRegistrySubsystem::RegisterItemTablesFromDataAsset()
 {
-	FAssetRegistryModule& asset_registry_module = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
-	IAssetRegistry& asset_registry = asset_registry_module.Get();
-
-	const TArray<FString> search_paths = GetTableSearchPaths();
-
-	if (search_paths.IsEmpty())
+	const auto settings = GetDefault<UItemDeveloperSettings>();
+	if (IsInvalid(settings))
 	{
-		EDITOR_MESSAGE_WARNING(ItemRegistryLog, TEXT("No search paths."));
+		EDITOR_MESSAGE_ERROR(ItemRegistryLog, TEXT("ItemDeveloperSettings is null."));
 		return false;
 	}
 
-	asset_registry.ScanPathsSynchronous(search_paths, false, false);
-
-	FARFilter filter;
-	filter.bRecursivePaths = true;
-	filter.bRecursiveClasses = false;
-	filter.ClassPaths.Add(UDataTable::StaticClass()->GetClassPathName());
-
-	for (const auto& search_path : search_paths)
+	if (settings->_ItemRegistryDataAsset.IsNull())
 	{
-		filter.PackagePaths.Add(*search_path);
+		EDITOR_MESSAGE_ERROR(ItemRegistryLog, TEXT("ItemRegistryDataAsset is not set."));
+		return false;
 	}
 
-	TArray<FAssetData> asset_data_list;
-	asset_registry.GetAssets(filter, asset_data_list);
+	const UItemRegistryDataAsset* registry_asset = settings->_ItemRegistryDataAsset.LoadSynchronous();
+	if (IsInvalid(registry_asset))
+	{
+		EDITOR_MESSAGE_ERROR(ItemRegistryLog, TEXT("Failed to load ItemRegistryDataAsset '%s'."), *settings->_ItemRegistryDataAsset.ToString());
+		return false;
+	}
 
 	bool is_success = true;
-	for (const auto& asset_data : asset_data_list)
+	for (const UDataTable* item_table : registry_asset->_ItemTables)
 	{
-		UDataTable* item_table = Cast<UDataTable>(asset_data.GetAsset());
-		if (IsInvalid(item_table))
-		{
-			EDITOR_MESSAGE_WARNING(ItemRegistryLog, TEXT("AutoRegisterItemTables - Failed to load asset '%s' as UDataTable."), *asset_data.GetObjectPathString());
-			is_success = false;
-			continue;
-		}
-
 		if (RegisterItemTable(item_table) == false)
 		{
-			EDITOR_MESSAGE_WARNING(ItemRegistryLog, TEXT("AutoRegisterItemTables - Skipped '%s'."), *item_table->GetName());
+			is_success = false;
 		}
 	}
 
 	return is_success;
-}
-
-TArray<FString> UItemRegistrySubsystem::GetTableSearchPaths() const
-{
-	TArray<FString> paths;
-
-	const auto settings = GetDefault<UItemDeveloperSettings>();
-
-	if (IsValid(settings))
-	{
-		for (const FDirectoryPath& path : settings->_ItemTableSearchPaths)
-		{
-			if (path.Path.IsEmpty())
-				continue;
-
-			paths.AddUnique(path.Path);
-		}
-	}
-
-	return paths;
 }
 
 bool UItemRegistrySubsystem::IsSupportedItemTable(const UDataTable* _item_table) const
@@ -215,7 +179,6 @@ bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table)
 		row_reference.RowStruct = row_struct;
 
 		_ItemTypeIndexMap.FindOrAdd(item_id.GetType()).ItemIDToRow.Add(item_id, MoveTemp(row_reference));
-		_TableToItemIDs.FindOrAdd(_item_table).ItemIDs.Add(item_id);
 	}
 
 	return is_success;
@@ -224,7 +187,6 @@ bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table)
 void UItemRegistrySubsystem::ClearItemIndex()
 {
 	_ItemTypeIndexMap.Reset();
-	_TableToItemIDs.Reset();
 }
 
 const FItemRowReference* UItemRegistrySubsystem::Find(const FItemID& _item_id) const
@@ -246,15 +208,15 @@ bool UItemRegistrySubsystem::RefreshRegistry()
 	ClearRegisteredItemTables();
 	ClearItemIndex();
 
-	const bool is_auto_register_success = AutoRegisterItemTables();
+	const bool is_register_success = RegisterItemTablesFromDataAsset();
 	const bool is_build_success = BuildItemIndex();
 
-	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("AutoRegister=%s, BuildIndex=%s, RegisteredTables=%d, IndexedItems=%d"),
-		is_auto_register_success ? TEXT("Success") : TEXT("Failed"),
+	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Register=%s, BuildIndex=%s, RegisteredTables=%d, IndexedItems=%d"),
+		is_register_success ? TEXT("Success") : TEXT("Failed"),
 		is_build_success ? TEXT("Success") : TEXT("Failed"),
 		_RegisteredItemTables.Num(), GetItemCount());
 
-	const bool is_success = is_auto_register_success && is_build_success;
+	const bool is_success = is_register_success && is_build_success;
 
 	if (is_success)
 	{
@@ -276,61 +238,9 @@ bool UItemRegistrySubsystem::RefreshItemTable(const UDataTable* _item_table)
 		return false;
 	}
 
-	if (IsSupportedItemTable(_item_table) == false)
-	{
-		EDITOR_MESSAGE_ERROR(ItemRegistryLog, TEXT("Failed : Table '%s' has unsupported RowStruct."), *_item_table->GetName());
-		return false;
-	}
+	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Refresh Item Table Requested : %s"), *_item_table->GetName());
 
-	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Refresh Item Table : %s"), *_item_table->GetName());
-
-	// 혹시 아직 등록 안 된 테이블이면 등록
-	RegisterItemTable(_item_table);
-
-	// 기존 인덱스에서 이 테이블 소속 항목 제거
-	RemoveItemIndexByTable(_item_table);
-
-	// 다시 인덱싱
-	const bool is_success = IndexItemTable(_item_table);
-
-	if (is_success)
-	{
-		EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Success! IndexedItems=%d"), GetItemCount());
-		EDITOR_NOTIFY_LOG(TEXT("Refresh Item Registry Success"));
-	}
-	else
-	{
-		EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Failed"));
-		EDITOR_NOTIFY_ERROR(TEXT("Refresh Item Registry Failed"));
-	}
-
-	return is_success;
-}
-
-void UItemRegistrySubsystem::RemoveItemIndexByTable(const UDataTable* _item_table)
-{
-	if (IsInvalid(_item_table))
-		return;
-
-	auto item_id_list = _TableToItemIDs.Find(_item_table);
-	if (IsInvalid(item_id_list))
-		return;
-
-	for (const FItemID& item_id : item_id_list->ItemIDs)
-	{
-		auto item_type_index_ptr = _ItemTypeIndexMap.Find(item_id.GetType());
-		if (IsValid(item_type_index_ptr))
-		{
-			item_type_index_ptr->ItemIDToRow.Remove(item_id);
-
-			if (item_type_index_ptr->ItemIDToRow.IsEmpty())
-			{
-				_ItemTypeIndexMap.Remove(item_id.GetType());
-			}
-		}
-	}
-
-	_TableToItemIDs.Remove(_item_table);
+	return RefreshRegistry();
 }
 
 bool UItemRegistrySubsystem::Contains(const FItemID& _item_id) const

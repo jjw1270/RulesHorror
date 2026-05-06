@@ -6,6 +6,8 @@
 #include "Engine/DeveloperSettings.h"
 #include "ItemDeveloperSettings.generated.h"
 
+class UItemRegistryDataAsset;
+
 
 UCLASS(Config = Game, DefaultConfig)
 class ITEMCORE_API UItemDeveloperSettings : public UDeveloperSettings
@@ -13,6 +15,6 @@ class ITEMCORE_API UItemDeveloperSettings : public UDeveloperSettings
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, Config, Category = "Item", meta = (ContentDir, LongPackageName))
-	TArray<FDirectoryPath> _ItemTableSearchPaths;
+	UPROPERTY(EditAnywhere, Config, Category = "Item")
+	TSoftObjectPtr<UItemRegistryDataAsset> _ItemRegistryDataAsset;
 };
