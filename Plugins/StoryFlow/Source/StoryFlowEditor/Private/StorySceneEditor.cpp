@@ -1168,6 +1168,15 @@ void FStorySceneEditor::ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_
 			continue;
 		}
 
+		if (next_link.IsBranchLink())
+		{
+			if (IsInvalid(_StorySceneAsset->FindBranchNode(next_link.NextBranchID)))
+			{
+				node_errors.Add(FString::Printf(TEXT("NextBranchID '%s' does not exist."), *next_link.NextBranchID.Get().ToString()));
+			}
+			continue;
+		}
+
 		if (next_link.IsSceneLink())
 		{
 			if (scene_registry == nullptr)

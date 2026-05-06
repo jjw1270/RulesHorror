@@ -26,7 +26,7 @@ protected:
 	float _ElapsedTime = 0.0f;
 
 public:
-	virtual UWorld* GetWorld() const override;
+	virtual UWorld* GetWorld() const override final;
 
 public:
 	void InitializeShot(const FStoryShotID& _shot_id);

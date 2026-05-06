@@ -85,6 +85,11 @@ public:
 
 	void FinishCurrentShot(UStoryShotBase* _shot_instance);
 
+#if WITH_EDITOR
+	static void SetEditorPlayFromShotSession(bool _is_active);
+	static bool IsEditorPlayFromShotSession();
+#endif
+
 protected:
 	const class UStoryFlowDeveloperSettings* GetStoryFlowDeveloperSettings() const;
 	UStorySceneAsset* FindSceneAssetBySceneID(const FStorySceneID& _scene_id) const;

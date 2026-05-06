@@ -170,6 +170,30 @@ Ref.ShotID = FStoryShotID(TEXT("Shot_003"));
 StoryFlow->StartFromRef(Ref);
 ```
 
+게임 시작 시 자동으로 StoryFlow를 시작하는 프로젝트 코드는 `GameMode::StartPlay()`에서 `Super::StartPlay()` 이후에 호출하는 것을 권장한다. 이렇게 하면 월드 Actor/PlayerController의 BeginPlay가 먼저 dispatch된 뒤 첫 Shot의 `EnterShot`이 실행된다.
+
+```cpp
+void AMyGameMode::StartPlay()
+{
+	Super::StartPlay();
+
+#if WITH_EDITOR
+	if (UStoryFlowSubsystem::IsEditorPlayFromShotSession())
+	{
+		return;
+	}
+#endif
+
+	UStoryFlowSubsystem* StoryFlow = GetGameInstance()->GetSubsystem<UStoryFlowSubsystem>();
+	if (StoryFlow)
+	{
+		StoryFlow->StartFromScene(FStorySceneID(TEXT("Scene_Intro")));
+	}
+}
+```
+
+Story Scene Editor의 Shot 노드 Play는 PIE 시작 전에 `UStoryFlowSubsystem::IsEditorPlayFromShotSession()`을 true로 표시한다. 프로젝트에서 일반 PIE 시작 시 Intro Scene을 자동 실행한다면, 이 값을 확인해 자동 시작을 건너뛰어야 Shot Play가 선택한 Shot에서 바로 시작된다.
+
 ### Scene 시작 절차
 
 1. `StorySceneRegistry`에서 `SceneID`에 대응하는 `StorySceneAsset`을 찾는다.
@@ -238,6 +262,7 @@ Content Browser의 `StoryFlow` 카테고리에서 다음을 생성할 수 있다
 - Compile 상태 표시
 - PIE 전 자동 Compile/검증 및 실패 시 PIE 차단
 - Shot 노드 Play 버튼으로 해당 Shot부터 PIE 시작
+  - Editor Play From Shot 세션 동안 `UStoryFlowSubsystem::IsEditorPlayFromShotSession()`이 true가 되어 프로젝트의 자동 StoryFlow 시작 로직이 이를 스킵할 수 있다
 - Entry / Shot / Branch 노드 더블클릭으로 연결된 Template 빠르게 열기
   - Entry: SceneTemplate
   - Shot: ShotTemplate
@@ -268,19 +293,19 @@ Details에서 DisplayName 또는 Description을 수정하면 노드 제목/comme
 - `Shot -> Branch`
 - `Shot -> Transition`
 - `Branch -> Shot`
+- `Branch -> Branch`
 - `Branch -> Transition`
 
 금지:
 
 - `Transition -> *`
-- `Branch -> Branch`
 - 같은 방향 핀 연결
 - StoryFlow 핀이 아닌 핀 연결
 
 추가 규칙:
 
 - 출력 핀은 1개 연결만 허용한다.
-- 입력 핀은 여러 연결을 허용한다.
+- 입력 핀은 여러 연결을 허용한다. Branch `In` 핀도 Entry/Shot/Branch 출력에서 오는 여러 연결을 받을 수 있다.
 - Branch 출력 핀은 `Next_0`, `Next_1` 순서로 정렬/사용한다.
 - BranchTemplate이 없거나 Outputs가 비어 있으면 Branch 출력 핀을 표시하지 않는다.
 - Branch 출력 핀의 내부 이름은 `Next_i`를 유지하고, 그래프 표시명은 Outputs의 DisplayName을 사용한다.

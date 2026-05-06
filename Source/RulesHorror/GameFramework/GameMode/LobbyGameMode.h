@@ -16,4 +16,7 @@ class ALobbyGameMode : public ARulesHorrorGameMode
 
 public:
 	ALobbyGameMode();
+
+protected:
+	virtual void StartPlay() override;
 };

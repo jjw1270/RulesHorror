@@ -242,6 +242,7 @@ Shot -> Shot
 Shot -> Branch
 Shot -> Transition
 Branch -> Shot
+Branch -> Branch
 Branch -> Transition
 ```
 
@@ -249,11 +250,10 @@ Branch -> Transition
 
 ```text
 Transition -> Any
-Branch -> Branch
 ```
 
 출력 핀은 1개 연결만 가진다. 새 출력 연결을 만들면 기존 연결은 자동으로 교체될 수 있다.
-입력 핀은 여러 연결을 받을 수 있다.
+입력 핀은 여러 연결을 받을 수 있다. Branch의 `In` 핀도 여러 Entry/Shot/Branch 출력에서 동시에 들어오는 연결을 받을 수 있다.
 
 ---
 
@@ -303,15 +303,26 @@ Blueprint 기준:
 C++ 예시:
 
 ```cpp
-if (UGameInstance* GameInstance = GetGameInstance())
+void AMyGameMode::StartPlay()
 {
-	UStoryFlowSubsystem* StoryFlow = GameInstance->GetSubsystem<UStoryFlowSubsystem>();
+	Super::StartPlay();
+
+#if WITH_EDITOR
+	if (UStoryFlowSubsystem::IsEditorPlayFromShotSession())
+	{
+		return;
+	}
+#endif
+
+	UStoryFlowSubsystem* StoryFlow = GetGameInstance()->GetSubsystem<UStoryFlowSubsystem>();
 	if (StoryFlow)
 	{
 		StoryFlow->StartFromScene(FStorySceneID(TEXT("Scene_Intro")));
 	}
 }
 ```
+
+자동 시작은 `BeginPlay`보다 `GameMode::StartPlay()`의 `Super::StartPlay()` 이후에 두는 것을 권장한다. 그러면 PlayerController와 월드 Actor의 BeginPlay가 먼저 끝난 뒤 첫 Shot의 `OnEnterShot`이 실행된다.
 
 ### 7.2 특정 Shot부터 테스트
 
@@ -321,6 +332,7 @@ Story Scene Editor에서 Shot 노드의 Play 버튼을 누르면 PIE가 시작�
 
 - PIE 중에는 버튼이 숨겨진다.
 - Compile 오류가 있으면 PIE가 차단된다.
+- Shot Play로 시작한 PIE에서는 `UStoryFlowSubsystem::IsEditorPlayFromShotSession()`이 true다. 프로젝트가 일반 PIE 시작 시 Intro Scene을 자동 실행한다면 이 값을 확인해 자동 시작을 건너뛰어야 한다.
 
 ### 7.3 중단
 

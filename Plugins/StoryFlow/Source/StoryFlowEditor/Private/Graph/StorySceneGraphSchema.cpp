@@ -74,11 +74,6 @@ const FPinConnectionResponse UStorySceneGraphSchema::CanCreateConnection(const U
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Transition cannot connect to other nodes."));
 	}
 
-	if (Cast<UStorySceneGraphNode_Branch>(output_node) && Cast<UStorySceneGraphNode_Branch>(input_node))
-	{
-		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, TEXT("Branch cannot connect to Branch."));
-	}
-
 	if (output_pin->LinkedTo.Num() > 0)
 	{
 		const ECanCreateConnectionResponse response = (output_pin == _a) ? CONNECT_RESPONSE_BREAK_OTHERS_A : CONNECT_RESPONSE_BREAK_OTHERS_B;

@@ -91,7 +91,7 @@ namespace
 
 			if (is_all_valid == false)
 			{
-				FStoryFlowEditorModule::Get().ClearPendingPlayFromShotRequest();
+				FStoryFlowEditorModule::Get().CancelPlayFromShotSession();
 				_out_reason = FString::Join(denied_reasons, TEXT("\n"));
 			}
 
@@ -153,10 +153,17 @@ void FStoryFlowEditorModule::StartupModule()
 
 	_PostPIEStartedHandle = FEditorDelegates::PostPIEStarted.AddRaw(this, &FStoryFlowEditorModule::OnPostPIEStarted);
 	_CancelPIEHandle = FEditorDelegates::CancelPIE.AddRaw(this, &FStoryFlowEditorModule::OnCancelPIE);
+	_EndPIEHandle = FEditorDelegates::EndPIE.AddRaw(this, &FStoryFlowEditorModule::OnEndPIE);
 }
 
 void FStoryFlowEditorModule::ShutdownModule()
 {
+	if (_EndPIEHandle.IsValid())
+	{
+		FEditorDelegates::EndPIE.Remove(_EndPIEHandle);
+		_EndPIEHandle.Reset();
+	}
+
 	if (_CancelPIEHandle.IsValid())
 	{
 		FEditorDelegates::CancelPIE.Remove(_CancelPIEHandle);
@@ -215,7 +222,12 @@ void FStoryFlowEditorModule::RequestPlayFromShotNode(UStorySceneGraphNode_Shot* 
 		return;
 	}
 
-	if (IsValid(GEditor) && IsValid(GEditor->PlayWorld))
+	if (IsInvalid(GEditor))
+	{
+		return;
+	}
+
+	if (IsValid(GEditor->PlayWorld))
 	{
 		EDITOR_NOTIFY_WARNING(TEXT("현재 PIE가 실행 중입니다. 먼저 종료해주세요."));
 		return;
@@ -223,12 +235,7 @@ void FStoryFlowEditorModule::RequestPlayFromShotNode(UStorySceneGraphNode_Shot* 
 
 	_PendingPlaySceneAsset = _shot_graph_node->GetOwningSceneAsset();
 	_PendingPlayShotNodeData = _shot_graph_node->GetShotNodeData();
-
-	if (IsInvalid(GEditor))
-	{
-		ClearPendingPlayFromShotRequest();
-		return;
-	}
+	UStoryFlowSubsystem::SetEditorPlayFromShotSession(true);
 
 	FRequestPlaySessionParams session_params;
 	GEditor->RequestPlaySession(session_params);
@@ -240,11 +247,17 @@ void FStoryFlowEditorModule::ClearPendingPlayFromShotRequest()
 	_PendingPlayShotNodeData = nullptr;
 }
 
+void FStoryFlowEditorModule::CancelPlayFromShotSession()
+{
+	ClearPendingPlayFromShotRequest();
+	UStoryFlowSubsystem::SetEditorPlayFromShotSession(false);
+}
+
 void FStoryFlowEditorModule::OnPostPIEStarted(bool _is_simulating)
 {
 	if (IsAnyInvalid(_PendingPlaySceneAsset, _PendingPlayShotNodeData))
 	{
-		ClearPendingPlayFromShotRequest();
+		CancelPlayFromShotSession();
 		return;
 	}
 
@@ -257,6 +270,7 @@ void FStoryFlowEditorModule::OnPostPIEStarted(bool _is_simulating)
 	if (story_flow_ref.IsValid() == false || story_flow_ref.ShotID.IsValid() == false)
 	{
 		EDITOR_NOTIFY_WARNING(TEXT("선택한 Shot으로 시작할 수 없습니다."));
+		CancelPlayFromShotSession();
 		return;
 	}
 
@@ -266,10 +280,16 @@ void FStoryFlowEditorModule::OnPostPIEStarted(bool _is_simulating)
 	if (IsInvalid(story_flow_subsystem) || story_flow_subsystem->StartFromRef(story_flow_ref) == false)
 	{
 		EDITOR_NOTIFY_ERROR(TEXT("선택한 Shot에서 StoryFlow를 시작하지 못했습니다."));
+		CancelPlayFromShotSession();
 	}
 }
 
 void FStoryFlowEditorModule::OnCancelPIE()
 {
-	ClearPendingPlayFromShotRequest();
+	CancelPlayFromShotSession();
+}
+
+void FStoryFlowEditorModule::OnEndPIE(bool _is_simulating)
+{
+	CancelPlayFromShotSession();
 }

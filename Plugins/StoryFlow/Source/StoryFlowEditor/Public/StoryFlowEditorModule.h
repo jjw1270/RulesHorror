@@ -23,6 +23,7 @@ private:
 	TSharedPtr<FGraphPanelNodeFactory> _GraphNodeFactory;
 	FDelegateHandle _PostPIEStartedHandle;
 	FDelegateHandle _CancelPIEHandle;
+	FDelegateHandle _EndPIEHandle;
 
 	TWeakObjectPtr<UStorySceneAsset> _PendingPlaySceneAsset;
 	TWeakObjectPtr<UStorySceneNodeData> _PendingPlayShotNodeData;
@@ -35,9 +36,11 @@ public:
 	virtual void ShutdownModule() override;
 
 	void RequestPlayFromShotNode(UStorySceneGraphNode_Shot* _shot_graph_node);
-	void ClearPendingPlayFromShotRequest();
+	void CancelPlayFromShotSession();
 
 private:
+	void ClearPendingPlayFromShotRequest();
 	void OnPostPIEStarted(bool _is_simulating);
 	void OnCancelPIE();
+	void OnEndPIE(bool _is_simulating);
 };

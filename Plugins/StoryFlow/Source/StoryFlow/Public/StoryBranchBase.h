@@ -30,7 +30,7 @@ protected:
 	TArray<FStoryBranchOutput> _BranchOutputs;
 
 public:
-	virtual UWorld* GetWorld() const override;
+	virtual UWorld* GetWorld() const override final;
 
 public:
 	void InitializeBranch(const FStoryFlowRef& _story_flow_ref);

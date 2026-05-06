@@ -20,7 +20,7 @@ protected:
 	bool _IsRunning = false;
 
 public:
-	virtual UWorld* GetWorld() const override;
+	virtual UWorld* GetWorld() const override final;
 
 public:
 	void InitializeScene(const FStoryFlowRef& _story_flow_ref);

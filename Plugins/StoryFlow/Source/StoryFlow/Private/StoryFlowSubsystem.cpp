@@ -36,6 +36,10 @@ namespace
 	const float DEBUG_LINE_PADDING = 2.0f;
 	const float DEBUG_TEXT_SCALE = 1.0f;
 
+#if WITH_EDITOR
+	bool GIsEditorPlayFromShotSession = false;
+#endif
+
 	static FString ToDebugString(const FStorySceneID& _scene_id)
 	{
 		return _scene_id.IsValid() ? _scene_id.Get().ToString() : TEXT("None");
@@ -364,6 +368,18 @@ void UStoryFlowSubsystem::FinishCurrentShot(UStoryShotBase* _shot_instance)
 		StopScene();
 	}
 }
+
+#if WITH_EDITOR
+void UStoryFlowSubsystem::SetEditorPlayFromShotSession(bool _is_active)
+{
+	GIsEditorPlayFromShotSession = _is_active;
+}
+
+bool UStoryFlowSubsystem::IsEditorPlayFromShotSession()
+{
+	return GIsEditorPlayFromShotSession;
+}
+#endif
 
 UStorySceneAsset* UStoryFlowSubsystem::FindSceneAssetBySceneID(const FStorySceneID& _scene_id) const
 {
