@@ -75,6 +75,7 @@ private:
 	const FSlateBrush* GetCompileStatusBrush() const;
 	FText GetCompileButtonTooltipText() const;
 	void OnGraphSelectionChanged(const TSet<UObject*>& _selection);
+	void OnGraphNodeDoubleClicked(UEdGraphNode* _node) const;
 	void OnDetailsFinishedChangingProperties(const FPropertyChangedEvent& _property_changed_event);
 	void OnGraphChanged(const struct FEdGraphEditAction& _graph_edit_action);
 	void BindGraphCommands();
@@ -92,7 +93,7 @@ private:
 	bool CanCreateCommentNode() const;
 	void ReportCompileFailureForPIE() const;
 	void RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) const;
-	void RefreshGraphNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const;
+	void RefreshGraphNodeComments(UStorySceneEdGraph* _graph) const;
 	bool ValidateCompiledScene(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors);
 	void ValidateSceneMetadata(UStorySceneEdGraph* _graph, TArray<FString>& _out_errors) const;
 	void ValidateBranchNode(UStorySceneGraphNode_Branch* _branch_node, TSet<FName>& _used_branch_ids, TArray<FString>& _out_errors) const;

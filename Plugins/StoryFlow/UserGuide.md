@@ -135,6 +135,7 @@ Shot은 `FinishShot`을 호출해야 다음 노드로 진행한다.
 | --- | --- |
 | SceneID | Registry와 런타임 시작에 쓰이는 고유 ID |
 | DisplayName | 사람이 읽기 쉬운 이름. 비어 있으면 SceneTemplate 설정 시 템플릿 이름으로 자동 입력 |
+| Description | Entry 노드 comment bubble로 표시되는 Scene 설명 |
 | TargetLevel | 이 Scene이 실행될 레벨 |
 | SceneTemplate | Scene Blueprint 인스턴스 |
 
@@ -156,7 +157,18 @@ StoryFlow Scene Asset을 더블클릭하면 Story Scene Editor가 열린다.
 
 `C` 키를 누르면 comment box를 만들 수 있다.
 
-### 5.2 Shot 노드
+### 5.2 Entry 노드
+
+Entry 노드는 Scene 시작점을 나타내며 삭제하거나 복제할 수 없다.
+
+표시:
+
+- 노드 제목은 `Entry`이며, Scene Asset의 DisplayName이 있으면 아래 줄에 표시된다.
+- Scene Asset의 DisplayName을 수정하면 Entry 노드 제목에 바로 반영된다.
+- Scene Asset의 Description은 Entry 노드 comment bubble로 표시되며, 수정하면 바로 반영된다.
+- Entry 노드를 선택하면 Details에는 Scene Asset이 표시된다.
+
+### 5.3 Shot 노드
 
 Shot 노드 Details에서 주로 편집하는 항목:
 
@@ -168,8 +180,10 @@ Shot 노드 Details에서 주로 편집하는 항목:
 | ShotTemplate | 실행할 Shot Blueprint 인스턴스 |
 
 노드 제목은 항상 `Shot`이며, DisplayName이 있으면 아래 줄에 표시된다.
+DisplayName을 수정하면 Shot 노드 제목에 바로 반영된다.
+Description을 수정하면 Shot 노드 comment bubble에 바로 반영된다.
 
-### 5.3 Branch 노드
+### 5.4 Branch 노드
 
 Branch 노드 Details에서 주로 편집하는 항목:
 
@@ -180,11 +194,13 @@ Branch 노드 Details에서 주로 편집하는 항목:
 | BranchTemplate | 실행할 Branch Blueprint 인스턴스. Outputs가 출력 핀 개수와 표시명을 정의 |
 
 BranchID는 자동 관리되며 Details에 표시하지 않는다. 노드 제목은 `Branch`이며, DisplayName이 있으면 아래 줄에 표시된다.
+DisplayName을 수정하면 Branch 노드 제목에 바로 반영된다.
+Description을 수정하면 Branch 노드 comment bubble에 바로 반영된다.
 
 BranchTemplate이 없거나 Outputs가 비어 있으면 출력 핀은 표시되지 않는다.
 Outputs를 설정하면 `Next_0`, `Next_1`, ... 출력 핀이 생기고, 핀 표시명은 각 Output의 DisplayName을 사용한다.
 
-### 5.4 Transition 노드
+### 5.5 Transition 노드
 
 Transition 노드 Details에서 편집하는 항목:
 
@@ -194,8 +210,27 @@ Transition 노드 Details에서 편집하는 항목:
 | Description | 노드 comment bubble로 표시되는 설명 |
 
 Transition 노드 제목은 `Transition`이며, NextSceneID가 있으면 아래 줄에 표시된다.
+NextSceneID를 수정하면 Transition 노드 제목에 바로 반영된다.
+Description을 수정하면 Transition 노드 comment bubble에 바로 반영된다.
 
-### 5.5 연결 규칙
+### 5.6 Template 빠르게 열기
+
+Story Scene Editor에서 주요 노드를 더블클릭하면 해당 노드가 사용하는 Template을 바로 열 수 있다.
+
+| 노드 | 더블클릭 시 열리는 대상 |
+| --- | --- |
+| Entry | Scene Asset의 `SceneTemplate` |
+| Shot | Shot 노드의 `ShotTemplate` |
+| Branch | Branch 노드의 `BranchTemplate` |
+
+동작:
+
+- Blueprint 기반 Template은 Blueprint 에디터로 열린다.
+- C++ 네이티브 Template은 Unreal Editor의 Source Code Accessor 설정에 따라 Visual Studio/Rider 등 IDE에서 해당 클래스 소스로 이동한다.
+- Template이 비어 있으면 아무 동작도 하지 않는다.
+- Template은 있지만 에디터/소스 이동 대상을 찾지 못하면 경고 알림이 표시된다.
+
+### 5.7 연결 규칙
 
 가능한 연결:
 
@@ -231,7 +266,7 @@ Compile이 하는 일:
 - Entry에서 도달 가능한 노드만 런타임 데이터로 변환
 - Entry 시작 링크 갱신
 - Shot/Branch의 다음 링크 갱신
-- Description을 comment bubble로 동기화
+- Entry/Shot/Branch/Transition Description을 comment bubble로 재동기화
 - 필수 설정 누락/잘못된 연결 검사
 
 Compile 실패 시:

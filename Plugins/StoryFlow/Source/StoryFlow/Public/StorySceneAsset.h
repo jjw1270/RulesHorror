@@ -25,6 +25,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText _DisplayName;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (MultiLine = true))
+	FText _Description;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UWorld> _TargetLevel = nullptr;
 
@@ -53,6 +56,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	const FText& GetDisplayName() const { return _DisplayName; }
+
+	UFUNCTION(BlueprintPure)
+	const FText& GetDescriptionText() const { return _Description; }
 
 	UFUNCTION(BlueprintPure)
 	const TSoftObjectPtr<UWorld>& GetTargetLevel() const { return _TargetLevel; }

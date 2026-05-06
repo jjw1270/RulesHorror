@@ -60,6 +60,7 @@ Scene 전체를 나타내는 `UPrimaryDataAsset`이다.
 
 - `_SceneID`
 - `_DisplayName`
+- `_Description` — Entry 노드 comment bubble로 표시되는 Scene 설명
 - `_TargetLevel`
 - `_EntryLink` — Compile 결과로 채워지는 Entry의 내부 시작 링크, Details에는 숨김
 - `_SceneTemplate`
@@ -237,17 +238,24 @@ Content Browser의 `StoryFlow` 카테고리에서 다음을 생성할 수 있다
 - Compile 상태 표시
 - PIE 전 자동 Compile/검증 및 실패 시 PIE 차단
 - Shot 노드 Play 버튼으로 해당 Shot부터 PIE 시작
+- Entry / Shot / Branch 노드 더블클릭으로 연결된 Template 빠르게 열기
+  - Entry: SceneTemplate
+  - Shot: ShotTemplate
+  - Branch: BranchTemplate
+  - Blueprint 기반 Template은 Blueprint 에디터로 열고, C++ 네이티브 Template은 Source Code Accessor 설정에 따라 IDE의 해당 클래스 소스로 이동
 
 ### 그래프 노드 표시 정책
 
 | 노드 | 제목 | 설명 표시 | 색상 |
 | --- | --- | --- | --- |
-| Entry | `Entry` | 없음 | 녹색 계열 |
+| Entry | `Entry` + 선택적 Scene DisplayName | Scene Description을 comment bubble로 표시 | 녹색 계열 |
 | Shot | `Shot` + 선택적 DisplayName | Description을 comment bubble로 표시 | 파란색 계열 |
 | Branch | `Branch` + 선택적 DisplayName | Description을 comment bubble로 표시 | 주황색 계열 |
 | Transition | `Transition` + NextSceneID | Description을 comment bubble로 표시 | 보라색 계열 |
 
-ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은 목적지가 핵심 정보이므로 `NextSceneID`를 제목 아래에 표시한다.
+Entry는 SceneAsset의 DisplayName을 제목 아래에 표시한다. ShotID/BranchID 같은 내부 ID는 노드 제목에서 숨긴다. Transition은 목적지가 핵심 정보이므로 `NextSceneID`를 제목 아래에 표시한다.
+
+Details에서 DisplayName 또는 Description을 수정하면 노드 제목/comment bubble은 Compile을 기다리지 않고 즉시 갱신된다.
 
 ### 연결 규칙
 
@@ -286,7 +294,7 @@ Compile은 에디터 그래프를 런타임 데이터로 접어 넣는 과정이
 주요 순서:
 
 1. ShotID 자동 보정
-2. Shot/Branch/Transition Description을 comment bubble로 동기화
+2. Entry/Shot/Branch/Transition Description을 comment bubble로 재동기화
 3. Entry에서 도달 가능한 노드 집합 계산
 4. 런타임 데이터 재생성
    - Entry `_EntryLink`

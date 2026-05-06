@@ -5,6 +5,8 @@
 #include "StoryBranchBase.h"
 #include "StoryBranchNodeData.h"
 #include "StorySceneNodeData.h"
+#include "StorySceneBase.h"
+#include "StoryShotBase.h"
 #include "StoryFlowDeveloperSettings.h"
 #include "StorySceneRegistryAsset.h"
 #include "Graph/StorySceneEdGraph.h"
@@ -34,6 +36,8 @@
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraphUtilities.h"
 #include "Editor/Transactor.h"
+#include "Subsystems/AssetEditorSubsystem.h"
+#include "SourceCodeNavigation.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Misc/PackageName.h"
 #include "Styling/AppStyle.h"
@@ -144,6 +148,57 @@ namespace
 		const FString description = _description.ToString();
 		_node->NodeComment = description;
 		_node->bCommentBubbleVisible = description.IsEmpty() == false;
+	}
+
+	static UObject* ResolveTemplateAssetEditorObject(UObject* _template)
+	{
+		if (IsInvalid(_template))
+		{
+			return nullptr;
+		}
+
+		if (IsValid(_template->GetClass()) && IsValid(_template->GetClass()->ClassGeneratedBy))
+		{
+			return _template->GetClass()->ClassGeneratedBy;
+		}
+
+		return _template->IsAsset() ? _template : nullptr;
+	}
+
+	static bool OpenTemplateDefinition(UObject* _template)
+	{
+		UObject* editor_object = ResolveTemplateAssetEditorObject(_template);
+		if (IsValid(editor_object) && IsValid(GEditor))
+		{
+			UAssetEditorSubsystem* asset_editor_subsystem = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>();
+			if (IsValid(asset_editor_subsystem))
+			{
+				return asset_editor_subsystem->OpenEditorForAsset(editor_object);
+			}
+		}
+
+		const UClass* template_class = IsValid(_template) ? _template->GetClass() : nullptr;
+		if (FSourceCodeNavigation::CanNavigateToClass(template_class))
+		{
+			return FSourceCodeNavigation::NavigateToClass(template_class);
+		}
+
+		return false;
+	}
+
+	static void OpenTemplateDefinitionOrNotify(UObject* _template, const TCHAR* _failure_message)
+	{
+		if (IsInvalid(_template))
+		{
+			return;
+		}
+
+		if (OpenTemplateDefinition(_template))
+		{
+			return;
+		}
+
+		EDITOR_NOTIFY_WARNING(TEXT("%s"), _failure_message);
 	}
 }
 
@@ -264,6 +319,7 @@ TSharedRef<SDockTab> FStorySceneEditor::SpawnGraphTab(const FSpawnTabArgs& _args
 
 	SGraphEditor::FGraphEditorEvents graph_editor_events;
 	graph_editor_events.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FStorySceneEditor::OnGraphSelectionChanged);
+	graph_editor_events.OnNodeDoubleClicked = FSingleNodeEvent::CreateSP(this, &FStorySceneEditor::OnGraphNodeDoubleClicked);
 
 	if (_ObservedGraph.Get() != graph)
 	{
@@ -432,6 +488,44 @@ void FStorySceneEditor::OnGraphSelectionChanged(const TSet<UObject*>& _selection
 	_DetailsView->SetObject(_StorySceneAsset.Get());
 }
 
+void FStorySceneEditor::OnGraphNodeDoubleClicked(UEdGraphNode* _node) const
+{
+	if (IsInvalid(_node))
+	{
+		return;
+	}
+
+	if (const UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(_node))
+	{
+		const UStorySceneNodeData* shot_node_data = shot_node->GetShotNodeData();
+		if (IsValid(shot_node_data))
+		{
+			OpenTemplateDefinitionOrNotify(shot_node_data->GetShotTemplate(), TEXT("ShotTemplate 에디터를 열 수 없습니다."));
+		}
+
+		return;
+	}
+
+	if (Cast<UStorySceneGraphNode_Entry>(_node))
+	{
+		if (IsValid(_StorySceneAsset))
+		{
+			OpenTemplateDefinitionOrNotify(_StorySceneAsset->GetSceneTemplate(), TEXT("SceneTemplate 에디터를 열 수 없습니다."));
+		}
+
+		return;
+	}
+
+	if (const UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(_node))
+	{
+		const UStoryBranchNodeData* branch_node_data = branch_node->GetBranchNodeData();
+		if (IsValid(branch_node_data))
+		{
+			OpenTemplateDefinitionOrNotify(branch_node_data->GetBranchTemplate(), TEXT("BranchTemplate 에디터를 열 수 없습니다."));
+		}
+	}
+}
+
 void FStorySceneEditor::OnDetailsFinishedChangingProperties(const FPropertyChangedEvent& _property_changed_event)
 {
 	if (_IsCompiling)
@@ -444,6 +538,7 @@ void FStorySceneEditor::OnDetailsFinishedChangingProperties(const FPropertyChang
 		if (UStorySceneEdGraph* graph = Cast<UStorySceneEdGraph>(_GraphEditorWidget->GetCurrentGraph()))
 		{
 			SyncGraphNodePins(graph);
+			RefreshGraphNodeComments(graph);
 		}
 	}
 
@@ -711,7 +806,7 @@ bool FStorySceneEditor::CompileSceneInternal()
 		_StorySceneAsset->SetSceneID(MakeDefaultSceneID(_StorySceneAsset));
 	}
 	RefreshShotIDsForCompile(graph);
-	RefreshGraphNodeDescriptionsForCompile(graph);
+	RefreshGraphNodeComments(graph);
 	graph->RebuildRuntimeData();
 
 	_CompileErrors.Reset();
@@ -777,7 +872,7 @@ void FStorySceneEditor::RefreshShotIDsForCompile(UStorySceneEdGraph* _graph) con
 	}
 }
 
-void FStorySceneEditor::RefreshGraphNodeDescriptionsForCompile(UStorySceneEdGraph* _graph) const
+void FStorySceneEditor::RefreshGraphNodeComments(UStorySceneEdGraph* _graph) const
 {
 	if (IsInvalid(_graph))
 	{
@@ -786,6 +881,17 @@ void FStorySceneEditor::RefreshGraphNodeDescriptionsForCompile(UStorySceneEdGrap
 
 	for (UEdGraphNode* node : _graph->Nodes)
 	{
+		if (UStorySceneGraphNode_Entry* entry_node = Cast<UStorySceneGraphNode_Entry>(node))
+		{
+			if (IsInvalid(_StorySceneAsset))
+			{
+				continue;
+			}
+
+			SetNodeCommentFromDescription(entry_node, _StorySceneAsset->GetDescriptionText());
+			continue;
+		}
+
 		if (UStorySceneGraphNode_Shot* shot_node = Cast<UStorySceneGraphNode_Shot>(node))
 		{
 			if (IsInvalid(shot_node->GetShotNodeData()))
