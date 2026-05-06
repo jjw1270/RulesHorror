@@ -4,7 +4,9 @@
 #include "StoryBranchNodeData.h"
 #include "StorySceneBase.h"
 #include "StorySceneNodeData.h"
+#if WITH_EDITOR
 #include "StoryFlowDisplayNameUtils.h"
+#endif
 #include "CommonUtils.h"
 
 UStorySceneNodeData* UStorySceneAsset::FindShotNode(const FStoryShotID& _shot_id) const

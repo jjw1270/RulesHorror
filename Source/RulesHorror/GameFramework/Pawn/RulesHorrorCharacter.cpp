@@ -65,7 +65,7 @@ void ARulesHorrorCharacter::SetupPlayerInputComponent(UInputComponent* _input_co
 	auto enhanced_input_comp = Cast<UEnhancedInputComponent>(_input_component);
 	if (IsInvalid(enhanced_input_comp))
 	{
-		TRACE_ERROR(TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this))
+		TRACE_ERROR(TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 		return;
 	}
 

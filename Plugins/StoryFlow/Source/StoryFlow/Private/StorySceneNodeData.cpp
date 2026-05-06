@@ -2,7 +2,9 @@
 
 #include "StorySceneNodeData.h"
 #include "StoryShotBase.h"
+#if WITH_EDITOR
 #include "StoryFlowDisplayNameUtils.h"
+#endif
 #include "CommonUtils.h"
 
 #if WITH_EDITOR

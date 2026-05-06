@@ -2,7 +2,9 @@
 
 #include "StoryBranchNodeData.h"
 #include "StoryBranchBase.h"
+#if WITH_EDITOR
 #include "StoryFlowDisplayNameUtils.h"
+#endif
 #include "CommonUtils.h"
 
 #if WITH_EDITOR

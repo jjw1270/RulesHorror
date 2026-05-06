@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "CommonUtils.h"
 
+#if WITH_EDITOR
 namespace StoryFlowDisplayNameUtils
 {
 	FORCEINLINE FText MakeDisplayNameFromTemplate(const UObject* _template)
@@ -28,3 +29,4 @@ namespace StoryFlowDisplayNameUtils
 		return FText::FromString(FName::NameToDisplayString(template_name, false));
 	}
 }
+#endif
