@@ -95,7 +95,8 @@ void URulesHorrorGameInstance::StartNewGame()
 		return;
 	}
 
-	save_game->SaveStoryFlowRef(story_flow_subsystem->GetCurrentRef());
+	save_game->SaveStoryFlowRef(story_flow_subsystem->GetPendingStartRef());
+	save_game_subsystem->SaveGame();
 }
 
 void URulesHorrorGameInstance::StartSavedGame()

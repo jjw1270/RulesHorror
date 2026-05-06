@@ -16,6 +16,7 @@ class RULESHORROR_API UUI_MainLobby : public UWidgetBase
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	
 protected:
 	UFUNCTION(BlueprintCallable)
@@ -25,6 +26,9 @@ protected:
 	void OnClick_StartSavedGame();
 
 protected:
+	UFUNCTION()
+	void OnAsyncLoadGameFinished(bool _is_success);
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetCanStartSavedGame(bool _value);
 

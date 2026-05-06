@@ -4,16 +4,28 @@
 #include "UI_MainLobby.h"
 #include "RulesHorrorUtils.h"
 #include "RulesHorrorGameInstance.h"
+#include "SaveGameSubsystem.h"
 
 void UUI_MainLobby::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
-	if (IsInvalid(game_inst))
-		return;
+	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
+	if (IsValid(save_game_subsystem))
+	{
+		save_game_subsystem->_OnAsyncLoadGameFinished.AddDynamic(this, &UUI_MainLobby::OnAsyncLoadGameFinished);
+	}
+}
 
-	SetCanStartSavedGame(game_inst->CanStartSavedGame());
+void UUI_MainLobby::NativeDestruct()
+{
+	auto save_game_subsystem = URulesHorrorUtils::GetGameInstanceSubsystem<USaveGameSubsystem>(this);
+	if (IsValid(save_game_subsystem))
+	{
+		save_game_subsystem->_OnAsyncLoadGameFinished.RemoveAll(this);
+	}
+
+	Super::NativeDestruct();
 }
 
 void UUI_MainLobby::OnClick_StartNewGame()
@@ -32,4 +44,13 @@ void UUI_MainLobby::OnClick_StartSavedGame()
 		return;
 
 	game_inst->StartSavedGame();
+}
+
+void UUI_MainLobby::OnAsyncLoadGameFinished(bool _is_success)
+{
+	auto game_inst = GetGameInstance<URulesHorrorGameInstance>();
+	if (IsInvalid(game_inst))
+		return;
+
+	SetCanStartSavedGame(game_inst->CanStartSavedGame());
 }

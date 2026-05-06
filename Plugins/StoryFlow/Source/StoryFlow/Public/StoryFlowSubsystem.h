@@ -134,6 +134,9 @@ public:
 	FStoryFlowRef GetCurrentRef() const;
 
 	UFUNCTION(BlueprintPure, Category = "StoryFlow")
+	FStoryFlowRef GetPendingStartRef() const { return _PendingStartRef; }
+
+	UFUNCTION(BlueprintPure, Category = "StoryFlow")
 	float GetTargetLevelLoadingProgressRate() const;
 
 	FString BuildDebugSummary() const;
