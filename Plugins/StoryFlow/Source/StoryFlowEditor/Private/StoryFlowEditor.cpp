@@ -11,7 +11,11 @@
 #include "StoryBranchBase.h"
 #include "StorySceneNodeData.h"
 #include "StoryFlowSubsystem.h"
+#include "Graph/SStorySceneGraphNode_Branch.h"
+#include "Graph/SStorySceneGraphNode_Entry.h"
 #include "Graph/SStorySceneGraphNode_Shot.h"
+#include "Graph/StorySceneGraphNode_Branch.h"
+#include "Graph/StorySceneGraphNode_Entry.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
 #include "AssetToolsModule.h"
 #include "EdGraphUtilities.h"
@@ -51,6 +55,20 @@ namespace
 			{
 				return SNew(SStorySceneGraphNode_Shot)
 					.GraphNodeObj(shot_node);
+			}
+
+			UStorySceneGraphNode_Branch* branch_node = Cast<UStorySceneGraphNode_Branch>(_node);
+			if (IsValid(branch_node))
+			{
+				return SNew(SStorySceneGraphNode_Branch)
+					.GraphNodeObj(branch_node);
+			}
+
+			UStorySceneGraphNode_Entry* entry_node = Cast<UStorySceneGraphNode_Entry>(_node);
+			if (IsValid(entry_node))
+			{
+				return SNew(SStorySceneGraphNode_Entry)
+					.GraphNodeObj(entry_node);
 			}
 
 			return nullptr;

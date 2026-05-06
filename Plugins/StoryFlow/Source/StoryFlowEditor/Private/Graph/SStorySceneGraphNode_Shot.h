@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "SGraphNodeDefault.h"
+#include "Graph/SStorySceneGraphNode_TemplateBase.h"
 
 class UStorySceneGraphNode_Shot;
 
-class SStorySceneGraphNode_Shot : public SGraphNodeDefault
+class SStorySceneGraphNode_Shot : public SStorySceneGraphNode_TemplateBase
 {
 public:
 	SLATE_BEGIN_ARGS(SStorySceneGraphNode_Shot)
@@ -18,9 +18,11 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& _args);
-	virtual void UpdateGraphNode() override;
 
 protected:
+	virtual UObject* GetTemplateObject() const override;
+	virtual void AddAdditionalNodeWidgets() override;
+
 	TSharedRef<SWidget> CreatePlayButtonWidget();
 
 private:

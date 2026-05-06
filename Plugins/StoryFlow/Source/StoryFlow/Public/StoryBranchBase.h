@@ -26,7 +26,7 @@ protected:
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "StoryFlow")
 	FStoryFlowRef _StartRef;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StoryFlow", meta = (HideInStoryFlowNode))
 	TArray<FStoryBranchOutput> _BranchOutputs;
 
 public:

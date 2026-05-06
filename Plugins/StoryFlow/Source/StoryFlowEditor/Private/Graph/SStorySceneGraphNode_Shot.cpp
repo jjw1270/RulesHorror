@@ -2,6 +2,8 @@
 
 #include "Graph/SStorySceneGraphNode_Shot.h"
 #include "Graph/StorySceneGraphNode_Shot.h"
+#include "StoryShotBase.h"
+#include "StorySceneNodeData.h"
 #include "StoryFlowEditorModule.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
@@ -12,13 +14,18 @@
 
 void SStorySceneGraphNode_Shot::Construct(const FArguments& _args)
 {
-	SGraphNodeDefault::Construct(SGraphNodeDefault::FArguments().GraphNodeObj(_args._GraphNodeObj));
+	ConstructBase(_args._GraphNodeObj);
 }
 
-void SStorySceneGraphNode_Shot::UpdateGraphNode()
+UObject* SStorySceneGraphNode_Shot::GetTemplateObject() const
 {
-	SGraphNodeDefault::UpdateGraphNode();
+	const UStorySceneGraphNode_Shot* shot_node = GetStorySceneGraphNode();
+	const UStorySceneNodeData* shot_node_data = IsValid(shot_node) ? shot_node->GetShotNodeData() : nullptr;
+	return IsValid(shot_node_data) ? shot_node_data->GetShotTemplate() : nullptr;
+}
 
+void SStorySceneGraphNode_Shot::AddAdditionalNodeWidgets()
+{
 	GetOrAddSlot(ENodeZone::TopLeft)
 		.SlotOffset2f(FVector2f(-32.0f, 4.0f))
 		.HAlign(HAlign_Left)
@@ -35,10 +42,12 @@ void SStorySceneGraphNode_Shot::UpdateGraphNode()
 TSharedRef<SWidget> SStorySceneGraphNode_Shot::CreatePlayButtonWidget()
 {
 	return SNew(SBox)
+		.Cursor(EMouseCursor::Default)
 		.WidthOverride(28.0f)
 		.HeightOverride(28.0f)
 		[
 			SNew(SButton)
+			.Cursor(EMouseCursor::Default)
 			.ButtonStyle(&FAppStyle::Get().GetWidgetStyle<FButtonStyle>("SimpleButton"))
 			.ContentPadding(FMargin(0.0f))
 			.Visibility(this, &SStorySceneGraphNode_Shot::GetPlayButtonVisibility)
