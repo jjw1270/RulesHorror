@@ -114,6 +114,20 @@ public:
 
 	static const UEnum* GetSubTypeEnum(EItemType _type);
 
+	static bool IsUsableItemType(EItemType _type)
+	{
+		return IsValidEnumValue(_type) &&
+			_type != EItemType::NA &&
+			_type != EItemType::MAX;
+	}
+
+	static bool IsUsableSubType(const UEnum* _sub_type_enum, int64 _sub_type)
+	{
+		return _sub_type > 0 &&
+			_sub_type <= MaxSubTypeValue &&
+			IsValidEnumValue(_sub_type_enum, _sub_type);
+	}
+
 	uint16 GetSerial() const
 	{
 		return static_cast<uint16>(Value % SubTypeMultiplier);

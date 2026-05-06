@@ -71,11 +71,11 @@ void FItemTableRow::HandleItemIDChanged(const UDataTable* _in_data_table)
 	if (IsInvalid(_in_data_table))
 		return;
 
-	if (IsValidEnumValue(TableItemType, true))
+	if (FItemID::IsUsableItemType(TableItemType))
 	{
 		if (ItemID.GetType() != TableItemType)
 		{
-			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(TableItemType, true));
+			EDITOR_MESSAGE_ERROR(ItemTableLog, TEXT("ItemType은 %s 고정입니다!"), *TEnumToString(TableItemType));
 			return;
 		}
 	}

@@ -163,7 +163,7 @@ void FItemIDCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> _property
 									.ContentPadding(FMargin(8.0f, 0.0f))
 									.IsEnabled_Lambda([this]()
 										{
-											return IsValidEnumValue(GetItemID().GetType(), true);
+											return FItemID::IsUsableItemType(GetItemID().GetType());
 										}
 									)
 									.OnGetMenuContent(this, &FItemIDCustomization::GetItemIDPickerMenu)
@@ -216,7 +216,7 @@ void FItemIDCustomization::GenerateTypeOptions()
 
 	for (EItemType item_type : TEnumRange<EItemType>())
 	{
-		if (IsValidEnumValue(item_type, true) == false)
+		if (FItemID::IsUsableItemType(item_type) == false)
 			continue;
 
 		auto type_option = MakeShared<EItemType>(item_type);
@@ -336,7 +336,7 @@ FText FItemIDCustomization::GetSelectedSubTypeText() const
 	const FItemID item_id = GetItemID();
 	const UEnum* sub_type_enum = item_id.GetSubTypeEnum(item_id.GetType());
 
-	if (IsValidEnumValue(sub_type_enum, item_id.GetSubType(), true))
+	if (FItemID::IsUsableSubType(sub_type_enum, item_id.GetSubType()))
 	{
 		return FText::FromString(sub_type_enum->GetNameStringByValue(item_id.GetSubType()));
 	}
@@ -378,7 +378,7 @@ void FItemIDCustomization::GenerateItemIDPickerOptions()
 	const FItemID item_id = GetItemID();
 
 	TOptional<uint8> sub_type_filter;
-	if (IsValidEnumValue(FItemID::GetSubTypeEnum(item_id.GetType()), item_id.GetSubType(), true))
+	if (FItemID::IsUsableSubType(FItemID::GetSubTypeEnum(item_id.GetType()), item_id.GetSubType()))
 	{
 		sub_type_filter = item_id.GetSubType();
 	}
@@ -472,7 +472,7 @@ FText FItemIDCustomization::GetPickerButtonText() const
 {
 	EItemType current_item_type = GetItemID().GetType();
 
-	if (IsValidEnumValue(current_item_type, true))
+	if (FItemID::IsUsableItemType(current_item_type))
 	{
 		return FText::FromString(TEnumToString(current_item_type));
 	}

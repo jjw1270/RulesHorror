@@ -40,7 +40,7 @@ public:
 
 	FItemTableRow(EItemType _type)
 	{
-		if (IsValidEnumValue(_type, true) == false)
+		if (FItemID::IsUsableItemType(_type) == false)
 			return;
 
 		if(ItemID == FItemID::Zero)

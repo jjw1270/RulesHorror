@@ -46,6 +46,7 @@ public class ItemCoreEditor : ModuleRules
                 "ToolMenus",
                 "Projects",
                 "KismetCompiler",
+                "MessageLog",
             }
             );
 		
