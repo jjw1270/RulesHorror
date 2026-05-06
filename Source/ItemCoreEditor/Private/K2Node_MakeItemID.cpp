@@ -180,7 +180,7 @@ void UK2Node_MakeItemID::PostReconstructNode()
 	}
 
 	const int64 current_value = sub_type_enum->GetValueByNameString(sub_type_pin->DefaultValue);
-	if (IsValidEnumValue(sub_type_enum, current_value, true))
+	if (FItemID::IsUsableSubType(sub_type_enum, current_value))
 		return;
 
 	const int32 num = sub_type_enum->NumEnums();
@@ -192,7 +192,7 @@ void UK2Node_MakeItemID::PostReconstructNode()
 		}
 
 		const int64 value = sub_type_enum->GetValueByIndex(i);
-		if (!IsValidEnumValue(sub_type_enum, value, true))
+		if (!FItemID::IsUsableSubType(sub_type_enum, value))
 		{
 			continue;
 		}

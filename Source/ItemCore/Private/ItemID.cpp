@@ -52,7 +52,7 @@ FItemIDValidationResult FItemID::Validate() const
 	// type check
 	const EItemType type = GetType();
 
-	if (!IsValidEnumValue(type, true))
+	if (!IsValidEnumValue(type))
 	{
 		return { false, TEXT("Type 값이 유효한 enum 값이 아닙니다.") };
 	}
@@ -81,7 +81,7 @@ FItemIDValidationResult FItemID::Validate() const
 		return { false, TEXT("SubType Enum 이 nullptr 입니다.") };
 	}
 
-	if (!IsValidEnumValue(sub_type_enum, sub_type, true))
+	if (!IsUsableSubType(sub_type_enum, sub_type))
 	{
 		return { false, FString::Printf(TEXT("SubType 값 %d 가 현재 Type 에 대한 유효한 enum 값이 아닙니다."), sub_type) };
 	}
