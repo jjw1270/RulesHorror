@@ -44,15 +44,6 @@ struct FItemTypeIndex
 	TMap<FItemID, FItemRowReference> ItemIDToRow;
 };
 
-USTRUCT()
-struct FItemIDList
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TArray<FItemID> ItemIDs;
-};
-
 UCLASS()
 class ITEMCORE_API UItemRegistrySubsystem : public UEngineSubsystem
 {
@@ -66,16 +57,12 @@ protected:
 	UPROPERTY(Transient)
 	TMap<EItemType, FItemTypeIndex> _ItemTypeIndexMap;
 
-	UPROPERTY(Transient)
-	TMap<const UDataTable*, FItemIDList> _TableToItemIDs;
-
 public:
 	virtual void Initialize(FSubsystemCollectionBase& _collection) override;
 	virtual void Deinitialize() override;
 
 protected:
-	bool AutoRegisterItemTables();
-	TArray<FString> GetTableSearchPaths() const;
+	bool RegisterItemTablesFromDataAsset();
 
 	// _item_table 의 RowStruct 가 FItemTableRow 계열인지 검사
 	bool IsSupportedItemTable(const UDataTable* _item_table) const;
@@ -93,7 +80,6 @@ protected:
 public:
 	bool RefreshRegistry();
 	bool RefreshItemTable(const UDataTable* _item_table);
-	void RemoveItemIndexByTable(const UDataTable* _item_table);
 
 public:
 	// 타입 안전 Row 조회
