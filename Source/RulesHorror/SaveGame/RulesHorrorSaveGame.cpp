@@ -7,6 +7,9 @@ void URulesHorrorSaveGame::ClearData()
 {
 	Super::ClearData();
 
+	if (CanModify() == false)
+		return;
+
 	_StoryFlowRef.Reset();
 }
 
@@ -17,6 +20,9 @@ bool URulesHorrorSaveGame::IsEmpty() const
 
 void URulesHorrorSaveGame::SaveStoryFlowRef(const FStoryFlowRef& _value)
 {
+	if (CanModify() == false)
+		return;
+
 	_StoryFlowRef = _value;
 }
 

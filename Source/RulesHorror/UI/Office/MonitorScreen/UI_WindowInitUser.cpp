@@ -16,6 +16,7 @@ void UUI_WindowInitUser::OnShow_Implementation()
 	const auto save_game = USaveGameHelper::GetSaveGame(this);
 	if (IsValid(save_game))
 	{
+		_CurrentNickname.Empty();
 		save_game->FindSavedStringData(TEXT("Nickname"), _CurrentNickname);
 		ShowSetNewNickname(_CurrentNickname.IsEmpty());
 	}
@@ -67,7 +68,7 @@ bool UUI_WindowInitUser::SetNewNickname(const FString& _new_nickname, FText& _ou
 		const auto save_game = USaveGameHelper::GetSaveGame(this);
 		if (IsValid(save_game))
 		{
-			save_game->SaveStringData(TEXT("Nickname"), _new_nickname);
+			save_game->SaveStringData(TEXT("Nickname"), nickname);
 			ShowSetNewNickname(_CurrentNickname.IsEmpty());
 
 			if (prev_nickname != _CurrentNickname)
