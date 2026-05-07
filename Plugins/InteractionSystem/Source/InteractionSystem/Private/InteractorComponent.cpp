@@ -8,6 +8,7 @@
 #include "InteractableInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "UI_InteractionIndicatorPanel.h"
 #include "InteractionSystemDeveloperSettings.h"
 
@@ -74,7 +75,7 @@ void UInteractorComponent::BeginPlay()
 		}
 	}
 
-	if (_OverlappedActorInfos.IsEmpty() == false)
+	if (_OverlappedActorInfos.IsEmpty() == false && _DetectMode != EInteractionDetectMode::NA)
 	{
 		SetComponentTickEnabled(true);
 		UpdateInteraction();
@@ -96,6 +97,7 @@ void UInteractorComponent::EndPlay(const EEndPlayReason::Type _end_play_reason)
 	{
 		ClearOverlayMaterial(pair.Key);
 	}
+	_OriginalForceDisableNaniteMap.Empty();
 
 	_TargetedActor = nullptr;
 	_OverlappedActorInfos.Empty();
@@ -143,8 +145,11 @@ void UInteractorComponent::OnBeginOverlap(UPrimitiveComponent* _overlapped_compo
 		_IndicatorPanel->AddInteractionActor(_other_actor, EInteractionState::None);
 	}
 
-	SetComponentTickEnabled(true);
-	UpdateInteraction();
+	if (_DetectMode != EInteractionDetectMode::NA)
+	{
+		SetComponentTickEnabled(true);
+		UpdateInteraction();
+	}
 }
 
 void UInteractorComponent::OnEndOverlap(UPrimitiveComponent* _overlapped_component, AActor* _other_actor, UPrimitiveComponent* _other_comp, int32 _other_body_index)
@@ -688,6 +693,9 @@ void UInteractorComponent::ApplyOverlayMaterial(AActor* _actor, UMaterialInterfa
 	if (IsInvalid(_actor))
 		return;
 
+	if (ShouldShowLocalInteractionVisuals() == false && (IsValid(_material) || _OriginalForceDisableNaniteMap.IsEmpty()))
+		return;
+
 	for (auto mesh_comp : IInteractableInterface::Execute_GetEffectedMeshComponents(_actor))
 	{
 		if (IsInvalid(mesh_comp))
@@ -701,7 +709,20 @@ void UInteractorComponent::ApplyOverlayMaterial(AActor* _actor, UMaterialInterfa
 			auto static_mesh = static_mesh_comp->GetStaticMesh();
 			if (IsValid(static_mesh))
 			{
-				static_mesh_comp->SetForceDisableNanite(IsValid(_material));
+				if (IsValid(_material))
+				{
+					if (_OriginalForceDisableNaniteMap.Contains(static_mesh_comp) == false)
+					{
+						_OriginalForceDisableNaniteMap.Add(static_mesh_comp, static_mesh_comp->IsForceDisableNanite());
+					}
+
+					static_mesh_comp->SetForceDisableNanite(true);
+				}
+				else if (const bool* original_force_disable_nanite = _OriginalForceDisableNaniteMap.Find(static_mesh_comp))
+				{
+					static_mesh_comp->SetForceDisableNanite(*original_force_disable_nanite);
+					_OriginalForceDisableNaniteMap.Remove(static_mesh_comp);
+				}
 			}
 		}
 
@@ -712,6 +733,12 @@ void UInteractorComponent::ApplyOverlayMaterial(AActor* _actor, UMaterialInterfa
 void UInteractorComponent::ClearOverlayMaterial(AActor* _actor) const
 {
 	ApplyOverlayMaterial(_actor, nullptr);
+}
+
+bool UInteractorComponent::ShouldShowLocalInteractionVisuals() const
+{
+	const auto pc = GetOwnerPlayerController();
+	return IsValid(pc) && pc->IsLocalController();
 }
 
 #if !UE_BUILD_SHIPPING

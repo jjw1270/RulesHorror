@@ -85,7 +85,9 @@ void UUI_InteractionIndicatorPanel::NativeTick(const FGeometry& _geo, float _del
 
 		// scale
 		const float distance = FVector::Dist(view_location, world_location);
-		const float scale = FMath::GetMappedRangeValueClamped(FVector2D(_PerspectiveMinDistance, _PerspectiveMaxDistance), FVector2D(1.0f, _PerspectiveMinScale), distance);
+		const float scale = FMath::IsNearlyEqual(_PerspectiveMinDistance, _PerspectiveMaxDistance)
+			? 1.0f
+			: FMath::GetMappedRangeValueClamped(FVector2D(_PerspectiveMinDistance, _PerspectiveMaxDistance), FVector2D(1.0f, _PerspectiveMinScale), distance);
 
 		indicator->SetRenderScale(FVector2D(scale));
 	}

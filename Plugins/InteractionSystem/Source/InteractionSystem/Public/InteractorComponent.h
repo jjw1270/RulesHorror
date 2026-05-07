@@ -142,7 +142,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ToggleDebug()
 	{
+#if !UE_BUILD_SHIPPING
 		SetShowDebug(!_ShowDebug);
+#endif
 	}
 #if !UE_BUILD_SHIPPING
 protected:
@@ -157,10 +159,13 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UMaterialInterface> _OverlayMaterial = nullptr;
 
+	mutable TMap<TWeakObjectPtr<class UStaticMeshComponent>, bool> _OriginalForceDisableNaniteMap;
+
 protected:
 	void InitOverlayMaterial();
 	void ApplyOverlayMaterial(AActor* _actor, class UMaterialInterface* _material) const;
 	void ClearOverlayMaterial(AActor* _actor) const;
+	bool ShouldShowLocalInteractionVisuals() const;
 
 #pragma endregion OverlayMaterial
 
