@@ -47,9 +47,9 @@ bool UItemRegistrySubsystem::RegisterItemTablesFromDataAsset()
 	}
 
 	bool is_success = true;
-	for (const UDataTable* item_table : registry_asset->_ItemTables)
+	for (const FItemTableReference& item_table_reference : registry_asset->_ItemTables)
 	{
-		if (RegisterItemTable(item_table) == false)
+		if (RegisterItemTable(item_table_reference.GetDataTable()) == false)
 		{
 			is_success = false;
 		}

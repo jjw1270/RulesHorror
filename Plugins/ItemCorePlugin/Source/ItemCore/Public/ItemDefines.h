@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "ItemDefines.generated.h"
 
 
@@ -52,5 +53,29 @@ public:
 	bool IsInvalid() const
 	{
 		return !_IsValid;
+	}
+};
+
+// FItemTableRow 계열 RowStruct를 가진 DataTable 참조.
+USTRUCT(BlueprintType)
+struct ITEMCORE_API FItemTableReference
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	TObjectPtr<UDataTable> DataTable = nullptr;
+
+public:
+	FItemTableReference() = default;
+
+	explicit FItemTableReference(UDataTable* _data_table)
+		: DataTable(_data_table)
+	{
+	}
+
+	UDataTable* GetDataTable() const
+	{
+		return DataTable.Get();
 	}
 };
