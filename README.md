@@ -75,15 +75,15 @@ README의 구조와 규모 설명은 **Git 추적 파일 기준**입니다. 다�
 
 | 구분 | 규모 |
 | --- | ---: |
-| Git tracked entries | 354 |
-| 일반 파일 | 351 |
+| Git tracked entries | 355 |
+| 일반 파일 | 352 |
 | `Source/RulesHorror` | 95 files / 약 3.9k lines |
 | `Plugins` 추적 항목 | 151 entries |
 | `Plugins` 내 추적 C++/Build 코드 | 113 files / 약 9.0k lines |
 | `Content` | 89 files |
 | tracked map | 4 `.umap` |
 | tracked asset | 84 `.uasset` |
-| 기획 문서 | 2 files |
+| 기획 문서 | 3 files |
 
 ---
 
@@ -130,6 +130,7 @@ RulesHorror/
 | 문서 | 역할 | 구현 연결 |
 | --- | --- | --- |
 | [`기획/개발기획.md`](./기획/개발기획.md) | MVP 구조, 코어 시스템, 구현 우선순위 | StoryFlow, SaveGame, 사이트/챕터 구조, 세로 슬라이스 |
+| [`기획/모니터UI인터랙션_기술정리.md`](./기획/모니터UI인터랙션_기술정리.md) | 월드 상호작용형 컴퓨터, 모니터 입력 보정, 멀티 윈도우 UI를 기술 구현 관점에서 정리한 문서 | `AComputer`, `AOfficePawn`, `UUI_Monitor`, `UI_WindowManager`, `Site_StoryList/Detail` |
 | [`기획/스토리기획.md`](./기획/스토리기획.md) | 시놉시스, 인물, 챕터 흐름, 실제 에셋명 기준 StoryFlow Scene / Shot 분해 | `Content/Story`, `StoryFlow`, `RulesHorrorDeveloperSettings` |
 
 이 프로젝트는 기획 문서의 흐름을 그대로 코드에 하드코딩하기보다, 다음과 같이 콘텐츠 제작 단위로 분해하는 방향을 잡았습니다.
@@ -206,6 +207,8 @@ Subtree로 가져온 플러그인은 현재 저장소에 코드가 포함되어 
 - Interactable Interface 구현
 - 상호작용 시 OfficePawn을 지정 MovePoint로 이동
 - 상호작용 전용 UI 열기/닫기
+
+이 디제틱 컴퓨터 UX의 입력 보정, 화면 상태 전환, 멀티 윈도우 구조, DataTable 기반 사이트 연결은 별도 기술 문서 [`기획/모니터UI인터랙션_기술정리.md`](./기획/모니터UI인터랙션_기술정리.md)에 더 자세히 정리되어 있습니다.
 
 관련 파일:
 
