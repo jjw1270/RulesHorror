@@ -15,11 +15,11 @@ bool FItemTableRow::IsUsableItem() const
 {
 #if UE_BUILD_SHIPPING
 	return DevState == EItemDevelopmentState::Shipping;
-#endif
-
+#else
 	return DevState == EItemDevelopmentState::Developing ||
 				DevState == EItemDevelopmentState::Ready ||
 				DevState == EItemDevelopmentState::Shipping;
+#endif
 }
 
 FText FItemTableRow::GetDisplayName() const
