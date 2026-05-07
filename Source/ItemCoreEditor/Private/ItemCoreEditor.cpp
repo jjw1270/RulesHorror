@@ -4,6 +4,7 @@
 #include "ItemCore.h"
 #include "PropertyEditorModule.h"
 #include "ItemIDCustomization.h"
+#include "ItemTableReferenceCustomization.h"
 #include "Engine/Engine.h"
 #include "MessageLogModule.h"
 #include "ToolMenus.h"
@@ -25,6 +26,7 @@ void FItemCoreEditorModule::StartupModule()
 	FPropertyEditorModule& property_module = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
 	property_module.RegisterCustomPropertyTypeLayout("ItemID", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemIDCustomization::MakeInstance));
+	property_module.RegisterCustomPropertyTypeLayout("ItemTableReference", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FItemTableReferenceCustomization::MakeInstance));
 
 	property_module.NotifyCustomizationModuleChanged();
 
@@ -45,6 +47,7 @@ void FItemCoreEditorModule::ShutdownModule()
 	{
 		FPropertyEditorModule& property_module = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		property_module.UnregisterCustomPropertyTypeLayout("ItemID");
+		property_module.UnregisterCustomPropertyTypeLayout("ItemTableReference");
 	}
 
 	// tool menu

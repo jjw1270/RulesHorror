@@ -42,7 +42,8 @@ Item Row Struct 작성
 
 주의:
 
-- `_ItemTables`는 `FItemTableRow` 계열 RowStruct를 가진 DataTable만 등록해야 한다.
+- `_ItemTables` picker에는 `FItemTableRow` 계열 RowStruct를 가진 DataTable만 표시된다.
+- 내부적으로 `_ItemTables`는 `FItemTableReference` 배열이며, 각 entry의 `DataTable`에 테이블을 지정한다.
 - 일반 `FTableRowBase` DataTable은 Item Registry 대상이 아니다.
 - DataAsset 위치는 플러그인 코드에서 강제하지 않는다.
 
@@ -182,6 +183,7 @@ Shipping 빌드에서는 `Shipping` 상태인 Row만 usable item으로 취급된
 권장:
 
 - 실제 게임에서 조회할 Item DataTable만 등록한다.
+- picker에 보이지 않는 테이블은 RowStruct가 `FItemTableRow`를 상속하는지 확인한다.
 - 테스트/샘플 테이블은 필요할 때만 등록한다.
 - 여러 테이블에 같은 ItemID가 없도록 관리한다.
 
@@ -377,7 +379,7 @@ Register=Success, BuildIndex=Success, RegisteredTables=N, IndexedItems=N
 | --- | --- |
 | `ItemRegistryDataAsset is not set.` | Project Settings에 Registry DataAsset 미설정 |
 | `Failed to load ItemRegistryDataAsset` | 설정된 DataAsset 로드 실패 |
-| `Table is null.` | `_ItemTables`에 null entry 있음 |
+| `Table is null.` | `_ItemTables`에 비어 있는 DataTable entry 있음 |
 | `unsupported RowStruct` | `FItemTableRow` 계열이 아닌 DataTable |
 | `Invalid ItemID` | Row의 ItemID가 유효하지 않음 |
 | `중복 ItemID` | 여러 Row가 같은 ItemID 사용 |
