@@ -98,10 +98,10 @@ RulesHorror/
 │  ├─ CommonLibraryPlugin/         # 공통 유틸 플러그인, submodule
 │  ├─ CustomUIPlugin/              # 공통 UI 프레임워크, submodule
 │  ├─ SaveGamePlugin/              # 저장 시스템, submodule
-│  ├─ InteractionSystem/           # 상호작용 감지/표시/실행 플러그인
+│  ├─ InteractionPlugin/           # 상호작용 감지/표시/실행 플러그인, submodule
 │  ├─ ItemCorePlugin/              # ItemID / Registry / DataTable 플러그인
 │  ├─ RulesPlugin/                 # 규칙 시스템 확장용 빈 플러그인/실험 자리
-│  └─ StoryFlow/                   # Scene / Shot / Branch 스토리 플로우 플러그인
+│  └─ StoryFlowPlugin/             # Scene / Shot / Branch 스토리 플로우 플러그인, submodule
 ├─ 기획/                           # 개발/스토리 기획 문서
 ├─ RulesHorror.uproject
 ├─ GenerateProjectFiles.bat
@@ -140,10 +140,10 @@ Chapter / Scene 기획
 | --- | --- | --- |
 | `CommonLibraryPlugin` | 로그, 유효성 검사, 공통 유틸리티 | Git submodule / [CommonLibraryPlugin](https://github.com/jjw1270/CommonLibraryPlugin.git) |
 | `CustomUIPlugin` | `WidgetBase`, Popup, Button, StringTable, Widget Registry 등 공통 UI 기반 | Git submodule / [CustomUIPlugin](https://github.com/jjw1270/CustomUIPlugin.git) |
-| `InteractionSystem` | 상호작용 대상 감지, Target 표시, Overlay, Indicator UI | Repo-local tracked source / [`Plugins/InteractionSystem`](./Plugins/InteractionSystem) |
+| `InteractionSystem` | 상호작용 대상 감지, Target 표시, Overlay, Indicator UI | Git submodule / [InteractionPlugin](https://github.com/jjw1270/InteractionPlugin.git) |
 | `ItemCorePlugin` | `ItemID`, DataTable Row, Registry, 에디터 Picker | Git subtree / [ItemCorePlugin](https://github.com/jjw1270/ItemCorePlugin.git) |
 | `SaveGamePlugin` | SaveGame Subsystem과 저장 슬롯 관리 | Git submodule / [SaveGamePlugin](https://github.com/jjw1270/SaveGamePlugin.git) |
-| `StoryFlow` | Scene / Shot / Branch 그래프 기반 스토리 진행 | Repo-local tracked source / [`Plugins/StoryFlow`](./Plugins/StoryFlow) |
+| `StoryFlow` | Scene / Shot / Branch 그래프 기반 스토리 진행 | Git submodule / [StoryFlowPlugin](https://github.com/jjw1270/StoryFlowPlugin.git) |
 | `RulesPlugin` | 규칙형 콘텐츠 확장을 위해 자리만 잡아둔 플러그인. 현재 실질 기능은 거의 없음 | Repo-local tracked source / [`Plugins/RulesPlugin`](./Plugins/RulesPlugin) |
 
 Submodule 플러그인은 GitHub에서 일반 폴더처럼 바로 펼쳐지지 않고 gitlink로 보일 수 있으므로, 위 표의 GitHub 링크를 함께 참고하는 것이 좋습니다.
@@ -166,9 +166,9 @@ Subtree로 가져온 플러그인은 현재 저장소에 코드가 포함되어 
 
 관련 파일:
 
-- `Plugins/InteractionSystem/Source/InteractionSystem/Public/InteractorComponent.h`
-- `Plugins/InteractionSystem/Source/InteractionSystem/Public/InteractableInterface.h`
-- `Plugins/InteractionSystem/Source/InteractionSystem/Public/InteractionSystemDefines.h`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Public/InteractorComponent.h`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Public/InteractableInterface.h`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Public/InteractionSystemDefines.h`
 - `Source/RulesHorror/GameFramework/Pawn/InteractionPawn/InteractionPawn.*`
 
 ---
@@ -324,11 +324,11 @@ Template Branch: Branch_*
 
 관련 파일:
 
-- `Plugins/StoryFlow/Source/StoryFlow/Public/StoryFlowSubsystem.h`
-- `Plugins/StoryFlow/Source/StoryFlow/Public/StorySceneAsset.h`
-- `Plugins/StoryFlow/Source/StoryFlow/Public/StoryShotBase.h`
-- `Plugins/StoryFlow/Source/StoryFlow/Public/StoryBranchBase.h`
-- `Plugins/StoryFlow/Source/StoryFlowEditor/Private/StorySceneEditor.cpp`
+- `Plugins/StoryFlowPlugin/Source/StoryFlow/Public/StoryFlowSubsystem.h`
+- `Plugins/StoryFlowPlugin/Source/StoryFlow/Public/StorySceneAsset.h`
+- `Plugins/StoryFlowPlugin/Source/StoryFlow/Public/StoryShotBase.h`
+- `Plugins/StoryFlowPlugin/Source/StoryFlow/Public/StoryBranchBase.h`
+- `Plugins/StoryFlowPlugin/Source/StoryFlowEditor/Private/StorySceneEditor.cpp`
 - `Source/RulesHorror/RulesHorrorDeveloperSettings.h`
 - `Source/RulesHorror/RulesHorrorGameInstance.cpp`
 - `Source/RulesHorror/GameFramework/GameMode/LobbyGameMode.cpp`
@@ -438,9 +438,9 @@ BuildAndLaunch.bat
 7. `Source/RulesHorror/UI/Office/MonitorScreen/WindowBase/*`
 8. `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/*`
 9. `Source/RulesHorror/Item/*`
-10. `Plugins/InteractionSystem/README.md`
+10. `Plugins/InteractionPlugin/README.md`
 11. `Plugins/ItemCorePlugin/README.md`
-12. `Plugins/StoryFlow/ReadMe.md`
+12. `Plugins/StoryFlowPlugin/ReadMe.md`
 
 ---
 
@@ -465,12 +465,14 @@ BuildAndLaunch.bat
 
 - [개발 기획](./기획/개발기획.md)
 - [스토리 기획](./기획/스토리기획.md)
-- [InteractionSystem README](./Plugins/InteractionSystem/README.md)
-- [StoryFlow README](./Plugins/StoryFlow/ReadMe.md)
+- [InteractionSystem README](./Plugins/InteractionPlugin/README.md)
+- [StoryFlow README](./Plugins/StoryFlowPlugin/ReadMe.md)
 - Submodule 원본:
   - [CommonLibraryPlugin](https://github.com/jjw1270/CommonLibraryPlugin.git)
   - [CustomUIPlugin](https://github.com/jjw1270/CustomUIPlugin.git)
   - [SaveGamePlugin](https://github.com/jjw1270/SaveGamePlugin.git)
+  - [InteractionPlugin](https://github.com/jjw1270/InteractionPlugin.git)
+  - [StoryFlowPlugin](https://github.com/jjw1270/StoryFlowPlugin.git)
 - Subtree 원본:
   - [ItemCorePlugin](https://github.com/jjw1270/ItemCorePlugin.git)
 

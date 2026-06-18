@@ -7,3 +7,9 @@
 [submodule "Plugins/SaveGamePlugin"]
 	path = Plugins/SaveGamePlugin
 	url = https://github.com/jjw1270/SaveGamePlugin.git
+[submodule "Plugins/InteractionPlugin"]
+	path = Plugins/InteractionPlugin
+	url = https://github.com/jjw1270/InteractionPlugin.git
+[submodule "Plugins/StoryFlowPlugin"]
+	path = Plugins/StoryFlowPlugin
+	url = https://github.com/jjw1270/StoryFlowPlugin.git

@@ -47,9 +47,9 @@
 ## 3. 상호작용 감지 레이어
 
 ### 관련 파일
-- `Plugins/InteractionSystem/Source/InteractionSystem/Public/InteractableInterface.h`
-- `Plugins/InteractionSystem/Source/InteractionSystem/Public/InteractorComponent.h`
-- `Plugins/InteractionSystem/Source/InteractionSystem/Private/InteractorComponent.cpp`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Public/InteractableInterface.h`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Public/InteractorComponent.h`
+- `Plugins/InteractionPlugin/Source/InteractionSystem/Private/InteractorComponent.cpp`
 - `Source/RulesHorror/GameFramework/Pawn/InteractionPawn/InteractionPawn.h`
 - `Source/RulesHorror/GameFramework/Pawn/InteractionPawn/InteractionPawn.cpp`
 
