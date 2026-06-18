@@ -9,11 +9,16 @@
 #include "UI/Common/UI_EditableTextBox.h"
 
 
+namespace
+{
+	constexpr int32 RulesHorrorSaveGameSlotIndex = 0;
+}
+
 void UUI_WindowInitUser::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
 
-	const auto save_game = USaveGameHelper::GetSaveGame(this);
+	const auto save_game = USaveGameHelper::GetCurrentSaveGame_Editable(this);
 	if (IsValid(save_game))
 	{
 		_CurrentNickname.Empty();
@@ -65,7 +70,7 @@ bool UUI_WindowInitUser::SetNewNickname(const FString& _new_nickname, FText& _ou
 	{
 		_CurrentNickname = nickname;
 
-		const auto save_game = USaveGameHelper::GetSaveGame(this);
+		const auto save_game = USaveGameHelper::GetCurrentSaveGame_Editable(this);
 		if (IsValid(save_game))
 		{
 			save_game->SaveStringData(TEXT("Nickname"), nickname);
@@ -73,7 +78,7 @@ bool UUI_WindowInitUser::SetNewNickname(const FString& _new_nickname, FText& _ou
 
 			if (prev_nickname != _CurrentNickname)
 			{
-				USaveGameHelper::SaveGame(this);
+				USaveGameHelper::SaveGameSlot(this, RulesHorrorSaveGameSlotIndex);
 			}
 
 			return true;

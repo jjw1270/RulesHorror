@@ -36,6 +36,10 @@
 		{
 			"Name": "ModuleGeneration",
 			"Enabled": true
+		},
+		{
+			"Name": "VibeUE",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

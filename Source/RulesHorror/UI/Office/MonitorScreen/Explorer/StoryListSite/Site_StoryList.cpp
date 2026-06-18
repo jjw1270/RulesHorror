@@ -43,7 +43,7 @@ void USite_StoryList::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	const auto save_game = USaveGameHelper::GetSaveGame(this);
+	const auto save_game = USaveGameHelper::GetCurrentSaveGame_ReadOnly(this);
 	if (IsValid(save_game))
 	{
 		// TODO : Story 진행상황 불러오기

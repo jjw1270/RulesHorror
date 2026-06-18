@@ -14,6 +14,11 @@
 #include "UI/Office/UI_Monitor.h"
 #endif
 
+namespace
+{
+	constexpr int32 RulesHorrorSaveGameSlotIndex = 0;
+}
+
 void URulesHorrorGameInstance::Shutdown()
 {
 #if WITH_EDITOR
@@ -45,7 +50,7 @@ void URulesHorrorGameInstance::PauseGame(bool _is_pause)
 
 bool URulesHorrorGameInstance::CanStartSavedGame() const
 {
-	const auto save_game = Cast<URulesHorrorSaveGame>(USaveGameHelper::GetSaveGame_ReadOnly(this));
+	const auto save_game = Cast<URulesHorrorSaveGame>(USaveGameHelper::GetSaveGameFromSlot_ReadOnly(this, RulesHorrorSaveGameSlotIndex));
 	if (IsValid(save_game))
 	{
 		const auto& saved_story_flow_ref = save_game->GetStoryFlowRef();
@@ -71,7 +76,14 @@ void URulesHorrorGameInstance::StartNewGame()
 		return;
 	}
 
-	save_game_subsystem->ResetGame();
+	const bool save_game_slot_ready = save_game_subsystem->IsValidSaveGameSlotIndex(RulesHorrorSaveGameSlotIndex)
+		? save_game_subsystem->ResetGameSlot(RulesHorrorSaveGameSlotIndex)
+		: save_game_subsystem->CreateNewGameSlot(RulesHorrorSaveGameSlotIndex);
+	if (save_game_slot_ready == false)
+	{
+		TRACE_ERROR(TEXT("ready save game slot failed."));
+		return;
+	}
 
 	auto dev_setting = GetDefault<URulesHorrorDeveloperSettings>();
 	if (IsInvalid(dev_setting))
@@ -88,7 +100,7 @@ void URulesHorrorGameInstance::StartNewGame()
 
 	story_flow_subsystem->StartFromScene(dev_setting->_StoryStartSceneID);
 
-	auto save_game = Cast<URulesHorrorSaveGame>(save_game_subsystem->GetSaveGame());
+	auto save_game = Cast<URulesHorrorSaveGame>(save_game_subsystem->GetCurrentSaveGame());
 	if (IsInvalid(save_game))
 	{
 		TRACE_ERROR(TEXT("save game invalid."));
@@ -96,12 +108,25 @@ void URulesHorrorGameInstance::StartNewGame()
 	}
 
 	save_game->SaveStoryFlowRef(story_flow_subsystem->GetPendingStartRef());
-	save_game_subsystem->SaveGame();
+	save_game_subsystem->SaveGameSlot(RulesHorrorSaveGameSlotIndex);
 }
 
 void URulesHorrorGameInstance::StartSavedGame()
 {
-	const auto save_game = Cast<URulesHorrorSaveGame>(USaveGameHelper::GetSaveGame_ReadOnly(this));
+	auto save_game_subsystem = GetSubsystem<USaveGameSubsystem>();
+	if (IsInvalid(save_game_subsystem))
+	{
+		TRACE_ERROR(TEXT("save game subsystem invalid."));
+		return;
+	}
+
+	if (save_game_subsystem->LoadGameSlot(RulesHorrorSaveGameSlotIndex) == false)
+	{
+		TRACE_ERROR(TEXT("load save game slot failed."));
+		return;
+	}
+
+	const auto save_game = Cast<URulesHorrorSaveGame>(save_game_subsystem->GetCurrentSaveGame());
 	if (IsInvalid(save_game))
 	{
 		TRACE_ERROR(TEXT("save game invalid."));

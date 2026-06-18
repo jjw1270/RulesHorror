@@ -27,7 +27,7 @@ void UUI_SitePanel::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
 
-	const auto save_game = USaveGameHelper::GetSaveGame(this);
+	const auto save_game = USaveGameHelper::GetCurrentSaveGame_ReadOnly(this);
 	if (IsValid(save_game))
 	{
 		FString nickname;
