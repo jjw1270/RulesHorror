@@ -16,14 +16,14 @@ struct FItemRowReference
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Item", meta = (ToolTip = "Item Row가 들어 있는 원본 DataTable"))
 	const UDataTable* DataTable = nullptr;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Item", meta = (ToolTip = "DataTable 안에서 Item Row를 식별하는 RowName"))
 	FName RowName = NAME_None;
 
 	// 실제 DataTable 의 RowStruct 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Item", meta = (ToolTip = "원본 DataTable의 실제 RowStruct"))
 	const UScriptStruct* RowStruct = nullptr;
 
 public:

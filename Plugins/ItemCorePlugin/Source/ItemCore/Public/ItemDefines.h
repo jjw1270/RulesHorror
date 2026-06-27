@@ -7,7 +7,7 @@
 #include "ItemDefines.generated.h"
 
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ShortToolTip = "아이템 대분류"))
 enum class EItemType : uint8
 {
 	NA = 0								UMETA(Hidden),
@@ -19,11 +19,11 @@ enum class EItemType : uint8
 ENUM_RANGE_BY_COUNT(EItemType, EItemType::MAX);
 
 // 따로 SubType을 연결하지 않으면 이 Enum을 기본으로 사용합니다.
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ShortToolTip = "기본 아이템 세부 분류"))
 enum class EDefaultItemSubType : uint8
 {
 	NA = 0					UMETA(Hidden),
-	Default
+	Default					UMETA(ToolTip = "기본 SubType")
 };
 
 USTRUCT()
@@ -57,13 +57,13 @@ public:
 };
 
 // FItemTableRow 계열 RowStruct를 가진 DataTable 참조.
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (ShortToolTip = "Item Registry에 등록할 DataTable 참조"))
 struct ITEMCORE_API FItemTableReference
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (ToolTip = "FItemTableRow 계열 RowStruct를 가진 Item DataTable"))
 	TObjectPtr<UDataTable> DataTable = nullptr;
 
 public:

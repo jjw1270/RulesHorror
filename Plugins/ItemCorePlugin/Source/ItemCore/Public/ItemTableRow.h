@@ -7,7 +7,7 @@
 #include "ItemID.h"
 #include "ItemTableRow.generated.h"
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (ShortToolTip = "아이템 개발/출시 상태"))
 enum class EItemDevelopmentState : uint8
 {
 	NotUsed				UMETA(Tooltip = "사용하지 않음, 샘플 등"),
@@ -17,20 +17,28 @@ enum class EItemDevelopmentState : uint8
 	Shipping				UMETA(Tooltip = "Shipping"),
 };
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (ShortToolTip = "Item DataTable 기본 Row"))
 struct ITEMCORE_API FItemTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (ToolTip = "Registry 조회와 중복 검증에 사용하는 고유 아이템 식별자"))
 	FItemID ItemID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (ToolTip = "UI, 로그, 디버그 표시 등에 사용할 아이템 이름"))
 	FText DisplayName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (MultiLine = true, ToolTip = "UI/툴팁 등에 사용할 아이템 설명"))
+	FText Description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item", meta = (ToolTip = "빌드 설정별 사용 가능 여부를 판단하는 개발/출시 상태"))
 	EItemDevelopmentState DevState = EItemDevelopmentState::NotUsed;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "Item", meta = (MultiLine = true, ToolTip = "에디터에서만 사용하는 제작 메모. 런타임 데이터로 사용하지 않음"))
+	FText DevComment;
+#endif
 
 public:
 	FItemTableRow()

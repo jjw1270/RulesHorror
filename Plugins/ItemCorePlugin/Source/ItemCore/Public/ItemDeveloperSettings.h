@@ -9,12 +9,12 @@
 class UItemRegistryDataAsset;
 
 
-UCLASS(Config = Game, DefaultConfig)
+UCLASS(Config = Game, DefaultConfig, meta = (DisplayName = "Item Developer Settings"))
 class ITEMCORE_API UItemDeveloperSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, Config, Category = "Item")
+	UPROPERTY(EditAnywhere, Config, Category = "Item", meta = (ToolTip = "Item Registry가 읽을 UItemRegistryDataAsset soft reference"))
 	TSoftObjectPtr<UItemRegistryDataAsset> _ItemRegistryDataAsset;
 };

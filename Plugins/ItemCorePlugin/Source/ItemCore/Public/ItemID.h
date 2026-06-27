@@ -12,7 +12,7 @@
 * 000 000 0000
 * bit 패킹 아님!! 그냥 10진수
 */
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (ShortToolTip = "Type/SubType/Serial로 구성된 아이템 식별자"))
 struct ITEMCORE_API FItemID
 {
 	GENERATED_BODY()
@@ -27,7 +27,7 @@ private:
 	static constexpr uint32 MaxSerialValue = 9999;
 
 protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Item", meta = (ToolTip = "Type 3자리 + SubType 3자리 + Serial 4자리 10진수 조합 값"))
 	uint32 Value = 0;
 
 public:
