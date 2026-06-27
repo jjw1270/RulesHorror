@@ -39,7 +39,7 @@ public:
 	}
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Item")
+	UFUNCTION(BlueprintPure, Category = "Item", meta = (ToolTip = "Registry에서 ItemID에 해당하는 기본 Item Row를 찾아 복사"))
 	static bool FindItemRow(FItemID _item_id, FItemTableRow& _out_item_row);
 
 };

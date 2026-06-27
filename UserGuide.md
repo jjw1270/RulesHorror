@@ -103,10 +103,17 @@ Type 3자리 + SubType 3자리 + Serial 4자리
 유효성 기준:
 
 - Type은 `NA`나 `MAX`가 아니어야 한다.
+- Type은 현재 255 이하 값만 사용한다. 표기는 3자리 구간이지만 `000~999` 전체를 허용하는 구조가 아니다.
 - SubType은 0이 아니어야 한다.
 - SubType은 해당 Type의 SubType enum에 존재해야 한다.
+- SubType은 현재 255 이하 값만 사용한다. 표기는 3자리 구간이지만 `000~999` 전체를 허용하는 구조가 아니다.
 - Serial은 0이 아니어야 한다.
 - Serial은 9999 이하이어야 한다.
+
+주의:
+
+- ItemID를 직접 정수로 입력하거나 CSV/저장 데이터에서 가져오는 경우에도 반드시 유효성 검사를 통과해야 한다.
+- C++에서는 가능하면 raw 정수 값을 직접 넣기보다 Type/SubType/Serial을 분리해 `Set()` 또는 `UItemIDHelper::MakeItemID()` 경로로 생성한다.
 
 ---
 
@@ -124,10 +131,10 @@ struct MYGAME_API FMyItemTableRow : public FItemTableRow
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FString Description;
+	TSoftObjectPtr<UObject> RelatedAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSoftObjectPtr<UObject> RelatedAsset;
+	int32 StackSize = 1;
 
 public:
 	FMyItemTableRow()
@@ -153,7 +160,7 @@ public:
 2. RowStruct로 프로젝트 Item Row를 선택한다.
    - 예: `FMyItemTableRow`
 3. Row를 추가한다.
-4. 각 Row의 `ItemID`, `DisplayName`, `DevState`를 설정한다.
+4. 각 Row의 `ItemID`, `DisplayName`, `Description`, `DevState`를 설정한다.
 
 기본 필드:
 
@@ -161,7 +168,9 @@ public:
 | --- | --- |
 | ItemID | 고유 식별자 |
 | DisplayName | UI 표시 이름 |
+| Description | UI/툴팁 등에 사용할 아이템 설명 |
 | DevState | 개발/출시 상태 |
+| DevComment | 에디터 전용 개발 메모. 패키징 런타임 데이터로 쓰지 않는다 |
 
 `DevState` 추천 사용:
 
@@ -389,6 +398,7 @@ Register=Success, BuildIndex=Success, RegisteredTables=N, IndexedItems=N
 - 에디터에서 Engine Subsystem 초기화 시 refresh된다.
 - GameInstance 시작 시 `UItemRegistryValidationSubsystem`이 refresh한다.
 - DataTable Row 변경 이벤트가 발생하면 `RefreshItemTable()`을 통해 전체 refresh된다.
+- `RefreshRegistry()`가 실패해도 실패 전까지 인덱싱된 valid Row가 일부 남을 수 있다. 실패 로그가 있으면 부분 Registry 상태로 간주하고, 조회 테스트를 통과했더라도 원인을 먼저 해결한다.
 
 ---
 
@@ -426,6 +436,7 @@ ToggleShowItemID
 - `_ItemRegistryDataAsset`은 soft reference다.
 - 패키징에서 DataAsset/테이블 cook 포함 여부는 프로젝트 설정과 참조 정책에 따라 확인해야 한다.
 - 패키징에서 Registry 로드가 실패하면 cook 정책을 별도로 지정해야 할 수 있다.
+- 패키징 전 `RefreshRegistry()` 실패가 한 번이라도 있으면 부분 Registry가 남아 있을 수 있으므로, Message Log 오류를 모두 해결한 뒤 다시 refresh 성공 상태를 확인한다.
 
 ---
 
