@@ -69,7 +69,8 @@ UItemDeveloperSettings::_ItemRegistryDataAsset
 
 ```text
 Refresh Registry...
-Register=Success, BuildIndex=Success, RegisteredTables=N, IndexedItems=N
+Register=Success, BuildIndex=Success, CandidateTables=N, CandidateItems=N, ActiveItems=N
+Applied Item Registry. RegisteredTables=N, IndexedItems=N
 Refresh Item Registry Success!
 ```
 
@@ -379,7 +380,8 @@ TArray<FMyItemTableRow> UMyItemHelper::GetAllMyItemRows()
 성공 로그:
 
 ```text
-Register=Success, BuildIndex=Success, RegisteredTables=N, IndexedItems=N
+Register=Success, BuildIndex=Success, CandidateTables=N, CandidateItems=N, ActiveItems=N
+Applied Item Registry. RegisteredTables=N, IndexedItems=N
 ```
 
 실패 로그 예:
@@ -398,7 +400,9 @@ Register=Success, BuildIndex=Success, RegisteredTables=N, IndexedItems=N
 - 에디터에서 Engine Subsystem 초기화 시 refresh된다.
 - GameInstance 시작 시 `UItemRegistryValidationSubsystem`이 refresh한다.
 - DataTable Row 변경 이벤트가 발생하면 `RefreshItemTable()`을 통해 전체 refresh된다.
-- `RefreshRegistry()`가 실패해도 실패 전까지 인덱싱된 valid Row가 일부 남을 수 있다. 실패 로그가 있으면 부분 Registry 상태로 간주하고, 조회 테스트를 통과했더라도 원인을 먼저 해결한다.
+- `RefreshRegistry()`는 임시 Registry를 먼저 만들고 성공할 때만 실제 Registry를 교체한다.
+- 실패하면 새 임시 결과는 폐기하고 이전 성공 Registry를 유지한다.
+- 이전 성공 Registry가 없는 초기 상태에서 실패하면 조회 가능한 active Registry는 비어 있다.
 
 ---
 
@@ -436,7 +440,7 @@ ToggleShowItemID
 - `_ItemRegistryDataAsset`은 soft reference다.
 - 패키징에서 DataAsset/테이블 cook 포함 여부는 프로젝트 설정과 참조 정책에 따라 확인해야 한다.
 - 패키징에서 Registry 로드가 실패하면 cook 정책을 별도로 지정해야 할 수 있다.
-- 패키징 전 `RefreshRegistry()` 실패가 한 번이라도 있으면 부분 Registry가 남아 있을 수 있으므로, Message Log 오류를 모두 해결한 뒤 다시 refresh 성공 상태를 확인한다.
+- 패키징 전 Message Log 오류를 모두 해결하고 `RefreshRegistry()` 성공 상태를 확인한다. 실패 상태에서는 이전 성공 Registry가 유지될 수 있으므로, 조회 테스트만으로 최신 데이터 적용을 판단하지 않는다.
 
 ---
 
