@@ -20,11 +20,13 @@ void UItemRegistrySubsystem::Deinitialize()
 {
 	ClearItemIndex();
 	ClearRegisteredItemTables();
+	_LastRefreshSucceeded = false;
+	_HasSuccessfulRegistry = false;
 
 	Super::Deinitialize();
 }
 
-bool UItemRegistrySubsystem::RegisterItemTablesFromDataAsset()
+bool UItemRegistrySubsystem::RegisterItemTablesFromDataAsset(TArray<const UDataTable*>& _out_registered_item_tables) const
 {
 	const auto settings = GetDefault<UItemDeveloperSettings>();
 	if (IsInvalid(settings))
@@ -49,7 +51,7 @@ bool UItemRegistrySubsystem::RegisterItemTablesFromDataAsset()
 	bool is_success = true;
 	for (const FItemTableReference& item_table_reference : registry_asset->_ItemTables)
 	{
-		if (RegisterItemTable(item_table_reference.GetDataTable()) == false)
+		if (RegisterItemTable(item_table_reference.GetDataTable(), _out_registered_item_tables) == false)
 		{
 			is_success = false;
 		}
@@ -70,7 +72,7 @@ bool UItemRegistrySubsystem::IsSupportedItemTable(const UDataTable* _item_table)
 	return row_struct->IsChildOf(FItemTableRow::StaticStruct());
 }
 
-bool UItemRegistrySubsystem::RegisterItemTable(const UDataTable* _item_table)
+bool UItemRegistrySubsystem::RegisterItemTable(const UDataTable* _item_table, TArray<const UDataTable*>& _out_registered_item_tables) const
 {
 	if (IsInvalid(_item_table))
 	{
@@ -84,12 +86,12 @@ bool UItemRegistrySubsystem::RegisterItemTable(const UDataTable* _item_table)
 		return false;
 	}
 
-	if (_RegisteredItemTables.Contains(_item_table))
+	if (_out_registered_item_tables.Contains(_item_table))
 	{
 		return true;
 	}
 
-	_RegisteredItemTables.Add(_item_table);
+	_out_registered_item_tables.Add(_item_table);
 	return true;
 }
 
@@ -98,13 +100,13 @@ void UItemRegistrySubsystem::ClearRegisteredItemTables()
 	_RegisteredItemTables.Reset();
 }
 
-bool UItemRegistrySubsystem::BuildItemIndex()
+bool UItemRegistrySubsystem::BuildItemIndex(const TArray<const UDataTable*>& _registered_item_tables, TMap<EItemType, FItemTypeIndex>& _out_item_type_index_map) const
 {
 	bool is_success = true;
 
-	for (auto item_table : _RegisteredItemTables)
+	for (auto item_table : _registered_item_tables)
 	{
-		if (IndexItemTable(item_table) == false)
+		if (IndexItemTable(item_table, _out_item_type_index_map) == false)
 		{
 			is_success = false;
 		}
@@ -113,7 +115,7 @@ bool UItemRegistrySubsystem::BuildItemIndex()
 	return is_success;
 }
 
-bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table)
+bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table, TMap<EItemType, FItemTypeIndex>& _out_item_type_index_map) const
 {
 	if (IsInvalid(_item_table))
 	{
@@ -151,9 +153,9 @@ bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table)
 
 		if (item_id_validate.IsValid())
 		{
-			if (Contains(item_id))
+			if (Contains(item_id, _out_item_type_index_map))
 			{
-				const FItemRowReference* existing_reference = Find(item_id);
+				const FItemRowReference* existing_reference = Find(item_id, _out_item_type_index_map);
 
 				EDITOR_MESSAGE_ERROR(ItemRegistryLog, TEXT("중복 ItemID : %d [Table=%s, Row=%s],[Table=%s, Row=%s]"),
 					(int32)item_id, *_item_table->GetName(), *row_name.ToString(),
@@ -178,7 +180,7 @@ bool UItemRegistrySubsystem::IndexItemTable(const UDataTable* _item_table)
 		row_reference.RowName = row_name;
 		row_reference.RowStruct = row_struct;
 
-		_ItemTypeIndexMap.FindOrAdd(item_id.GetType()).ItemIDToRow.Add(item_id, MoveTemp(row_reference));
+		_out_item_type_index_map.FindOrAdd(item_id.GetType()).ItemIDToRow.Add(item_id, MoveTemp(row_reference));
 	}
 
 	return is_success;
@@ -191,7 +193,12 @@ void UItemRegistrySubsystem::ClearItemIndex()
 
 const FItemRowReference* UItemRegistrySubsystem::Find(const FItemID& _item_id) const
 {
-	auto item_type_index_ptr = _ItemTypeIndexMap.Find(_item_id.GetType());
+	return Find(_item_id, _ItemTypeIndexMap);
+}
+
+const FItemRowReference* UItemRegistrySubsystem::Find(const FItemID& _item_id, const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const
+{
+	auto item_type_index_ptr = _item_type_index_map.Find(_item_id.GetType());
 	if (IsValid(item_type_index_ptr))
 	{
 		return item_type_index_ptr->ItemIDToRow.Find(_item_id);
@@ -205,25 +212,45 @@ bool UItemRegistrySubsystem::RefreshRegistry()
 	EDITOR_MESSAGE_CLEAR(ItemRegistryLog);
 	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Refresh Registry..."));
 
-	ClearRegisteredItemTables();
-	ClearItemIndex();
+	TArray<const UDataTable*> new_registered_item_tables;
+	TMap<EItemType, FItemTypeIndex> new_item_type_index_map;
 
-	const bool is_register_success = RegisterItemTablesFromDataAsset();
-	const bool is_build_success = BuildItemIndex();
+	const bool is_register_success = RegisterItemTablesFromDataAsset(new_registered_item_tables);
+	const bool is_build_success = BuildItemIndex(new_registered_item_tables, new_item_type_index_map);
+	const int32 new_item_count = GetItemCount(new_item_type_index_map);
 
-	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Register=%s, BuildIndex=%s, RegisteredTables=%d, IndexedItems=%d"),
+	EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Register=%s, BuildIndex=%s, CandidateTables=%d, CandidateItems=%d, ActiveItems=%d"),
 		is_register_success ? TEXT("Success") : TEXT("Failed"),
 		is_build_success ? TEXT("Success") : TEXT("Failed"),
-		_RegisteredItemTables.Num(), GetItemCount());
+		new_registered_item_tables.Num(), new_item_count, GetItemCount());
 
 	const bool is_success = is_register_success && is_build_success;
 
 	if (is_success)
 	{
+		_RegisteredItemTables = MoveTemp(new_registered_item_tables);
+		_ItemTypeIndexMap = MoveTemp(new_item_type_index_map);
+		_LastRefreshSucceeded = true;
+		_HasSuccessfulRegistry = true;
+
+		EDITOR_MESSAGE_LOG(ItemRegistryLog, TEXT("Applied Item Registry. RegisteredTables=%d, IndexedItems=%d"),
+			_RegisteredItemTables.Num(), GetItemCount());
 		EDITOR_NOTIFY_LOG(TEXT("Refresh Item Registry Success!"));
 	}
 	else
 	{
+		_LastRefreshSucceeded = false;
+
+		if (_HasSuccessfulRegistry)
+		{
+			EDITOR_MESSAGE_WARNING(ItemRegistryLog, TEXT("Refresh failed. Keeping previous successful registry. ActiveTables=%d, ActiveItems=%d"),
+				_RegisteredItemTables.Num(), GetItemCount());
+		}
+		else
+		{
+			EDITOR_MESSAGE_WARNING(ItemRegistryLog, TEXT("Refresh failed. No successful registry is available. Active registry is empty."));
+		}
+
 		EDITOR_NOTIFY_ERROR(TEXT("Refresh Item Registry Failed!"));
 	}
 
@@ -245,7 +272,12 @@ bool UItemRegistrySubsystem::RefreshItemTable(const UDataTable* _item_table)
 
 bool UItemRegistrySubsystem::Contains(const FItemID& _item_id) const
 {
-	auto item_type_index_ptr = _ItemTypeIndexMap.Find(_item_id.GetType());
+	return Contains(_item_id, _ItemTypeIndexMap);
+}
+
+bool UItemRegistrySubsystem::Contains(const FItemID& _item_id, const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const
+{
+	auto item_type_index_ptr = _item_type_index_map.Find(_item_id.GetType());
 	if (IsValid(item_type_index_ptr))
 	{
 		return item_type_index_ptr->ItemIDToRow.Contains(_item_id);
@@ -256,9 +288,14 @@ bool UItemRegistrySubsystem::Contains(const FItemID& _item_id) const
 
 int32 UItemRegistrySubsystem::GetItemCount() const
 {
+	return GetItemCount(_ItemTypeIndexMap);
+}
+
+int32 UItemRegistrySubsystem::GetItemCount(const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const
+{
 	int32 count = 0;
 
-	for (const auto& item_type_pair : _ItemTypeIndexMap)
+	for (const auto& item_type_pair : _item_type_index_map)
 	{
 		count += item_type_pair.Value.ItemIDToRow.Num();
 	}

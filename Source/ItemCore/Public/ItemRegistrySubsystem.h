@@ -57,25 +57,36 @@ protected:
 	UPROPERTY(Transient)
 	TMap<EItemType, FItemTypeIndex> _ItemTypeIndexMap;
 
+	UPROPERTY(Transient)
+	bool _LastRefreshSucceeded = false;
+
+	UPROPERTY(Transient)
+	bool _HasSuccessfulRegistry = false;
+
 public:
 	virtual void Initialize(FSubsystemCollectionBase& _collection) override;
 	virtual void Deinitialize() override;
 
 protected:
-	bool RegisterItemTablesFromDataAsset();
+	bool RegisterItemTablesFromDataAsset(TArray<const UDataTable*>& _out_registered_item_tables) const;
 
 	// _item_table 의 RowStruct 가 FItemTableRow 계열인지 검사
 	bool IsSupportedItemTable(const UDataTable* _item_table) const;
 
-	bool RegisterItemTable(const UDataTable* _item_table);
+	bool RegisterItemTable(const UDataTable* _item_table, TArray<const UDataTable*>& _out_registered_item_tables) const;
 	void ClearRegisteredItemTables();
 
-	bool BuildItemIndex();
+	bool BuildItemIndex(const TArray<const UDataTable*>& _registered_item_tables, TMap<EItemType, FItemTypeIndex>& _out_item_type_index_map) const;
 
-	bool IndexItemTable(const UDataTable* _item_table);
+	bool IndexItemTable(const UDataTable* _item_table, TMap<EItemType, FItemTypeIndex>& _out_item_type_index_map) const;
 	void ClearItemIndex();
 
+	const FItemRowReference* Find(const FItemID& _item_id, const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const;
 	const FItemRowReference* Find(const FItemID& _item_id) const;
+
+	bool Contains(const FItemID& _item_id, const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const;
+
+	int32 GetItemCount(const TMap<EItemType, FItemTypeIndex>& _item_type_index_map) const;
 
 public:
 	bool RefreshRegistry();
