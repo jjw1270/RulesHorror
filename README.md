@@ -48,7 +48,7 @@
 
 | 항목 | 내용 |
 | --- | --- |
-| Engine | Unreal Engine `5.7` |
+| Engine | Unreal Engine `5.8` |
 | Target Platform | Windows |
 | Main Language | C++ |
 | UI | UMG / Slate |

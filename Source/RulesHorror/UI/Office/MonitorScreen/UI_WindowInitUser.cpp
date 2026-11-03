@@ -3,16 +3,12 @@
 
 #include "UI_WindowInitUser.h"
 #include "RulesHorrorUtils.h"
+#include "RulesHorrorGameInstance.h"
 #include "WidgetHelper.h"
 #include "SaveGameSubsystem.h"
 #include "Internationalization/BreakIterator.h"
 #include "UI/Common/UI_EditableTextBox.h"
 
-
-namespace
-{
-	constexpr int32 RulesHorrorSaveGameSlotIndex = 0;
-}
 
 void UUI_WindowInitUser::OnShow_Implementation()
 {
@@ -78,7 +74,7 @@ bool UUI_WindowInitUser::SetNewNickname(const FString& _new_nickname, FText& _ou
 
 			if (prev_nickname != _CurrentNickname)
 			{
-				USaveGameHelper::SaveGameSlot(this, RulesHorrorSaveGameSlotIndex);
+				USaveGameHelper::SaveGameSlot(this, URulesHorrorGameInstance::SaveGameSlotIndex);
 			}
 
 			return true;

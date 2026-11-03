@@ -14,11 +14,6 @@
 #include "UI/Office/UI_Monitor.h"
 #endif
 
-namespace
-{
-	constexpr int32 RulesHorrorSaveGameSlotIndex = 0;
-}
-
 void URulesHorrorGameInstance::Shutdown()
 {
 #if WITH_EDITOR
@@ -50,7 +45,7 @@ void URulesHorrorGameInstance::PauseGame(bool _is_pause)
 
 bool URulesHorrorGameInstance::CanStartSavedGame() const
 {
-	const auto save_game = Cast<URulesHorrorSaveGame>(USaveGameHelper::GetSaveGameFromSlot_ReadOnly(this, RulesHorrorSaveGameSlotIndex));
+	const auto save_game = Cast<URulesHorrorSaveGame>(USaveGameHelper::GetSaveGameFromSlot_ReadOnly(this, SaveGameSlotIndex));
 	if (IsValid(save_game))
 	{
 		const auto& saved_story_flow_ref = save_game->GetStoryFlowRef();
@@ -76,9 +71,9 @@ void URulesHorrorGameInstance::StartNewGame()
 		return;
 	}
 
-	const bool save_game_slot_ready = save_game_subsystem->IsValidSaveGameSlotIndex(RulesHorrorSaveGameSlotIndex)
-		? save_game_subsystem->ResetGameSlot(RulesHorrorSaveGameSlotIndex)
-		: save_game_subsystem->CreateNewGameSlot(RulesHorrorSaveGameSlotIndex);
+	const bool save_game_slot_ready = save_game_subsystem->IsValidSaveGameSlotIndex(SaveGameSlotIndex)
+		? save_game_subsystem->ResetGameSlot(SaveGameSlotIndex)
+		: save_game_subsystem->CreateNewGameSlot(SaveGameSlotIndex);
 	if (save_game_slot_ready == false)
 	{
 		TRACE_ERROR(TEXT("ready save game slot failed."));
@@ -108,7 +103,7 @@ void URulesHorrorGameInstance::StartNewGame()
 	}
 
 	save_game->SaveStoryFlowRef(story_flow_subsystem->GetPendingStartRef());
-	save_game_subsystem->SaveGameSlot(RulesHorrorSaveGameSlotIndex);
+	save_game_subsystem->SaveGameSlot(SaveGameSlotIndex);
 }
 
 void URulesHorrorGameInstance::StartSavedGame()
@@ -120,7 +115,7 @@ void URulesHorrorGameInstance::StartSavedGame()
 		return;
 	}
 
-	if (save_game_subsystem->LoadGameSlot(RulesHorrorSaveGameSlotIndex) == false)
+	if (save_game_subsystem->LoadGameSlot(SaveGameSlotIndex) == false)
 	{
 		TRACE_ERROR(TEXT("load save game slot failed."));
 		return;

@@ -18,6 +18,8 @@ protected:
 	virtual void Shutdown() override;
 	
 public:
+	static constexpr int32 SaveGameSlotIndex = 0;
+
 	UFUNCTION(BlueprintCallable)
 	void QuitGame();
 
