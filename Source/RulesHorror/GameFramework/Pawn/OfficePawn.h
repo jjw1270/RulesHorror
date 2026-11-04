@@ -27,7 +27,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reflection")
 	TObjectPtr<class UStaticMeshComponent> ReflectionBodyMesh = nullptr;
 
-	/** 머리 (카메라에 붙어 시선과 같이 돎, 반사·그림자에만 보임) */
+	/** 머리 (시선 방향을 따라 목(_HeadPivot)을 축으로 돎, 반사·그림자에만 보임) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reflection")
 	TObjectPtr<class UStaticMeshComponent> ReflectionHeadMesh = nullptr;
 
@@ -37,6 +37,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Reflection", meta = (ClampMin = "0.0"))
 	float _BodyTurnSpeed = 6.0f;
+
+	/** 머리가 도는 축 (눈 기준 몸 좌표, cm). 목 가운데 깃 높이라 고개를 돌려도 목이 셔츠 깃 안에 남음 */
+	UPROPERTY(EditAnywhere, Category = "Reflection")
+	FVector _HeadPivot = FVector(-10.0f, 0.0f, -13.0f);
 
 	float _BodyYaw = 0.0f;
 

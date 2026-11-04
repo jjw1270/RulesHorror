@@ -108,7 +108,16 @@ void AOfficePawn::UpdateReflectionBody(float _delta_time, bool _snap)
 		_BodyYaw = FMath::RInterpTo(FRotator(0.0f, _BodyYaw, 0.0f), FRotator(0.0f, target_yaw, 0.0f), _delta_time, _BodyTurnSpeed).Yaw;
 	}
 
-	ReflectionBodyMesh->SetWorldRotation(FRotator(0.0f, _BodyYaw, 0.0f));
+	const FQuat body_quat = FRotator(0.0f, _BodyYaw, 0.0f).Quaternion();
+	ReflectionBodyMesh->SetWorldRotation(body_quat);
+
+	// 머리는 시선 방향을 따르되 눈이 아니라 목(_HeadPivot)을 축으로 돎 (몸 메시 원점 = 정면을 볼 때의 눈 위치)
+	if (IsValid(ReflectionHeadMesh) && IsValid(Camera))
+	{
+		const FQuat view_quat = Camera->GetComponentQuat();
+		const FVector pivot = ReflectionBodyMesh->GetComponentLocation() + body_quat.RotateVector(_HeadPivot);
+		ReflectionHeadMesh->SetWorldLocationAndRotation(pivot - view_quat.RotateVector(_HeadPivot), view_quat);
+	}
 }
 
 void AOfficePawn::Input_LeftMouseButtonStarted()

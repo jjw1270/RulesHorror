@@ -71,6 +71,12 @@ SPINE = [("spine_01", -4.0), ("spine_03", 3.0), ("neck_01", 4.0)]   # forward ti
 
 EYE_ABOVE_FLOOR = 121.0  # cm, MP_Main eye above the L_Office floor
 SOLE_CLEARANCE = 0.4     # cm above the carpet
+# AOfficePawn::_HeadPivot: the head mesh turns about this point (Unreal cm from the eyes, about the middle of the neck
+# near the collar), so the neck stays inside the collar when the player looks around.
+HEAD_PIVOT = (-10.0, 0.0, -13.0)
+# Skin kept inside the collar on the body (Unreal cm box, shrunk 3 mm inwards) so that no gap opens between the collar
+# and the neck when the head turns; at rest the head's own neck covers it.
+NECK_FILLER = ((-18.0, -9.0, -26.0), (0.0, 9.0, -12.5))
 
 
 def build_character():
@@ -268,9 +274,45 @@ def remove_transparent_faces(obj, image_path):
     print(f"EYE removed {len(drop)} transparent cornea faces")
 
 
+def neck_filler(basemesh, to_ue, skin_mat):
+    """Skin of the lower neck and upper chest that the clothes normally hide, shrunk 3 mm inwards."""
+    masks = [m for m in basemesh.modifiers if m.type == "MASK" and m.name.startswith("Delete.")]
+    for m in masks:
+        m.show_viewport = False
+    full = evaluated_copy(basemesh, "_neckfill")
+    for m in masks:
+        m.show_viewport = True
+    full.data.transform(to_ue @ full.matrix_world)
+    full.matrix_world = to_ue.inverted()
+    lo, hi = Vector(NECK_FILLER[0]) / 100.0, Vector(NECK_FILLER[1]) / 100.0
+    bm = bmesh.new()
+    bm.from_mesh(full.data)
+    def inside(f):
+        c = f.calc_center_median()
+        c = Vector((c.x, -c.y, c.z))  # Blender Y = -Unreal Y
+        return all(lo[i] <= c[i] <= hi[i] for i in range(3))
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if not inside(f)], context="FACES")
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    bm.normal_update()
+    for v in bm.verts:
+        v.co -= v.normal * 0.003
+    bm.to_mesh(full.data)
+    bm.free()
+    full.data.transform(full.matrix_world)
+    full.matrix_world = Matrix()
+    full.data.materials.clear()
+    full.data.materials.append(skin_mat)
+    for p in full.data.polygons:
+        p.material_index = 0
+    return full
+
+
 def bake(basemesh, rig, parts, eye):
     """Apply the pose, split the body into head (head + neck groups) and body, turn to Unreal +X, eye at origin."""
     to_ue = Matrix.Rotation(math.radians(90.0), 4, "Z") @ Matrix.Translation(-eye)
+    for bone in ("neck_01", "head"):  # for choosing HEAD_PIVOT
+        p = to_ue @ (rig.matrix_world @ rig.pose.bones[bone].head)
+        print(f"BONE {bone}: Unreal cm ({p.x * 100.0:.1f}, {-p.y * 100.0:.1f}, {p.z * 100.0:.1f})")
 
     textures = {"Skin": copy_texture(source_image(basemesh), "Skin")}
     for slot, (obj, _) in parts.items():
@@ -312,6 +354,7 @@ def bake(basemesh, rig, parts, eye):
             p.material_index = 0
     pieces["body"].append(body)
     pieces["head"].append(head_skin)
+    pieces["body"].append(neck_filler(basemesh, to_ue, mats["Skin"]))
     for slot, (obj, part) in parts.items():
         c = evaluated_copy(obj, "_" + slot)
         if slot == "Eye":

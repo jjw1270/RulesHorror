@@ -59,11 +59,15 @@ monitor, `back`) and `--no-save` to skip writing the `.blend` and the FBX files.
 - The posed meshes are baked (armature, the masks that hide skin under the clothes). The skin is split at the base of the
   neck by bone weights (`head` + `neck_01` = head part); the cut sits inside the shirt collar.
 - The eye texture leaves the cornea shell transparent; those faces are removed so the eyes can use an opaque material.
+- Neck filler (`NECK_FILLER`): the skin of the lower neck and upper chest inside the collar is kept on the body, shrunk
+  3 mm inwards. At rest the head's own neck covers it; when the head turns it fills the gap between collar and neck.
+- `HEAD_PIVOT` `(-10, 0, -13)` cm: the middle of the neck at collar height (the script prints the `neck_01` and `head`
+  bone positions to choose it). It must match `AOfficePawn::_HeadPivot`.
 - Both meshes have their origin at the midpoint between the eyeballs (the pawn camera), Unreal `+X` forward, `+Z` up.
   - `SM_OfficeWorker_Head`: about 13,500 triangles, bounds `(-20.8, -9.5, -19.4) .. (3.7, 10.0, 13.4)` cm:
     head and neck skin, eyes, eyebrows, eyelashes, hair.
-  - `SM_OfficeWorker_Body`: about 25,200 triangles, bounds `(-26.4, -29.0, -120.6) .. (64.8, 29.2, -12.3)` cm:
-    hands, suit, shoes (the skin under the clothes is removed).
+  - `SM_OfficeWorker_Body`: about 25,800 triangles, bounds `(-26.4, -29.0, -120.6) .. (64.8, 29.2, -12.0)` cm:
+    hands, suit, shoes, neck filler (the other skin under the clothes is removed).
 
 ## Material slots
 
@@ -85,8 +89,9 @@ and the alpha of `BaseColorTex` as the opacity mask.
 
 - Assets: `/Game/Objects/OfficeWorker/SM_OfficeWorker_Head`, `SM_OfficeWorker_Body` (no collision, Nanite off),
   textures `T_OfficeWorker_*`, instances `MI_OfficeWorker_*`.
-- `AOfficePawn` components (C++): `ReflectionHead` is attached to the camera and turns with the view;
-  `ReflectionBody` is attached to the pawn root with absolute rotation, stays upright and follows only 35 % of the
+- `AOfficePawn` components (C++): `ReflectionHead` is attached to the camera and turns with the view, but about the
+  neck (`_HeadPivot`, body space from the eyes) instead of the eyes, so the neck stays inside the collar for the whole
+  look range (yaw -5 .. 50, pitch -5 .. 15 around the move point's pitch); `ReflectionBody` is attached to the pawn root with absolute rotation, stays upright and follows only 35 % of the
   look yaw (`_BodyYawFollowRatio`). Both use `FirstPersonPrimitiveType = WorldSpaceRepresentation`: hidden from the
   player's own view, still visible in hardware ray traced (Lumen) reflections and shadows, no collision.
   The meshes are assigned in `OfficePawn_BP` and on the pawn placed in `L_Office`.
