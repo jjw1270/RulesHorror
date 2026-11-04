@@ -24,10 +24,10 @@ ARulesHorrorCharacter::ARulesHorrorCharacter()
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
-	// Create the Camera Component	
+	// Create the Camera Component at eye height on the capsule (there is no body mesh with a head socket)
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 64.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
