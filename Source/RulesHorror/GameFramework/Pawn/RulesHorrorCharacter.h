@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "RulesHorrorCharacter.generated.h"
 
+class UAnimSequenceBase;
 class UInputAction;
 
 /*
@@ -51,6 +52,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Walk")
 	float _WalkSpeed = 250.0f;
 
+protected:
+	/** 1인칭 팔 애니 (UFirstPersonArmsAnimInstance가 이동 속도에 따라 블렌드) */
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimSequenceBase> _FirstPersonIdleAnim = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimSequenceBase> _FirstPersonWalkAnim = nullptr;
+
 public:
 	ARulesHorrorCharacter();
 
@@ -85,4 +94,7 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UInteractorComponent* GetInteractorComponent() const { return InteractorComponent; }
+
+	UAnimSequenceBase* GetFirstPersonIdleAnim() const { return _FirstPersonIdleAnim; }
+	UAnimSequenceBase* GetFirstPersonWalkAnim() const { return _FirstPersonWalkAnim; }
 };

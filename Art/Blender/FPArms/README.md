@@ -100,7 +100,11 @@ Only the `upperarm` bones have location keys (whole-arm drift); every other bone
 - Used by `/Game/GameFramework/Pawn/BP_RulesHorrorCharacter` (test pawn of `L_InGameTest`), component `FP_Arms`:
   - a SkeletalMeshComponent attached to `First Person Camera`, relative transform identity
   - Only Owner See, first-person primitive type (rendered with the camera's 70° first-person FOV), no shadow, no collision
-  - Animation Mode = Use Animation Asset, `A_FPArms_Idle`, looping (`A_FPArms_Walk` is not used yet)
+  - Animation Mode = Use Animation Blueprint with the native class `UFirstPersonArmsAnimInstance`
+    (`Source/RulesHorror/GameFramework/Animation/FirstPersonArmsAnimInstance.*`, no Anim Blueprint asset). It reads
+    `_FirstPersonIdleAnim` / `_FirstPersonWalkAnim` from the character (`A_FPArms_Idle` / `A_FPArms_Walk`) and blends
+    them by ground speed: 100 % Walk at the movement's `MaxWalkSpeed` (250), walk play rate follows the speed (0.5 to 1.5),
+    the blend weight eases in and out (`_BlendInterpSpeed` 8), and the walk cycle restarts from the first step after a stop.
 - The mannequin is gone from `CharacterMesh0` and `First Person Mesh` (both have no mesh now). The camera used to hang on the `head` socket of `First Person Mesh`; `ARulesHorrorCharacter` now attaches it to the capsule at eye height, 64 cm above the capsule center (C++ default, the Blueprint keeps it).
 - Import: `SkeletalMeshTools.import_file` with animations and without physics asset. The FBX uses the same axis conversion as the prop meshes (forward `-Z`, up `Y`), so Blender `+X` arrives as Unreal `+X`.
 - The FBX is written in centimeters: `export_fbx` scales the rig data by 100 and sets the scene unit scale to 0.01 during the export, then restores the scene. Exported in meters, the FBX carries a x100 scale on the `Armature` node, and Unreal then imports either a mesh 100x too small (`FBX_SCALE_ALL`) or animation tracks that do not match the bind pose, which makes the arms disappear as soon as an animation plays (`FBX_SCALE_NONE`).
