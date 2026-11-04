@@ -30,8 +30,11 @@ python create_office_room_textures.py
   (default `FlatNormal`) on the same tiled UVs.
 - Instances in `/Game/Objects/OfficeRoom`:
 
-| Instance | Textures | UVTiling | Roughness | GrimeAmount |
-|---|---|---|---|---|
-| `MI_OfficeRoom_Wall` | wall | 0.5 | 0.85 | 0.25 |
-| `MI_OfficeRoom_Carpet` | carpet | 1.0 | 0.95 | 0.3 |
-| `MI_OfficeRoom_Ceiling` | ceiling | 0.8333 | 0.9 | 0.15 |
+| Instance | Textures | BaseColor (tint) | UVTiling | Roughness | GrimeAmount |
+|---|---|---|---|---|---|
+| `MI_OfficeRoom_Wall` | wall | 0.5 | 0.5 | 0.85 | 0.25 |
+| `MI_OfficeRoom_Carpet` | carpet | 1.0 | 1.0 | 0.95 | 0.3 |
+| `MI_OfficeRoom_Ceiling` | ceiling | 0.55 | 0.8333 | 0.9 | 0.15 |
+
+The wall and ceiling textures are bright off-white; `L_Office` uses a fixed exposure (PostProcessVolume EV100 -0.5),
+so their tint is lowered to keep them from blowing out to plain white.
