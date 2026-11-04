@@ -10,6 +10,9 @@
 #include "InteractorComponent.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/CollisionProfile.h"
 #include "Objects/Interactable/Computer.h"
 #include "UI/Office/UI_Monitor.h"
 #include "WidgetHelper.h"
@@ -23,6 +26,29 @@ AOfficePawn::AOfficePawn()
 
 	WidgetInteractionComponent->InteractionSource = EWidgetInteractionSource::Custom;
 	ApplyMonitorTraceChannel();
+
+	// 반사·그림자 전용 몸과 머리 (본인 화면엔 안 보임, 하드웨어 레이트레이싱 반사엔 보임)
+	ReflectionBodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReflectionBody"));
+	ReflectionBodyMesh->SetupAttachment(GetRootComponent());
+	ReflectionBodyMesh->SetUsingAbsoluteRotation(true);
+
+	ReflectionHeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReflectionHead"));
+	ReflectionHeadMesh->SetupAttachment(Camera);
+
+	for (UStaticMeshComponent* mesh : { ReflectionBodyMesh.Get(), ReflectionHeadMesh.Get() })
+	{
+		mesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
+		mesh->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+		mesh->SetGenerateOverlapEvents(false);
+		mesh->SetCanEverAffectNavigation(false);
+	}
+}
+
+void AOfficePawn::OnConstruction(const FTransform& _transform)
+{
+	Super::OnConstruction(_transform);
+
+	UpdateReflectionBody(0.0f, true);
 }
 
 void AOfficePawn::BeginPlay()
@@ -30,6 +56,7 @@ void AOfficePawn::BeginPlay()
 	Super::BeginPlay();
 
 	ApplyMonitorTraceChannel();
+	UpdateReflectionBody(0.0f, true);
 }
 
 void AOfficePawn::SetupPlayerInputComponent(UInputComponent* _input_component)
@@ -59,6 +86,29 @@ void AOfficePawn::Tick(float _delta_time)
 	Super::Tick(_delta_time);
 
 	DriveWidgetInteraction(_delta_time);
+	UpdateReflectionBody(_delta_time, false);
+}
+
+void AOfficePawn::UpdateReflectionBody(float _delta_time, bool _snap)
+{
+	if (IsInvalid(ReflectionBodyMesh))
+		return;
+
+	// 시선 좌우 오프셋의 일부만 따라 돌고, 위아래로는 기울지 않음
+	const bool is_looking = _EnableLookAtCursor && _UseLookAtCursor;
+	const float look_yaw = is_looking ? _CurrentYaw : 0.0f;
+	const float target_yaw = GetActorRotation().Yaw - look_yaw * (1.0f - _BodyYawFollowRatio);
+
+	if (_snap || _BodyTurnSpeed <= 0.0f)
+	{
+		_BodyYaw = target_yaw;
+	}
+	else
+	{
+		_BodyYaw = FMath::RInterpTo(FRotator(0.0f, _BodyYaw, 0.0f), FRotator(0.0f, target_yaw, 0.0f), _delta_time, _BodyTurnSpeed).Yaw;
+	}
+
+	ReflectionBodyMesh->SetWorldRotation(FRotator(0.0f, _BodyYaw, 0.0f));
 }
 
 void AOfficePawn::Input_LeftMouseButtonStarted()

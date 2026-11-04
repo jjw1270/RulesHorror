@@ -23,6 +23,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<class UWidgetInteractionComponent> WidgetInteractionComponent = nullptr;
 
+	/** 앉아 있는 몸 (본인 화면엔 안 보이고 반사·그림자에만 보임). 기울지 않고 시선 좌우의 일부만 따라 돎 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reflection")
+	TObjectPtr<class UStaticMeshComponent> ReflectionBodyMesh = nullptr;
+
+	/** 머리 (카메라에 붙어 시선과 같이 돎, 반사·그림자에만 보임) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reflection")
+	TObjectPtr<class UStaticMeshComponent> ReflectionHeadMesh = nullptr;
+
+	/** 시선 좌우 회전 중 몸이 따라 도는 비율 (0 = 고정, 1 = 머리와 같이) */
+	UPROPERTY(EditAnywhere, Category = "Reflection", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float _BodyYawFollowRatio = 0.35f;
+
+	UPROPERTY(EditAnywhere, Category = "Reflection", meta = (ClampMin = "0.0"))
+	float _BodyTurnSpeed = 6.0f;
+
+	float _BodyYaw = 0.0f;
+
 	UPROPERTY()
 	TObjectPtr<class AComputer> _InteractingComputer = nullptr;
 
@@ -40,6 +57,7 @@ public:
 	AOfficePawn();
 
 protected:
+	virtual void OnConstruction(const FTransform& _transform) override;
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* _input_component) override;
 	virtual void Tick(float _delta_time) override;
@@ -55,6 +73,7 @@ protected:
 	void Input_MouseWheel(const FInputActionValue& _value);
 
 	void DriveWidgetInteraction(float _delta_time);
+	void UpdateReflectionBody(float _delta_time, bool _snap);
 	void BuildCorrectedMonitorWidgetHit(FHitResult& _out_hit) const;
 	void ApplyMonitorTraceChannel();
 
