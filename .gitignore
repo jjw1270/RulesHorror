@@ -31,6 +31,7 @@ Plugins/**/Intermediate/
 
 # Generated project files
 *.sln
+*.slnx
 *.suo
 *.opensdf
 *.sdf
