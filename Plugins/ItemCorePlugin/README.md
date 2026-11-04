@@ -29,7 +29,7 @@
 | 경로 | `Plugins/ItemCorePlugin` |
 | 플러그인 이름 | `ItemCore` |
 | 모듈 | `ItemCore`, `ItemCoreEditor` |
-| Engine version | 5.7 |
+| Engine version | 5.8 |
 | Content 포함 | 있음 (`CanContainContent: true`) |
 | 의존 플러그인 | `CommonLibrary` |
 
