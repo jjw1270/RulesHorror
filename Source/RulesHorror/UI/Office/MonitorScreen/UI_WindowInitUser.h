@@ -27,8 +27,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UUI_EditableTextBox> _EditableTextBoxWidget = nullptr;
 
+	/* 모니터는 처음에 모든 화면을 숨기므로, 실제로 보였던 뒤에 닫힐 때만 가입 완료로 친다. */
+	bool _WasShown = false;
+
 protected:
 	virtual void OnShow_Implementation() override;
+	virtual void OnHide_Implementation(EWidgetHideType _hide_type) override;
 
 protected:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)

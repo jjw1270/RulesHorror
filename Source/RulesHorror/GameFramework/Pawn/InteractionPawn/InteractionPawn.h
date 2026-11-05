@@ -43,6 +43,9 @@ protected:
 
 	bool _UseLookAtCursor = true;
 
+	/* 켜면 커서를 따라 시선을 돌리지 않고 지금 방향을 유지한다 (컷신 입력 잠금). */
+	bool _IsLookLocked = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float _MouseSensitivity = 0.08f;
 
@@ -75,6 +78,9 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetUseLookAtCursor(bool _value);
+
+	UFUNCTION(BlueprintCallable)
+	void SetLookLocked(bool _is_locked) { _IsLookLocked = _is_locked; }
 
 	UFUNCTION(BlueprintPure)
 	UCameraComponent* GetCamera() const { return Camera; }

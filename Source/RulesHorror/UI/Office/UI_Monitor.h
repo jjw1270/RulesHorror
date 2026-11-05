@@ -31,10 +31,9 @@ protected:
 	int32 _DEBUG_Start_Widget_Index = -1;
 #endif
 
-#if WITH_EDITOR
 public:
+	/* 다음에 모니터를 켤 때 첫 화면(로딩 → 닉네임)부터 보여 준다. 새 게임/이어하기, PIE 종료 때 부른다. */
 	static void ResetLastActiveWidgetindex() { _LastActiveWidgetIndex.Reset(); }
-#endif
 
 protected:
 	UFUNCTION()

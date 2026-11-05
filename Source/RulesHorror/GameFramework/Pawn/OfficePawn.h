@@ -57,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Monitor", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	FVector2D _MonitorHitCorrectionStrength = FVector2D(0.1f, 0.1f);
 
+	/* 끄면 모니터 화면 클릭·휠이 화면으로 가지 않는다 (스토리 입력 잠금·대사 중). 눌린 버튼을 떼는 입력은 막지 않는다. */
+	bool _IsScreenInputEnabled = true;
+
 public:
 	AOfficePawn();
 
@@ -87,5 +90,8 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	bool IsOnInteracintingComputer() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetScreenInputEnabled(bool _is_enabled) { _IsScreenInputEnabled = _is_enabled; }
 
 };

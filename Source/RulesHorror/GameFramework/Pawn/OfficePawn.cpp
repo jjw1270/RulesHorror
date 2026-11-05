@@ -122,6 +122,9 @@ void AOfficePawn::UpdateReflectionBody(float _delta_time, bool _snap)
 
 void AOfficePawn::Input_LeftMouseButtonStarted()
 {
+	if (_IsScreenInputEnabled == false)
+		return;
+
 	if (IsValid(WidgetInteractionComponent->GetHoveredWidgetComponent()))
 	{
 		WidgetInteractionComponent->PressPointerKey(EKeys::LeftMouseButton);
@@ -139,7 +142,7 @@ void AOfficePawn::Input_LeftMouseButtonCompleted()
 void AOfficePawn::Input_MouseWheel(const FInputActionValue& _value)
 {
 	const float axis = _value.Get<float>();
-	if (FMath::IsNearlyZero(axis))
+	if (FMath::IsNearlyZero(axis) || _IsScreenInputEnabled == false)
 		return;
 
 	if (IsValid(WidgetInteractionComponent->GetHoveredWidgetComponent()))

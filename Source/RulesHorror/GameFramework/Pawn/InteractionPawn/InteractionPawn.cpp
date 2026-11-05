@@ -95,7 +95,10 @@ void AInteractionPawn::Tick(float _delta_time)
 
 	if (_EnableLookAtCursor && _UseLookAtCursor)
 	{
-		UpdateLookAtCursor();
+		if (_IsLookLocked == false)
+		{
+			UpdateLookAtCursor();
+		}
 
 		_CurrentYaw = FMath::FInterpTo(_CurrentYaw, _TargetYaw, _delta_time, _FollowSpeed);
 		_CurrentPitch = FMath::FInterpTo(_CurrentPitch, _TargetPitch, _delta_time, _FollowSpeed);

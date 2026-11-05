@@ -8,11 +8,14 @@
 #include "SaveGameSubsystem.h"
 #include "Internationalization/BreakIterator.h"
 #include "UI/Common/UI_EditableTextBox.h"
+#include "StoryFlow/RulesHorrorStorySubsystem.h"
 
 
 void UUI_WindowInitUser::OnShow_Implementation()
 {
 	Super::OnShow_Implementation();
+
+	_WasShown = true;
 
 	const auto save_game = USaveGameHelper::GetCurrentSaveGame_Editable(this);
 	if (IsValid(save_game))
@@ -20,6 +23,18 @@ void UUI_WindowInitUser::OnShow_Implementation()
 		_CurrentNickname.Empty();
 		save_game->FindSavedStringData(TEXT("Nickname"), _CurrentNickname);
 		ShowSetNewNickname(_CurrentNickname.IsEmpty());
+	}
+}
+
+void UUI_WindowInitUser::OnHide_Implementation(EWidgetHideType _hide_type)
+{
+	Super::OnHide_Implementation(_hide_type);
+
+	// 닉네임을 정하거나 확인하고 이 화면을 넘기면 사이트 가입을 마친 것으로 본다 (CH02_S03).
+	if (_WasShown)
+	{
+		_WasShown = false;
+		URulesHorrorStorySubsystem::Send(this, RulesHorrorStoryEvents::SiteSignedUp);
 	}
 }
 

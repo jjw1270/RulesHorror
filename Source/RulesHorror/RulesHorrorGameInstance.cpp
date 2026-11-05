@@ -9,16 +9,11 @@
 #include "SaveGameSubsystem.h"
 #include "SaveGame/RulesHorrorSaveGame.h"
 #include "StoryFlowSubsystem.h"
-
-#if WITH_EDITOR
 #include "UI/Office/UI_Monitor.h"
-#endif
 
 void URulesHorrorGameInstance::Shutdown()
 {
-#if WITH_EDITOR
 	UUI_Monitor::ResetLastActiveWidgetindex();
-#endif
 
 	Super::Shutdown();
 }
@@ -106,6 +101,8 @@ void URulesHorrorGameInstance::StartNewGame()
 	save_game->SaveStoryFlowRef(start_ref);
 	save_game_subsystem->SaveGameSlot(SaveGameSlotIndex);
 
+	// 모니터는 레벨이 바뀌어도 마지막 화면을 기억하므로, 새로 시작할 때는 닉네임(사이트 가입) 화면부터 다시 보이게 한다.
+	UUI_Monitor::ResetLastActiveWidgetindex();
 	story_flow_subsystem->StartFromRef(start_ref);
 }
 
@@ -138,5 +135,6 @@ void URulesHorrorGameInstance::StartSavedGame()
 		return;
 	}
 
+	UUI_Monitor::ResetLastActiveWidgetindex();
 	story_flow_subsystem->StartFromRef(save_game->GetStoryFlowRef());
 }

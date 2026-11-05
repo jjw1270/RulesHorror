@@ -33,6 +33,9 @@ protected:
 	const FName TextureParamName = TEXT("Display Input");
 	const FName FilterParamName = TEXT("Filter On");
 
+	/* SetPower로 마지막에 정한 전원 상태. 화면 머티리얼은 BeginPlay 다음 틱에 만들어지므로 그때 이 상태를 보고 끌지 정한다. */
+	bool _IsPowerOn = false;
+
 public:	
 	AComputer();
 
@@ -54,6 +57,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EInteractionState _InteractionState = EInteractionState::None;
 
+	/* 끄면 감지·상호작용이 안 된다 (스토리에서 컴퓨터를 쓰면 안 되는 구간). Shot_SetInteractable로 켜고 끈다. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool _IsInteractionEnabled = true;
+
 	UPROPERTY(EditAnywhere)
 	FName _InteractMovePoint;
 
@@ -72,6 +79,7 @@ protected:
 	virtual void SetInteractionState_Implementation(EInteractionState _state) override;
 	virtual void Interact_Implementation(AActor* _interactor) override;
 	virtual bool CanBeDetected_Implementation() const override;
+	virtual bool CanInteract_Implementation() const override;
 
 	UFUNCTION()
 	void OnOfficePawnMoveToPointFinished(const FName& _point_name);
@@ -82,6 +90,12 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void FinishInteract();
+
+	UFUNCTION(BlueprintCallable)
+	void SetInteractionEnabled(bool _is_enabled) { _IsInteractionEnabled = _is_enabled; }
+
+	UFUNCTION(BlueprintPure)
+	bool IsInteractionEnabled() const { return _IsInteractionEnabled; }
 
 #pragma endregion Interaction
 

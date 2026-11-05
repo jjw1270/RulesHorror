@@ -8,6 +8,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "UI/Office/UI_Monitor.h"
 #include "UI/Office/UI_OnInteractingComputer.h"
+#include "StoryFlow/RulesHorrorStorySubsystem.h"
 
 AComputer::AComputer()
 {
@@ -53,11 +54,21 @@ void AComputer::UpdateScreenFromWidget()
 		_DynamicScreenMaterialInstance->SetTextureParameterValue(TextureParamName, widget_render_target);
 	}
 
+	// 레벨을 열자마자 스토리가 전원을 켰으면(이어하기 직후) 화면 위젯은 이미 켜지는 애니메이션 중이다.
+	// 다시 Show를 부르면 애니메이션이 첫 키로 멈춰 화면이 안 보이므로 머티리얼만 켠다.
+	if (_IsPowerOn)
+	{
+		_DynamicScreenMaterialInstance->SetScalarParameterValue(FilterParamName, 1.0f);
+		return;
+	}
+
 	SetPower(false, false);
 }
 
 void AComputer::SetPower(bool _on, bool _show_anim)
 {
+	_IsPowerOn = _on;
+
 	if (IsValid(_DynamicScreenMaterialInstance))
 	{
 		_DynamicScreenMaterialInstance->SetScalarParameterValue(FilterParamName, _on ? 1.0f : 0.0f);
@@ -97,7 +108,12 @@ void AComputer::Interact_Implementation(AActor* _interactor)
 
 bool AComputer::CanBeDetected_Implementation() const
 {
-	return IsInvalid(_OfficePawn);
+	return _IsInteractionEnabled && IsInvalid(_OfficePawn);
+}
+
+bool AComputer::CanInteract_Implementation() const
+{
+	return _IsInteractionEnabled;
 }
 
 void AComputer::FinishInteract()
@@ -123,6 +139,7 @@ void AComputer::OnOfficePawnMoveToPointFinished(const FName& _point_name)
 	if (_point_name == _InteractMovePoint)
 	{
 		OpenInteractingWidget();
+		URulesHorrorStorySubsystem::Send(this, RulesHorrorStoryEvents::ComputerOpened);
 	}
 	else if (_point_name == _FinishInteractMovePoint)
 	{
