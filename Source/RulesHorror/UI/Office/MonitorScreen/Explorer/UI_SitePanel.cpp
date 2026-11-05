@@ -2,26 +2,10 @@
 
 
 #include "UI_SitePanel.h"
+#include "UI/Office/MonitorScreen/Explorer/UI_SiteBase.h"
 #include "SaveGameSubsystem.h"
-#include "Item/RulesHorrorItemHelper.h"
+#include "CommonUtils.h"
 #include "Components/WidgetSwitcher.h"
-#include "UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.h"
-#include "UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.h"
-
-void UUI_SitePanel::NativeOnInitialized()
-{
-	Super::NativeOnInitialized();
-
-	if (IsValid(Site_StoryList))
-	{
-		Site_StoryList->_OnClickShowStoryDetailEvent.BindUObject(this, &UUI_SitePanel::ShowStoryDetailSite);
-	}
-
-	if (IsValid(Site_StoryDetail))
-	{
-		Site_StoryDetail->_OnClickShowStoryListEvent.BindUObject(this, &UUI_SitePanel::ShowStoryListSite);
-	}
-}
 
 void UUI_SitePanel::OnShow_Implementation()
 {
@@ -53,11 +37,6 @@ void UUI_SitePanel::ChangeSite(UUI_SiteBase* _new_site)
 	}
 }
 
-void UUI_SitePanel::ShowStoryListSite()
-{
-	ChangeSite(Site_StoryList);
-}
-
 void UUI_SitePanel::BroadcastOnSiteChangedEvent(UUI_SiteBase* _site)
 {
 	if (IsInvalid(_site))
@@ -75,13 +54,4 @@ void UUI_SitePanel::BroadcastOnSiteChangedEvent(UUI_SiteBase* _site)
 	{
 		_OnSiteChangedEvent.Broadcast(_MainSiteAddress);
 	}
-}
-
-void UUI_SitePanel::ShowStoryDetailSite(const FItemID_Story& _story_id)
-{
-	if (_story_id.IsValid() == false || IsInvalid(Site_StoryDetail))
-		return;
-
-	Site_StoryDetail->SetStoryID(_story_id);
-	ChangeSite(Site_StoryDetail);
 }

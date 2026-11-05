@@ -37,8 +37,6 @@ namespace RulesHorrorStoryEvents
 	inline const FName SiteEnterScenario01(TEXT("Site_EnterScenario_01"));
 	inline const FName SiteEnterScenario02(TEXT("Site_EnterScenario_02"));
 	inline const FName SiteEnterScenario03(TEXT("Site_EnterScenario_03"));
-	/* 옛 괴담 목록 페이지(Site_StoryDetail)의 입장 버튼. i-wish로 바뀐 뒤로는 사이트에 없고 기다리는 Shot도 없다. */
-	inline const FName SiteStoryPlay(TEXT("Site_StoryPlay"));
 
 	inline FName GetSiteEnterScenarioEvent(ERulesHorrorScenario _scenario)
 	{

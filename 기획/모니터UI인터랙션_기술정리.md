@@ -30,8 +30,8 @@
 → 모니터 전원 On + 전용 상호작용 UI 진입
 → 마우스 입력을 모니터 위젯으로 전달
 → 모니터 내부 멀티 윈도우 UI 조작
-→ 사이트/스토리 선택
-→ 선택된 맵 또는 시나리오로 진입
+→ i-wish 사이트에서 낙인 칸 선택 + 경고 팝업 확인
+→ StoryFlow Scene이 시나리오로 진입
 ```
 
 구성 레이어는 크게 5단계다.
@@ -40,7 +40,7 @@
 2. **컴퓨터 Actor 및 진입 제어 레이어**
 3. **모니터 표면 입력 처리 레이어**
 4. **멀티 윈도우 UI 레이어**
-5. **DataTable 기반 콘텐츠 연결 레이어**
+5. **사이트 및 시나리오 진입 레이어**
 
 ---
 
@@ -361,88 +361,54 @@ if (_DragType == EWindowDragType::Move)
 
 ---
 
-## 8. 사이트 및 스토리 콘텐츠 연결
+## 8. 사이트와 시나리오 진입
 
 ### 관련 파일
 - `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/UI_SiteBase.h`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/UI_SiteBase.cpp`
 - `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/UI_SitePanel.h`
 - `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/UI_SitePanel.cpp`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.h`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.cpp`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.h`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.cpp`
-- `Source/RulesHorror/Item/RulesHorrorItemDefines.h`
-- `Source/RulesHorror/Item/RulesHorrorItemHelper.h`
-- `Source/RulesHorror/Item/RulesHorrorItemHelper.cpp`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/Site_IWish.h`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/Site_IWish.cpp`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/UI_IWishSlot.h`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/UI_IWishSlot.cpp`
 
 ### 구현 내용
 
-모니터 안의 브라우저형 UI는 정적인 화면이 아니라, **데이터 기반으로 스토리 목록과 상세 정보를 표시**한다.
-
-#### `FStoryTableRow`
-- `AdditionalSiteAddress`
-- `StoryMap`
-
-#### `URulesHorrorItemHelper`
-- 스토리 ID로 Row 조회
-- 전체 스토리 Row 목록 조회
-
-#### `USite_StoryList`
-- 전체 스토리 Row를 페이지 단위로 나누어 표시
-- 라디오 버튼 그룹으로 페이지 전환
-- 스토리 제목 버튼 클릭 시 상세 페이지 진입
-
-#### `USite_StoryDetail`
-- 선택된 스토리의 제목과 추가 사이트 주소 표시
-- 연결된 `StoryMap`으로 레벨 이동 가능
+인터넷 창의 사이트는 `i-wish` 한 페이지다. 낡은 개인 홈페이지 모양이고, 가운데 낙인 칸 3개가 시나리오 입구다.
 
 #### `UUI_SitePanel`
-- 목록/상세 사이트 전환
-- 주소창 문자열 브로드캐스트
+- 사이트 페이지 전환(`WidgetSwitcher`)과 주소창 문자열 브로드캐스트
 - 저장된 닉네임 불러오기
+
+#### `USite_IWish`
+- 회원 인사(닉네임), 낙인 칸 3개, 경고 팝업
+- 열린 칸을 누르면 경고 팝업, 확인을 누르면 스토리 이벤트 `Site_EnterScenario_0N`을 보낸다
+
+#### `UUI_IWishSlot`
+- 칸 하나의 시나리오·제목·낙인 이름·경고 문구
+- 진행 상태에 따라 잠김 / 열림 / 클리어(낙인 획득) 모양으로 바뀐다
 
 ### 기술 포인트
 
-- 스토리 정보, 사이트 주소, 연결 맵을 코드에 박아 넣지 않고 **DataTable 기반**으로 연결했다.
-- 따라서 UI 로직을 거의 건드리지 않고도 스토리 항목 추가/수정이 가능하다.
-- 이 구조는 이후 StoryFlow, 해금 상태, 저장 데이터와도 자연스럽게 연결될 수 있다.
+- 사이트는 맵을 직접 열지 않는다. 이벤트만 보내고, 그 이벤트를 기다리는 StoryFlow Scene이 레벨 이동을 맡는다. 그래서 사이트 UI를 고쳐도 진행 흐름이 깨지지 않는다.
+- 옛 괴담 목록/상세 페이지(DataTable `FStoryTableRow`로 목록을 그리고 `StoryMap`을 바로 열던 구조)는 i-wish로 바뀌면서 지웠다. DataTable 구조(`Source/RulesHorror/Item/`, `DT_Item_Story`)는 남아 있다.
 
 ### 핵심 코드
 
 ```cpp
-void USite_StoryDetail::SetStoryID(FItemID_Story _story_id)
+void USite_IWish::OnClickWarningConfirm(UButtonBase* _btn)
 {
-    if (_CurrentStoryID == _story_id)
+    const ERulesHorrorScenario scenario = _PendingSlot.IsValid() ? _PendingSlot->GetScenario() : ERulesHorrorScenario::None;
+    HideWarning();
+
+    const FName event_name = RulesHorrorStoryEvents::GetSiteEnterScenarioEvent(scenario);
+    if (event_name.IsNone())
         return;
 
-    _CurrentStoryID = _story_id;
-    _LastStoryID = _story_id;
-
-    const auto& story_item_row = URulesHorrorItemHelper::GetStoryItemRow(_CurrentStoryID);
-
-    SetAdditionalSiteAddress(story_item_row.AdditionalSiteAddress);
-    SetTitle(story_item_row.GetDisplayName());
+    // 시나리오 진입(레벨 이동)은 이 이벤트를 기다리는 Scene이 맡는다.
+    URulesHorrorStorySubsystem::Send(this, event_name);
 }
 ```
-
-```cpp
-void USite_StoryDetail::PlayCurrentStory()
-{
-    if (_CurrentStoryID.IsValid() == false)
-        return;
-
-    const auto& story_item_row = URulesHorrorItemHelper::GetStoryItemRow(_CurrentStoryID);
-
-    if (story_item_row.StoryMap.IsNull())
-        return;
-
-    UGameplayStatics::OpenLevelBySoftObjectPtr(this, story_item_row.StoryMap);
-}
-```
-
-- 선택한 스토리 ID를 DataTable Row로 해석해 주소/제목/UI를 갱신한다.
-- 최종적으로는 Row에 연결된 `StoryMap`을 열기 때문에, 콘텐츠 확장이 데이터 중심으로 이뤄진다.
 
 ---
 
@@ -451,20 +417,18 @@ void USite_StoryDetail::PlayCurrentStory()
 ### 관련 파일
 - `Source/RulesHorror/UI/Office/MonitorScreen/UI_WindowInitUser.cpp`
 - `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/UI_SitePanel.cpp`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.cpp`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/UI_IWishSlot.cpp`
+- `Source/RulesHorror/SaveGame/RulesHorrorProgressSubsystem.h`
 
 ### 구현 내용
 
-저장 시스템은 현재 일부만 연결되어 있지만, 구조상 컴퓨터 UI와 이어질 준비가 되어 있다.
-
-- 초기 사용자 닉네임 저장/불러오기
-- 사이트 화면에서 닉네임 표시
-- 스토리 리스트 쪽에 진행도 반영 TODO 존재
+- 초기 사용자 닉네임 저장/불러오기, 사이트 화면에서 닉네임 표시
+- 낙인 칸 상태를 진행 저장(`Scenario_0N_Unlocked`, `Scenario_0N_Clear`, `Brand_0N`)에서 읽고, 값이 바뀌면 바로 다시 칠한다
+- 가입을 마친 저장(`Site_SignedUp`)이면 이어하기 때 모니터가 부팅·가입 화면을 건너뛰고 i-wish 창부터 보여 준다
 
 ### 기술 포인트
 
-- 컴퓨터 UI가 단발성 연출이 아니라, **저장 데이터 기반 상태 변화가 가능한 허브 시스템**으로 설계되어 있다.
-- 현재는 닉네임 저장이 연결되어 있고, 향후 해금/클리어/낙인 상태 반영으로 확장될 여지가 남아 있다.
+- 컴퓨터 UI가 단발성 연출이 아니라, **저장 데이터에 따라 상태가 바뀌는 허브 시스템**으로 동작한다.
 
 ---
 
@@ -486,9 +450,9 @@ void USite_StoryDetail::PlayCurrentStory()
 - 창 생성, 포커스, 드래그, 리사이즈, 탭, 최소화, 복구를 공통 베이스로 분리
 - 이후 다른 앱/사이트 UI를 추가하기 쉬운 구조
 
-### 5) 데이터 기반 콘텐츠 확장성
-- 스토리 사이트 정보와 맵 이동 대상을 DataTable로 관리
-- 기획 변경에 대한 대응력이 좋음
+### 5) 사이트와 진행 흐름 분리
+- 사이트는 스토리 이벤트만 보내고 레벨 이동은 StoryFlow가 맡음
+- 낙인 칸 데이터는 위젯 인스턴스 값, 상태는 진행 저장에서 읽음 → 기획 변경에 대한 대응력이 좋음
 
 ---
 
@@ -496,7 +460,6 @@ void USite_StoryDetail::PlayCurrentStory()
 
 현재 기준으로 확인되는 미완성 또는 확장 예정 지점은 다음과 같다.
 
-- `USite_StoryList`에 스토리 진행도/해금 상태 반영 TODO 존재
 - 창 종류는 구조상 확장 가능하지만 현재는 `Explorer` 중심
 - 컴퓨터 종료 시 전원 Off 연출과 후처리는 Blueprint 또는 추가 연동 여지가 있음
 - 허브 변화, 낙인 상태, StoryFlow 진행 조건과의 연결은 문서상 추가 확장 예정
@@ -507,6 +470,6 @@ void USite_StoryDetail::PlayCurrentStory()
 
 ## 12. 기술 요약 문장
 
-이 시스템은 Unreal Engine 5에서 **월드 상호작용 Actor, 이동 포인트 연출, `WidgetInteractionComponent` 기반 입력 보정, 멀티 윈도우 UMG 구조, DataTable 기반 콘텐츠 연결**을 결합해 구현한 디제틱 컴퓨터 UX다. 특히 3D 모니터 표면과 2D UI 입력을 자연스럽게 이어주기 위해 **커스텀 hit 보정 로직**을 설계했고, 브라우저/데스크톱 형태의 내부 UI를 통해 스토리 선택 허브로 확장 가능한 구조를 만들었다.
+이 시스템은 Unreal Engine 5에서 **월드 상호작용 Actor, 이동 포인트 연출, `WidgetInteractionComponent` 기반 입력 보정, 멀티 윈도우 UMG 구조, StoryFlow 이벤트 기반 시나리오 진입**을 결합해 구현한 디제틱 컴퓨터 UX다. 특히 3D 모니터 표면과 2D UI 입력을 자연스럽게 이어주기 위해 **커스텀 hit 보정 로직**을 설계했고, 브라우저/데스크톱 형태의 내부 UI를 통해 스토리 선택 허브로 확장 가능한 구조를 만들었다.
 
 

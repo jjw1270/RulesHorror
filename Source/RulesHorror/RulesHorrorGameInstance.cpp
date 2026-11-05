@@ -10,18 +10,14 @@
 #include "SaveGame/RulesHorrorSaveGame.h"
 #include "StoryFlowSubsystem.h"
 #include "UI/Office/UI_Monitor.h"
-#include "UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.h"
-#include "UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.h"
 
 namespace
 {
-	/* 모니터·사이트 화면이 기억하는 마지막 상태(정적 변수)를 지운다. 레벨이 바뀌어도 남으므로 새 게임/이어하기/종료 때 부른다.
+	/* 모니터 화면이 기억하는 마지막 상태(정적 변수)를 지운다. 레벨이 바뀌어도 남으므로 새 게임/이어하기/종료 때 부른다.
 	   모니터 첫 화면은 다음에 켤 때 저장(사이트 가입 여부)을 보고 다시 정한다. */
 	void ResetMonitorScreenState()
 	{
 		UUI_Monitor::ResetLastActiveWidgetindex();
-		USite_StoryDetail::ResetLastStoryID();
-		USite_StoryList::ResetLastPage();
 	}
 }
 

@@ -236,7 +236,7 @@ PlayerController cursor hit
 - Minimize / Restore / Close
 - Move / Resize
 - Explorer Window
-- Story List / Story Detail Site
+- i-wish 사이트 (낙인 3칸, 칸 선택 → 경고 팝업 → 시나리오 진입)
 
 관련 파일:
 
@@ -244,14 +244,14 @@ PlayerController cursor hit
 - `Source/RulesHorror/UI/Office/MonitorScreen/WindowBase/WindowBase.*`
 - `Source/RulesHorror/UI/Office/MonitorScreen/WindowBase/WindowDefines.h`
 - `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/Window_Explorer.*`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.*`
-- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.*`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/Site_IWish.*`
+- `Source/RulesHorror/UI/Office/MonitorScreen/Explorer/IWishSite/UI_IWishSlot.*`
 
 ---
 
 ### 6. DataTable 기반 스토리 콘텐츠 연결
 
-스토리 사이트에서 표시할 항목은 코드에 직접 박아 넣기보다 `ItemCore`의 DataTable / Registry 구조 위에 얹어 관리합니다.
+괴담 항목 데이터는 코드에 직접 박아 넣기보다 `ItemCore`의 DataTable / Registry 구조 위에 얹어 관리합니다. 이 테이블을 쓰던 옛 괴담 목록/상세 페이지는 i-wish 사이트로 바뀌면서 지웠고, 데이터 구조는 ItemCore 연결 예시로 남겨 두었습니다.
 
 프로젝트 전용 Row인 `FStoryTableRow`는 `FItemTableRow`를 상속하며 다음 정보를 추가합니다.
 
@@ -352,7 +352,7 @@ Template Branch: Branch_*
 - Computer Actor와 모니터 UI 진입 흐름
 - Office 모니터용 커서 / WidgetInteraction 처리
 - 멀티 윈도우 기반 모니터 UI
-- Explorer / Story List / Story Detail UI 코드
+- Explorer 창과 i-wish 사이트(낙인 3칸, 저장 상태로 칸 잠김·열림·클리어 표시) UI 코드
 - Story Item DataTable 연결 구조
 - `SA_Intro` StorySceneAsset + `Scene_Intro` SceneID → 새 게임 / 이어하기 분기 → `CH01_S01` 시작 흐름
 - `FStoryFlowRef` 기반 StoryFlow 저장 / 복원 기초 구조
@@ -364,7 +364,6 @@ Template Branch: Branch_*
 - 낙인 / 시나리오 / 엔딩 조건 Save Key 반영
 - StoryFlow 중요 Shot마다 저장 갱신 정책 추가
 - `CH01_S02` 이후 본편 StorySceneAsset / ShotAsset 제작
-- 괴담 사이트 진행도 반영 (`USite_StoryList` TODO 구간)
 - 꿈속 허브 상태 변화
 - 미니게임 4종 본 구현
 - 병실 엔딩 UX 완성
