@@ -46,6 +46,10 @@ protected:
 protected:
 	static TOptional<int32> _LastRadioButtonIndex;
 
+public:
+	/* 마지막으로 본 목록 쪽을 잊는다. 새 게임/이어하기 때 부른다. */
+	static void ResetLastPage() { _LastRadioButtonIndex.Reset(); }
+
 protected:
 	UFUNCTION()
 	void OnRadioButtonSelected(class URadioButton* _btn);

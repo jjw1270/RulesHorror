@@ -8,6 +8,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/UniformGridPanel.h"
+#include "CommonUtils.h"
 
 
 void UUI_WindowManager::NativeOnInitialized()
@@ -25,6 +26,20 @@ void UUI_WindowManager::NativeOnInitialized()
 			window_icon->_OnDoubleClicked.AddDynamic(this, &UUI_WindowManager::OnDoubleClickIconButton);
 		}
 	}
+}
+
+void UUI_WindowManager::OnShow_Implementation()
+{
+	Super::OnShow_Implementation();
+
+	if (_AutoOpenWindowType == EWindowWidgetType::NA)
+		return;
+
+	const FWindowData* data_ptr = _WindowDataMap.Find(_AutoOpenWindowType);
+	if (data_ptr != nullptr && IsValid(data_ptr->WindowWidget) && IsValid(data_ptr->WindowWidget->GetParent()) && data_ptr->WindowWidget->IsVisible())
+		return;
+
+	OpenWindow(_AutoOpenWindowType);
 }
 
 void UUI_WindowManager::OpenWindow(EWindowWidgetType _type)

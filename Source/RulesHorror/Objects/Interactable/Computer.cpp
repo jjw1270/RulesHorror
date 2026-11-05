@@ -108,7 +108,12 @@ void AComputer::Interact_Implementation(AActor* _interactor)
 
 bool AComputer::CanBeDetected_Implementation() const
 {
-	return _IsInteractionEnabled && IsInvalid(_OfficePawn);
+	if (_IsInteractionEnabled == false || IsValid(_OfficePawn))
+		return false;
+
+	// 대사·입력 잠금 중에는 클릭이 막히므로 상호작용 표시도 띄우지 않는다 (StoryInspectable과 같은 기준).
+	const URulesHorrorStorySubsystem* story_subsystem = URulesHorrorStorySubsystem::Get(this);
+	return IsInvalid(story_subsystem) || (story_subsystem->IsDialoguePlaying() == false && story_subsystem->IsPlayerInputLocked() == false);
 }
 
 bool AComputer::CanInteract_Implementation() const

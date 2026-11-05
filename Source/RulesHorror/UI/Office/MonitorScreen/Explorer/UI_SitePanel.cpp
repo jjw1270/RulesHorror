@@ -35,7 +35,7 @@ void UUI_SitePanel::OnShow_Implementation()
 		SetNickName(FText::FromString(nickname));
 	}
 
-	BroadcastOnSiteChangedEvent(Site_StoryList);
+	BroadcastOnSiteChangedEvent(IsValid(WS_Site) ? Cast<UUI_SiteBase>(WS_Site->GetActiveWidget()) : nullptr);
 }
 
 void UUI_SitePanel::ChangeSite(UUI_SiteBase* _new_site)
@@ -60,6 +60,12 @@ void UUI_SitePanel::ShowStoryListSite()
 
 void UUI_SitePanel::BroadcastOnSiteChangedEvent(UUI_SiteBase* _site)
 {
+	if (IsInvalid(_site))
+	{
+		_OnSiteChangedEvent.Broadcast(_MainSiteAddress);
+		return;
+	}
+
 	const FString& additional_address = _site->GetAdditionalSiteAddress();
 	if (additional_address.IsEmpty() == false)
 	{
@@ -73,7 +79,7 @@ void UUI_SitePanel::BroadcastOnSiteChangedEvent(UUI_SiteBase* _site)
 
 void UUI_SitePanel::ShowStoryDetailSite(const FItemID_Story& _story_id)
 {
-	if (_story_id.IsValid() == false)
+	if (_story_id.IsValid() == false || IsInvalid(Site_StoryDetail))
 		return;
 
 	Site_StoryDetail->SetStoryID(_story_id);

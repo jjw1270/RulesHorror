@@ -32,8 +32,12 @@ protected:
 #endif
 
 public:
-	/* 다음에 모니터를 켤 때 첫 화면(로딩 → 닉네임)부터 보여 준다. 새 게임/이어하기, PIE 종료 때 부른다. */
+	/* 다음에 모니터를 켤 때 첫 화면을 저장 기준으로 다시 정한다(GetStartWidgetIndex). 새 게임/이어하기, PIE 종료 때 부른다. */
 	static void ResetLastActiveWidgetindex() { _LastActiveWidgetIndex.Reset(); }
+
+protected:
+	/* 처음 켤 때 보일 화면. 사이트 가입을 마친 저장(Site_SignedUp)이면 부팅·가입 화면을 건너뛰고 바탕화면(창 관리자)부터, 아니면 부팅부터. */
+	int32 GetStartWidgetIndex() const;
 
 protected:
 	UFUNCTION()

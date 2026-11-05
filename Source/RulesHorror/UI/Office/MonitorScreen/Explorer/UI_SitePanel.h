@@ -37,22 +37,24 @@ protected:
 
 	void ChangeSite(class UUI_SiteBase* _new_site);
 
+	/* 지금 보이는 사이트 페이지의 주소를 주소창에 알린다. */
+	void BroadcastOnSiteChangedEvent(UUI_SiteBase* _site);
+
+	// 사이트 첫 화면은 i-wish(Site_IWish)다. 옛 괴담 목록/상세 페이지는 i-wish로 바뀌면서 사이트에서 빠졌다(있으면 예전처럼 동작).
 #pragma region Site_StoryList
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<class USite_StoryList> Site_StoryList = nullptr;
 
 protected:
 	UFUNCTION()
 	void ShowStoryListSite();
 
-	void BroadcastOnSiteChangedEvent(UUI_SiteBase* _site);
-
 #pragma endregion Site_StoryList
 //////////////////////////////////////////////////////////////////////
 #pragma region Site_StoryDetail
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidgetOptional))
 	TObjectPtr<class USite_StoryDetail> Site_StoryDetail = nullptr;
 
 protected:

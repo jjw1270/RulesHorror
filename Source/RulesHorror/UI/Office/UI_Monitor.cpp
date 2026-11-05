@@ -9,6 +9,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "UI/Office/MonitorScreen/WindowBase/UI_WindowManager.h"
 #include "UI/Office/MonitorScreen/WindowBase/WindowBase.h"
+#include "SaveGame/RulesHorrorProgressSubsystem.h"
 
 TOptional<int32> UUI_Monitor::_LastActiveWidgetIndex;
 
@@ -44,11 +45,7 @@ void UUI_Monitor::OnShow_Implementation()
 
 	if (_LastActiveWidgetIndex.IsSet() == false)
 	{
-#if WITH_EDITOR
-		_LastActiveWidgetIndex = (_DEBUG_Start_Widget_Index > 0) ? _DEBUG_Start_Widget_Index : 0;
-#else
-		_LastActiveWidgetIndex = 0;
-#endif
+		_LastActiveWidgetIndex = GetStartWidgetIndex();
 	}
 
 	WidgetSwitcher->SetActiveWidgetIndex(_LastActiveWidgetIndex.GetValue());
@@ -58,6 +55,26 @@ void UUI_Monitor::OnShow_Implementation()
 	{
 		actived_screen_widget->Show(EWidgetShowType::SelfHitTestInvisible);
 	}
+}
+
+int32 UUI_Monitor::GetStartWidgetIndex() const
+{
+#if WITH_EDITOR
+	if (_DEBUG_Start_Widget_Index > 0)
+		return _DEBUG_Start_Widget_Index;
+#endif
+
+	const URulesHorrorProgressSubsystem* progress = URulesHorrorUtils::GetGameInstanceSubsystem<URulesHorrorProgressSubsystem>(this);
+	if (IsValid(progress) && progress->GetProgressFlag(ERulesHorrorProgressFlag::Site_SignedUp))
+	{
+		for (int32 i = 0; i < WidgetSwitcher->GetChildrenCount(); ++i)
+		{
+			if (WidgetSwitcher->GetChildAt(i)->IsA<UUI_WindowManager>())
+				return i;
+		}
+	}
+
+	return 0;
 }
 
 void UUI_Monitor::OnShowScreenWidget(UWidgetBase* _widget)

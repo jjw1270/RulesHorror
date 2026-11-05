@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SaveGame/RulesHorrorProgressDefines.h"
 #include "RulesHorrorStoryDefines.generated.h"
 
 /* 대사/자막 한 줄. Speaker가 비면 지문(괄호 설명)으로 보여준다. Text 안의 {Nickname}은 저장된 닉네임으로 바뀐다. */
@@ -30,6 +31,23 @@ namespace RulesHorrorStoryEvents
 	inline const FName ComputerOpened(TEXT("Computer_Opened"));
 	/* 사이트 가입(닉네임 화면)을 마침 */
 	inline const FName SiteSignedUp(TEXT("Site_SignedUp"));
-	/* 사이트에서 괴담(시나리오) 입장을 누름 */
+	/* i-wish 사이트 화면이 열림 (모니터의 인터넷 창) */
+	inline const FName SiteOpened(TEXT("Site_Opened"));
+	/* i-wish에서 낙인 칸을 고르고 경고 팝업에서 확인을 누름. 시나리오마다 이름이 다르다. */
+	inline const FName SiteEnterScenario01(TEXT("Site_EnterScenario_01"));
+	inline const FName SiteEnterScenario02(TEXT("Site_EnterScenario_02"));
+	inline const FName SiteEnterScenario03(TEXT("Site_EnterScenario_03"));
+	/* 옛 괴담 목록 페이지(Site_StoryDetail)의 입장 버튼. i-wish로 바뀐 뒤로는 사이트에 없고 기다리는 Shot도 없다. */
 	inline const FName SiteStoryPlay(TEXT("Site_StoryPlay"));
+
+	inline FName GetSiteEnterScenarioEvent(ERulesHorrorScenario _scenario)
+	{
+		switch (_scenario)
+		{
+		case ERulesHorrorScenario::Scenario_01_PCBang:		return SiteEnterScenario01;
+		case ERulesHorrorScenario::Scenario_02_Mugunghwa:	return SiteEnterScenario02;
+		case ERulesHorrorScenario::Scenario_03_Forest:		return SiteEnterScenario03;
+		default:											return NAME_None;
+		}
+	}
 }

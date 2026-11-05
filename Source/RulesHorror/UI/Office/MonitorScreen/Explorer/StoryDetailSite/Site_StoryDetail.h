@@ -39,6 +39,9 @@ protected:
 public:
 	void SetStoryID(FItemID_Story _story_id);
 
+	/* 마지막으로 본 괴담을 잊는다. 새 게임/이어하기 때 부른다 (지난 판 페이지가 남지 않게). */
+	static void ResetLastStoryID() { _LastStoryID = FItemID_Story::Zero; }
+
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetTitle(const FText& _text);

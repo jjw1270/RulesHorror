@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "StoryShotBase.h"
+#include "SaveGame/RulesHorrorProgressDefines.h"
 #include "Shot_WaitStoryEvent.generated.h"
 
 /*
@@ -24,6 +25,10 @@ protected:
 	/* 켜면 이 Shot에 들어온 뒤에 받은 이벤트만 친다. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wait")
 	bool _IgnoreEarlierEvents = false;
+
+	/* 이 진행 플래그가 모두 켜져 있으면 기다리지 않고 바로 넘어간다 (예: 이미 가입했으면 가입 대기 생략). 비어 있으면 늘 기다린다. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wait")
+	TArray<ERulesHorrorProgressFlag> _SkipIfProgressFlags;
 
 	FDelegateHandle _StoryEventHandle;
 	bool _IsAwaiting = false;

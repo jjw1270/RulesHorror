@@ -10,10 +10,24 @@
 #include "SaveGame/RulesHorrorSaveGame.h"
 #include "StoryFlowSubsystem.h"
 #include "UI/Office/UI_Monitor.h"
+#include "UI/Office/MonitorScreen/Explorer/StoryDetailSite/Site_StoryDetail.h"
+#include "UI/Office/MonitorScreen/Explorer/StoryListSite/Site_StoryList.h"
+
+namespace
+{
+	/* 모니터·사이트 화면이 기억하는 마지막 상태(정적 변수)를 지운다. 레벨이 바뀌어도 남으므로 새 게임/이어하기/종료 때 부른다.
+	   모니터 첫 화면은 다음에 켤 때 저장(사이트 가입 여부)을 보고 다시 정한다. */
+	void ResetMonitorScreenState()
+	{
+		UUI_Monitor::ResetLastActiveWidgetindex();
+		USite_StoryDetail::ResetLastStoryID();
+		USite_StoryList::ResetLastPage();
+	}
+}
 
 void URulesHorrorGameInstance::Shutdown()
 {
-	UUI_Monitor::ResetLastActiveWidgetindex();
+	ResetMonitorScreenState();
 
 	Super::Shutdown();
 }
@@ -101,8 +115,8 @@ void URulesHorrorGameInstance::StartNewGame()
 	save_game->SaveStoryFlowRef(start_ref);
 	save_game_subsystem->SaveGameSlot(SaveGameSlotIndex);
 
-	// 모니터는 레벨이 바뀌어도 마지막 화면을 기억하므로, 새로 시작할 때는 닉네임(사이트 가입) 화면부터 다시 보이게 한다.
-	UUI_Monitor::ResetLastActiveWidgetindex();
+	// 모니터는 레벨이 바뀌어도 마지막 화면을 기억하므로, 새로 시작할 때는 부팅·닉네임(사이트 가입) 화면부터 다시 보이게 한다.
+	ResetMonitorScreenState();
 	story_flow_subsystem->StartFromRef(start_ref);
 }
 
@@ -135,6 +149,7 @@ void URulesHorrorGameInstance::StartSavedGame()
 		return;
 	}
 
-	UUI_Monitor::ResetLastActiveWidgetindex();
+	// 이어하기: 이미 가입했으면 모니터가 바탕화면부터 보인다 (UUI_Monitor::GetStartWidgetIndex).
+	ResetMonitorScreenState();
 	story_flow_subsystem->StartFromRef(save_game->GetStoryFlowRef());
 }

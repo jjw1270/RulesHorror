@@ -3,11 +3,22 @@
 
 #include "StoryFlow/Shots/Shot_WaitStoryEvent.h"
 #include "StoryFlow/RulesHorrorStorySubsystem.h"
+#include "SaveGame/RulesHorrorProgressSubsystem.h"
 #include "CommonUtils.h"
 
 void UShot_WaitStoryEvent::OnEnterShot_Implementation()
 {
 	Super::OnEnterShot_Implementation();
+
+	if (_SkipIfProgressFlags.Num() > 0)
+	{
+		const URulesHorrorProgressSubsystem* progress = URulesHorrorProgressSubsystem::FindFromSubsystemOuter(this);
+		if (IsValid(progress) && progress->AreAllProgressFlagsSet(_SkipIfProgressFlags))
+		{
+			FinishShot();
+			return;
+		}
+	}
 
 	URulesHorrorStorySubsystem* story_subsystem = URulesHorrorStorySubsystem::Get(this);
 	if (IsInvalid(story_subsystem))

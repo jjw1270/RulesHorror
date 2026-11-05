@@ -81,6 +81,10 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TMap<EWindowWidgetType, FWindowData> _WindowDataMap;
 
+	/* 바탕화면이 보일 때 저절로 여는 창 (인터넷 창 = i-wish 시작 페이지). 이미 열려 있으면 그대로 둔다. NA면 열지 않는다. */
+	UPROPERTY(EditAnywhere)
+	EWindowWidgetType _AutoOpenWindowType = EWindowWidgetType::NA;
+
 	FVector2D _InitialWindowPos = FVector2D(80.0f, 80.0f);
 	FVector2D _InitialNormalPos = FVector2D(120.0f, 120.0f);
 	FVector2D _WindowOffset = FVector2D(24.0f, 24.0f);
@@ -88,6 +92,7 @@ protected:
 
 protected:
 	virtual void NativeOnInitialized() override;
+	virtual void OnShow_Implementation() override;
 
 public:
 	UFUNCTION(BlueprintImplementableEvent)

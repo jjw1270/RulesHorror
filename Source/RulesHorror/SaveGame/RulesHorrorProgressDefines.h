@@ -30,6 +30,8 @@ enum class ERulesHorrorProgressFlag : uint8
 
 	EndingUnlocked			UMETA(ToolTip = "병실 엔딩 진입 가능(마지막 소원 입력 완료). CH05_S04"),
 
+	Site_SignedUp			UMETA(ToolTip = "괴담 사이트 i-wish 가입(닉네임) 완료. CH02_S03. 켜져 있으면 모니터가 부팅·가입 화면을 건너뛰고 바탕화면부터 보여 준다."),
+
 	Max UMETA(Hidden),
 };
 
