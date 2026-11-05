@@ -72,6 +72,20 @@ void UUI_WindowManager::OpenWindow(EWindowWidgetType _type)
 
 	window_widget->Show(EWidgetShowType::SelfHitTestInvisible);
 
+	// 작업표시줄 탭: 아이콘 더블클릭이든 바탕화면 자동 열기든, 창을 열 때마다 탭이 붙어 있게 한다.
+	if (data_ptr->CreateTab)
+	{
+		if (IsInvalid(data_ptr->WindowTab))
+		{
+			CreateWindowTab(_type, *data_ptr);
+		}
+
+		if (IsValid(data_ptr->WindowTab) && data_ptr->WindowTab->GetParent() != HB_WindowTab)
+		{
+			HB_WindowTab->AddChildToHorizontalBox(data_ptr->WindowTab);
+		}
+	}
+
 	if (!data_ptr->HasBeenOpened && data_ptr->IsMaximized)
 	{
 		window_widget->SetMaximize(true);
@@ -236,16 +250,6 @@ void UUI_WindowManager::OnDoubleClickIconButton(UClickButton* _icon_button)
 	if (IsInvalid(window_data_ptr))
 		return;
 	
-	if (IsInvalid(window_data_ptr->WindowTab))
-	{
-		CreateWindowTab(window_widget_type, *window_data_ptr);
-	}
-
-	if (IsValid(window_data_ptr->WindowTab))
-	{
-		HB_WindowTab->AddChildToHorizontalBox(window_data_ptr->WindowTab);
-	}
-
 	OpenWindow(window_widget_type);
 }
 

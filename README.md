@@ -484,4 +484,5 @@ BuildAndLaunch.bat
 - `Copyright (c) 2026 장윤제. All rights reserved.`가 명시된 파일은 해당 고지를 따릅니다.
 - 이 저장소의 공개는 포트폴리오 열람과 기술 검토를 위한 것이며, 별도 허가 없이 복제, 수정, 재배포, 상업적 사용을 허용한다는 의미가 아닙니다.
 - 외부 에셋, 레퍼런스 이미지, 빌드 산출물은 저장소에 포함하지 않으며, 외부 에셋의 권리는 각 원저작자와 라이선스 정책을 따릅니다.
+- 예외로 포함한 공개 라이선스 글꼴: 게임 속 모니터 화면의 도트 글꼴 [Galmuri](https://github.com/quiple/galmuri) v2.40.4 (Copyright (c) 2019–2025 Lee Minseo, SIL Open Font License 1.1, 전문은 `Art/UI/Fonts/Galmuri/OFL.txt`). `Content/UI/Fonts/Galmuri/`에 언리얼 글꼴 에셋으로 들어 있습니다.
 - 최종 배포 목표는 Steam 출시이며, 공개 저장소는 출시 빌드가 아니라 개발/검토용 소스 저장소입니다.
