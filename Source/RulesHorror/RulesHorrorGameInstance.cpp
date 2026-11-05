@@ -93,8 +93,6 @@ void URulesHorrorGameInstance::StartNewGame()
 		return;
 	}
 
-	story_flow_subsystem->StartFromScene(dev_setting->_StoryStartSceneID);
-
 	auto save_game = Cast<URulesHorrorSaveGame>(save_game_subsystem->GetCurrentSaveGame());
 	if (IsInvalid(save_game))
 	{
@@ -102,8 +100,13 @@ void URulesHorrorGameInstance::StartNewGame()
 		return;
 	}
 
-	save_game->SaveStoryFlowRef(story_flow_subsystem->GetPendingStartRef());
+	// 시작 Scene이 체크포인트를 저장하기 전에 끝나도 이어하기가 되도록 시작 위치를 먼저 저장한다.
+	FStoryFlowRef start_ref;
+	start_ref.SceneID = dev_setting->_StoryStartSceneID;
+	save_game->SaveStoryFlowRef(start_ref);
 	save_game_subsystem->SaveGameSlot(SaveGameSlotIndex);
+
+	story_flow_subsystem->StartFromRef(start_ref);
 }
 
 void URulesHorrorGameInstance::StartSavedGame()
