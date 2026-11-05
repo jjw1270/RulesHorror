@@ -2,11 +2,11 @@
 rough ink stamp textures. Run after make_iwish_photos.py (Blender renders in Renders/):
     python make_iwish_images.py [--renders <dir>]
 Writes T_IW_*.png next to this file (import to /Game/UI/Office/Monitor/Textures/IWish, default texture filter).
-Pixel text uses Galmuri11 (SIL OFL 1.1, Art/UI/Fonts/Galmuri/OFL.txt) if --font is given or found in Saved.
+No text is baked into the images (the site's words stay in UMG so they can be translated).
 """
 import io
+import json
 import math
-import random
 import sys
 from pathlib import Path
 
@@ -218,7 +218,6 @@ def wrist_mark(points):
 
 
 def main():
-    import json
     out = HERE
     photos = {}
     photos["window"] = camera_photo(RENDERS / "window.png", (40, 0, 800, 570), (1.08, 0.96, 0.8), lift=0.035, gain=1.25,
@@ -232,7 +231,7 @@ def main():
                                    noise=0.03, chroma=0.025, vig=0.6, stamp="'04 11 05", mark=wrist_mark(pts))
     for k, im in photos.items():
         im.save(RENDERS / ("photo_" + k + ".jpg"), quality=95)
-        thumb(im, (128, 96)).save(out / ("T_IW_Photo_" + k.capitalize() + ".png"))
+        thumb(im, (104, 78)).save(out / ("T_IW_Photo_" + k.capitalize() + ".png"))   # shown 1:1 on the site
     # banner photo strip (right part of the title banner): left edge fades out
     b = Image.open(RENDERS / "banner.png").convert("RGB")
     b = b.resize((470, 84), Image.LANCZOS)
