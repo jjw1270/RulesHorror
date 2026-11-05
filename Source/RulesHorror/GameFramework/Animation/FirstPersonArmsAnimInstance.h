@@ -33,6 +33,8 @@ private:
 /*
  * 1인칭 팔 애님 인스턴스 (애님 블루프린트 없이 사용).
  * 소유 캐릭터(ARulesHorrorCharacter)의 Idle/Walk 시퀀스를 이동 속도에 따라 블렌드함.
+ * 애님 블루프린트의 부모 클래스로 써도 된다: 그 블루프린트의 애님 그래프가 포즈를 만들고, 이 클래스는 _WalkAlpha 등 값만 채운다.
+ * 팔 교체 방법: Art/Blender/FPArms/README.md "고퀄 팔로 바꾸는 법".
  */
 UCLASS(Transient)
 class RULESHORROR_API UFirstPersonArmsAnimInstance : public UAnimInstance

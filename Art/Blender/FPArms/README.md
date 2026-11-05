@@ -23,7 +23,7 @@ Optional arguments after `--` for the generator:
 
 ## Camera-space contract
 
-- The mesh is attached to the first-person camera with an identity relative transform. Its origin is the eye point.
+- The mesh is attached to the first-person camera. Its origin is the eye point. In the game the component is rotated 14° down around the eye (see "Unreal"), so the framing below is the unrotated rest framing.
 - Unreal axes: `+X` = view forward, `+Y` = right, `+Z` = up. Blender `+X` = UE `+X`, Blender `+Y` = UE `-Y`, Blender `Z` = UE `Z`, 1 m = 100 cm.
 - The player's right arm (UE `+Y`, Blender `-Y`) uses the `_r` bones.
 - Framing was made for a 70° horizontal FOV at 16:9 (about 43° vertical):
@@ -98,7 +98,9 @@ Only the `upperarm` bones have location keys (whole-arm drift); every other bone
 
 - Assets in `/Game/Objects/FPArms/`: `SKM_FPArms`, `SKM_FPArms_Skeleton`, `A_FPArms_Idle`, `A_FPArms_Walk` (the imported takes renamed), and the three `MI_FPArms_*` instances. No physics asset.
 - Used by `/Game/GameFramework/Pawn/BP_RulesHorrorCharacter` (test pawn of `L_InGameTest`), component `FP_Arms`:
-  - a SkeletalMeshComponent attached to `First Person Camera`, relative transform identity
+  - a SkeletalMeshComponent attached to `First Person Camera`, relative rotation pitch -14° (location 0). This turns the arms down around the eye
+    so they stay mostly out of view: while idle nothing shows on a 16:9 screen, while walking a fingertip swings in at the bottom now and then.
+    The unrotated pose (hands held up in front) read as "zombie arms". Later interactions that need the hands can raise them again.
   - Only Owner See, first-person primitive type (rendered with the camera's 70° first-person FOV), no shadow, no collision
   - Animation Mode = Use Animation Blueprint with the native class `UFirstPersonArmsAnimInstance`
     (`Source/RulesHorror/GameFramework/Animation/FirstPersonArmsAnimInstance.*`, no Anim Blueprint asset). It reads
@@ -108,3 +110,18 @@ Only the `upperarm` bones have location keys (whole-arm drift); every other bone
 - The mannequin is gone from `CharacterMesh0` and `First Person Mesh` (both have no mesh now). The camera used to hang on the `head` socket of `First Person Mesh`; `ARulesHorrorCharacter` now attaches it to the capsule at eye height, 64 cm above the capsule center (C++ default, the Blueprint keeps it).
 - Import: `SkeletalMeshTools.import_file` with animations and without physics asset. The FBX uses the same axis conversion as the prop meshes (forward `-Z`, up `Y`), so Blender `+X` arrives as Unreal `+X`.
 - The FBX is written in centimeters: `export_fbx` scales the rig data by 100 and sets the scene unit scale to 0.01 during the export, then restores the scene. Exported in meters, the FBX carries a x100 scale on the `Armature` node, and Unreal then imports either a mesh 100x too small (`FBX_SCALE_ALL`) or animation tracks that do not match the bind pose, which makes the arms disappear as soon as an animation plays (`FBX_SCALE_NONE`).
+
+## 고퀄 팔로 바꾸는 법
+
+팔은 `BP_RulesHorrorCharacter`의 `FP_Arms` 컴포넌트 하나에 모여 있다. 게임 코드는 팔의 뼈 이름이나 메시를 모르므로 이 컴포넌트와 캐릭터의 애니 값만 바꾸면 된다.
+
+1. 새 팔을 가져온다(`/Game/Objects/` 아래 새 폴더). 저장소가 공개라 구매 에셋은 넣지 않는다. 직접 만들거나 CC0(예: MPFB 사람에서 팔만)로.
+   스켈레탈 FBX는 cm 단위로 내보낸다(위 "Unreal"의 마지막 항목).
+2. `FP_Arms`의 Skeletal Mesh를 새 메시로 바꾼다. Only Owner See, First Person 타입, 그림자·충돌 없음 설정은 그대로 둔다.
+3. 애니는 둘 중 하나:
+   - 간단히: Anim Class는 `FirstPersonArmsAnimInstance` 그대로 두고, 캐릭터의 `_FirstPersonIdleAnim` / `_FirstPersonWalkAnim`에 새 스켈레톤용 대기·걷기 시퀀스를 넣는다. 이동 속도에 따라 저절로 섞인다.
+   - 애님 블루프린트: 새 팔에 맞는 애님 블루프린트를 만들어 `FP_Arms`의 Anim Class에 넣는다. 부모 클래스를 `FirstPersonArmsAnimInstance`로 하면
+     그래프에서 `_WalkAlpha`(0 대기 ~ 1 걷기), `_WalkPlayRate`, `_IdleAnim`, `_WalkAnim`을 그대로 읽어 쓸 수 있다(그래프가 있으면 그래프가 포즈를 만든다).
+4. `FP_Arms`의 상대 위치·회전으로 화면 속 자리를 맞춘다(지금은 pitch -14°). L_Street PIE에서 16:9로 대기·걷기 둘 다 확인한다.
+   에디터 뷰포트는 16:9보다 넓어서 아래쪽이 덜 보이므로, PIE 중 `First Person Camera`의 Constrain Aspect Ratio를 켜고 Aspect Ratio 1.7778로 본다.
+5. 옛 팔 에셋(`/Game/Objects/FPArms/`)은 아무것도 참조하지 않게 된 뒤에 지운다.

@@ -56,6 +56,13 @@ void FFirstPersonArmsAnimInstanceProxy::Update(float _delta_seconds)
 
 bool FFirstPersonArmsAnimInstanceProxy::Evaluate(FPoseContext& _output)
 {
+	// 이 클래스를 부모로 만든 애님 블루프린트는 자기 애님 그래프로 포즈를 만든다 (false = 그래프 평가).
+	// 그래프에서는 _WalkAlpha, _WalkPlayRate, _IdleAnim, _WalkAnim 값을 읽어 쓸 수 있다.
+	if (HasRootNode())
+	{
+		return false;
+	}
+
 	if (_IdleAnim == nullptr && _WalkAnim == nullptr)
 	{
 		_output.ResetToRefPose();
