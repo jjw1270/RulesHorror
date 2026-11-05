@@ -30,7 +30,7 @@ MPFB is installed into a separate Blender user folder so the normal Blender setu
    contents of `src/mpfb` (the folder with `blender_manifest.toml`) as `mpfb-2.0.18.zip`.
 2. Install it:
    ```
-   set BLENDER_USER_RESOURCES=C:\Users\<you>\blender_mpfb\user
+   set BLENDER_USER_RESOURCES=F:\BlenderProjects\MPFB\user
    "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" --command extension install-file -r user_default -e mpfb-2.0.18.zip
    ```
 3. Download `makehuman_system_assets_cc0.zip`
@@ -41,7 +41,7 @@ MPFB is installed into a separate Blender user folder so the normal Blender setu
 ## Regenerate
 
 ```
-set BLENDER_USER_RESOURCES=C:\Users\<you>\blender_mpfb\user
+set BLENDER_USER_RESOURCES=F:\BlenderProjects\MPFB\user
 "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" --background --python create_office_worker_blend.py
 ```
 
