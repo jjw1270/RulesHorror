@@ -50,5 +50,6 @@ The C++ code and `Computer_BP` rely on these; keep them when editing the script.
 ## Unreal
 
 - Asset: `/Game/Objects/ComputerMonitor/SM_ComputerMonitor` (Nanite off, simple box or convex collision).
-- Used by `/Game/Objects/Interactable/Computer_BP`, component `Monitor`.
+- Not placed directly: `../Computer` appends the monitor from `ComputerMonitor.blend` into `SM_Computer`, the mesh of
+  `/Game/Objects/Interactable/Computer_BP` component `Monitor`. Run that script again after changing the monitor.
 - Import settings: FBX exported with forward `-Z`, up `Y`, unit scale applied. Blender `+X` arrives as Unreal `+X`.

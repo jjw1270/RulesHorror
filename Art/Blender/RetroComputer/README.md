@@ -29,7 +29,7 @@ Append `-- --preview <dir>` to also render a preview PNG per mesh (after the `.b
 ## Geometry
 
 Unreal bounds in cm (Blender `+Y` = Unreal `-Y`). All match the originals within 0.2 cm, so placed actors
-(`L_Office`, `/Game/Objects/Interactable/Computer_BP`) keep their transforms.
+(in `L_Office`) keep their transforms.
 The user side is Unreal `+Y`: monitor screen, tower front and keyboard front edges face Unreal `+Y`;
 the mouse buttons point to Unreal `-Y` (away from the user).
 
@@ -65,5 +65,6 @@ All slots are meant for `/Game/Objects/Materials/M_Prop_Base` instances (paramet
 ## Unreal
 
 - Assets: `/Game/Objects/RetroComputer/<SM_Name>` (Nanite off, simple box or convex collision).
-- `SM_KeyboardStandard`, `SM_Mouse` and `SM_PCTower` are also used by `/Game/Objects/Interactable/Computer_BP`.
+- `../Computer` appends `SM_KeyboardStandard`, `SM_Mouse` and `SM_PCTower` from `RetroComputer.blend` into `SM_Computer`
+  (the mesh of `/Game/Objects/Interactable/Computer_BP`). Run that script again after changing them.
 - Import settings: FBX exported with forward `-Z`, up `Y`, unit scale applied. Blender `+X` arrives as Unreal `+X`.
